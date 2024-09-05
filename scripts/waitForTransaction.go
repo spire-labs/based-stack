@@ -11,6 +11,7 @@ import (
 )
 
 func waitForTransaction(hash common.Hash, client *ethclient.Client) *types.Receipt {
+	log.Printf("Waiting for transaction %v\n", hash)
 	for {
 		_, isPending, err := client.TransactionByHash(context.Background(), hash)
 		if err != nil {
@@ -27,5 +28,6 @@ func waitForTransaction(hash common.Hash, client *ethclient.Client) *types.Recei
 		log.Fatalf("Error fetching transaction receipt: %v", err)
 	}
 
+	log.Printf("Transaction included in block number %v", txReceipt.BlockNumber)
 	return txReceipt
 }
