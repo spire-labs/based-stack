@@ -17,6 +17,7 @@ import (
 
 const (
 	l1Url                    = "http://localhost:8545"
+	l1Beacon                 = "http://localhost:5052"
 	l1ChainId                = 900
 	l2Url                    = "http://localhost:9545"
 	l2ChainId                = 901
@@ -47,6 +48,28 @@ func main() {
 			Usage: "Deposits a transaction to OptimismPortal",
 			Action: func(_ *cli.Context) error {
 				deposit()
+				return nil
+			},
+		},
+		{
+			Name:  "decode",
+			Usage: "Decodes batches from L2",
+			Flags: []cli.Flag{
+				&cli.IntFlag{
+					Name:     "start",
+					Required: true,
+					Usage:    "First block (inclusive) to fetch",
+				},
+				&cli.IntFlag{
+					Name:     "end",
+					Required: true,
+					Usage:    "Last block (exclusive) to fetch",
+				},
+			},
+			Action: func(clx *cli.Context) error {
+				start := clx.Int("start")
+				end := clx.Int("end")
+				decodeBatch(start, end)
 				return nil
 			},
 		},
