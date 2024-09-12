@@ -13,6 +13,7 @@ import { SystemConfig } from "src/L1/SystemConfig.sol";
 import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
+import { Election } from "src/L1/Election.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 
 import { DeployUtils } from "scripts/libraries/DeployUtils.sol";
@@ -94,6 +95,7 @@ contract DeployImplementationsOutput {
         L1ERC721Bridge l1ERC721BridgeImpl;
         L1StandardBridge l1StandardBridgeImpl;
         OptimismMintableERC20Factory optimismMintableERC20FactoryImpl;
+        Election electionImpl;
     }
 
     Output internal outputs;
@@ -109,6 +111,7 @@ contract DeployImplementationsOutput {
         else if (sel == this.l1ERC721BridgeImpl.selector) outputs.l1ERC721BridgeImpl = L1ERC721Bridge(_addr);
         else if (sel == this.l1StandardBridgeImpl.selector) outputs.l1StandardBridgeImpl = L1StandardBridge(payable(_addr));
         else if (sel == this.optimismMintableERC20FactoryImpl.selector) outputs.optimismMintableERC20FactoryImpl = OptimismMintableERC20Factory(_addr);
+        else if (sel == this.electionImpl.selector) outputs.electionImpl = Election(_addr);
         else revert("DeployImplementationsOutput: unknown selector");
         // forgefmt: disable-end
     }
@@ -145,6 +148,11 @@ contract DeployImplementationsOutput {
     function delayedWETHImpl() public view returns (DelayedWETH) {
         DeployUtils.assertValidContractAddress(address(outputs.delayedWETHImpl));
         return outputs.delayedWETHImpl;
+    }
+
+    function electionImpl() public view returns (Election) {
+        DeployUtils.assertValidContractAddress(address(outputs.electionImpl));
+        return outputs.electionImpl;
     }
 
     function preimageOracleSingleton() public view returns (PreimageOracle) {
@@ -217,6 +225,7 @@ contract DeployImplementations is Script {
         deployDelayedWETHImpl(_dsi, _dso);
         deployPreimageOracleSingleton(_dsi, _dso);
         deployMipsSingleton(_dsi, _dso);
+        deployElection(_dsi, _dso);
 
         _dso.checkOutput();
     }
@@ -332,6 +341,14 @@ contract DeployImplementations is Script {
 
         vm.label(address(mipsSingleton), "MIPSSingleton");
         _dso.set(_dso.mipsSingleton.selector, address(mipsSingleton));
+    }
+
+    function deployElection(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+        vm.broadcast(msg.sender);
+        Election election = new Election();
+
+        vm.label(address(election), "Election");
+        _dso.set(_dso.electionImpl.selector, address(election));
     }
 
     // -------- Utilities --------
