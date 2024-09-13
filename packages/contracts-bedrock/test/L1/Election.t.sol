@@ -13,8 +13,9 @@ contract ElectionTest is Test {
   }
 
   function testReturnsWinner() public view {
+    address _expectedWinner = election.sequencers(0);
     address _winner = election.electionWinner();
 
-    vm.assertTrue(_winner != address(0));
+    vm.assertTrue(_winner == _expectedWinner);
   }
 }
