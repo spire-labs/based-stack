@@ -730,7 +730,7 @@ type L1DependenciesConfig struct {
 	// as part of the derivation pipeline.
 	OptimismPortalProxy common.Address `json:"optimismPortalProxy"`
 	// Election represents the address of the election contract on L1
-	Election common.Address `json:"ekection"`
+	Election common.Address `json:"election"`
 
 	// DAChallengeProxy represents the L1 address of the DataAvailabilityChallenge contract.
 	DAChallengeProxy common.Address `json:"daChallengeProxy"`

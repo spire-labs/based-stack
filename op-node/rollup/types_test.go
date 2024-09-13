@@ -39,15 +39,16 @@ func randConfig() *Config {
 				GasLimit:    1234567,
 			},
 		},
-		BlockTime:              2,
-		MaxSequencerDrift:      100,
-		SeqWindowSize:          2,
-		ChannelTimeoutBedrock:  123,
-		L1ChainID:              big.NewInt(900),
-		L2ChainID:              big.NewInt(901),
-		BatchInboxAddress:      randAddr(),
-		DepositContractAddress: randAddr(),
-		L1SystemConfigAddress:  randAddr(),
+		BlockTime:               2,
+		MaxSequencerDrift:       100,
+		SeqWindowSize:           2,
+		ChannelTimeoutBedrock:   123,
+		L1ChainID:               big.NewInt(900),
+		L2ChainID:               big.NewInt(901),
+		BatchInboxAddress:       randAddr(),
+		DepositContractAddress:  randAddr(),
+		L1SystemConfigAddress:   randAddr(),
+		ElectionContractAddress: randAddr(),
 	}
 }
 
@@ -433,6 +434,11 @@ func TestConfig_Check(t *testing.T) {
 			name:        "NoDepositContractAddress",
 			modifier:    func(cfg *Config) { cfg.DepositContractAddress = common.Address{} },
 			expectedErr: ErrMissingDepositContractAddress,
+		},
+		{
+			name: "NoElectionAddr",
+			modifier: func(cfg *Config) { cfg.ElectionContractAddress = common.Address{} },
+			expectedErr: ErrMissingElectionContractAddress,
 		},
 		{
 			name:        "NoL1ChainId",
