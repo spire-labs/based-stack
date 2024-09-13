@@ -987,7 +987,7 @@ type L1Deployments struct {
 	ProtocolVersionsProxy             common.Address `json:"ProtocolVersionsProxy"`
 	DataAvailabilityChallenge         common.Address `json:"DataAvailabilityChallenge"`
 	DataAvailabilityChallengeProxy    common.Address `json:"DataAvailabilityChallengeProxy"`
-	Election 													common.Address `json:"Election"`
+	Election                          common.Address `json:"Election"`
 }
 
 // GetName will return the name of the contract given an address.
