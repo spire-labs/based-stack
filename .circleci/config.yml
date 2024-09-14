@@ -1481,6 +1481,7 @@ workflows:
             - pnpm-monorepo
       - semgrep-scan
       - go-mod-download
+      - go-lint
       # - fuzz-golang:
       #     name: op-challenger-fuzz
       #     package_name: op-challenger
