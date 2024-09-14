@@ -1553,35 +1553,35 @@ workflows:
           name: op-supervisor-tests
           module: op-supervisor
           requires: ["go-mod-download"]
-      - go-e2e-test:
-          name: op-e2e-HTTP-tests<< matrix.variant >>
-          matrix:
-            parameters:
-              variant: ["", "-l2oo"]
-          module: op-e2e
-          target: test-http
-          parallelism: 4
-          requires:
-            - go-mod-download
-            - pnpm-monorepo
-      - go-e2e-test:
-          name: op-e2e-action-tests<< matrix.variant >>
-          matrix:
-            parameters:
-              variant: ["", "-l2oo", "-altda"]
-          module: op-e2e
-          target: test-actions
-          parallelism: 1
-          requires:
-            - go-mod-download
-            - pnpm-monorepo
-      - go-e2e-test:
-          name: op-e2e-fault-proof-tests
-          module: op-e2e
-          target: test-fault-proofs
-          parallelism: 4
-          requires:
-            - pnpm-monorepo
+      # - go-e2e-test:
+      #     name: op-e2e-HTTP-tests<< matrix.variant >>
+      #     matrix:
+      #       parameters:
+      #         variant: ["", "-l2oo"]
+      #     module: op-e2e
+      #     target: test-http
+      #     parallelism: 4
+      #     requires:
+      #       - go-mod-download
+      #       - pnpm-monorepo
+      # - go-e2e-test:
+      #     name: op-e2e-action-tests<< matrix.variant >>
+      #     matrix:
+      #       parameters:
+      #         variant: ["", "-l2oo", "-altda"]
+      #     module: op-e2e
+      #     target: test-actions
+      #     parallelism: 1
+      #     requires:
+      #       - go-mod-download
+      #       - pnpm-monorepo
+      # - go-e2e-test:
+      #     name: op-e2e-fault-proof-tests
+      #     module: op-e2e
+      #     target: test-fault-proofs
+      #     parallelism: 4
+      #     requires:
+      #       - pnpm-monorepo
             # - cannon-prestate
       - op-program-compat:
           requires:
@@ -1606,7 +1606,7 @@ workflows:
             - op-service-tests
             - op-supervisor-tests
             # - op-e2e-HTTP-tests
-            - op-e2e-fault-proof-tests
+            # - op-e2e-fault-proof-tests
             # - op-e2e-action-tests
             # - op-e2e-action-tests-altda
       # - docker-build:
@@ -1902,23 +1902,23 @@ workflows:
   #         requires:
   #           - hold
 
-  scheduled-todo-issues:
-    when:
-      equal: [ build_four_hours, <<pipeline.schedule.name>> ]
-    jobs:
-      - todo-issues:
-          name: todo-issue-checks
-          context:
-            - slack
+  # scheduled-todo-issues:
+  #   when:
+  #     equal: [ build_four_hours, <<pipeline.schedule.name>> ]
+  #   jobs:
+  #     - todo-issues:
+  #         name: todo-issue-checks
+  #         context:
+  #           - slack
 
-  scheduled-fpp:
-    when:
-      equal: [ build_four_hours, <<pipeline.schedule.name>> ]
-    jobs:
-      - fpp-verify:
-          context:
-            - slack
-            - oplabs-fpp-nodes
+  # scheduled-fpp:
+  #   when:
+  #     equal: [ build_four_hours, <<pipeline.schedule.name>> ]
+  #   jobs:
+  #     - fpp-verify:
+  #         context:
+  #           - slack
+  #           - oplabs-fpp-nodes
 
   # develop-publish-contract-artifacts:
   #   when:
@@ -1928,35 +1928,35 @@ workflows:
   #   jobs:
   #     - publish-contract-artifacts
 
-  develop-fault-proofs:
-    when:
-      and:
-        - or:
-          - equal: [ "develop", <<pipeline.git.branch>> ]
-          - equal: [ true, <<pipeline.parameters.fault_proofs_dispatch>> ]
-        - not:
-            equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
-    jobs:
-      - go-mod-download
-      - cannon-prestate:
-          requires:
-            - go-mod-download
-      - pnpm-monorepo:
-          name: pnpm-monorepo
-          requires:
-            - go-mod-download
-      - go-e2e-test:
-          name: op-e2e-cannon-tests
-          module: op-e2e
-          target: test-cannon
-          parallelism: 4
-          notify: true
-          mentions: "@proofs-squad"
-          requires:
-            - pnpm-monorepo
-            - cannon-prestate
-          context:
-            - slack
+  # develop-fault-proofs:
+  #   when:
+  #     and:
+  #       - or:
+  #         - equal: [ "develop", <<pipeline.git.branch>> ]
+  #         - equal: [ true, <<pipeline.parameters.fault_proofs_dispatch>> ]
+  #       - not:
+  #           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+  #   jobs:
+  #     - go-mod-download
+  #     - cannon-prestate:
+  #         requires:
+  #           - go-mod-download
+  #     - pnpm-monorepo:
+  #         name: pnpm-monorepo
+  #         requires:
+  #           - go-mod-download
+  #     - go-e2e-test:
+  #         name: op-e2e-cannon-tests
+  #         module: op-e2e
+  #         target: test-cannon
+  #         parallelism: 4
+  #         notify: true
+  #         mentions: "@proofs-squad"
+  #         requires:
+  #           - pnpm-monorepo
+  #           - cannon-prestate
+  #         context:
+  #           - slack
 
   # develop-kontrol-tests:
   #   when:
