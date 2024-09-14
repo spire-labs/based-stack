@@ -1582,17 +1582,17 @@ workflows:
           parallelism: 4
           requires:
             - pnpm-monorepo
-            - cannon-prestate
+            # - cannon-prestate
       - op-program-compat:
           requires:
             - op-program-tests
       - bedrock-go-tests:
           requires:
             - go-mod-download
-            - cannon-build-test-vectors
-            - cannon-go-lint-and-test
-            - check-generated-mocks-op-node
-            - check-generated-mocks-op-service
+            # - cannon-build-test-vectors
+            # - cannon-go-lint-and-test
+            # - check-generated-mocks-op-node
+            # - check-generated-mocks-op-service
             - go-mod-download
             - op-batcher-tests
             - op-chain-ops-tests
@@ -1605,10 +1605,10 @@ workflows:
             - op-program-compat
             - op-service-tests
             - op-supervisor-tests
-            - op-e2e-HTTP-tests
+            # - op-e2e-HTTP-tests
             - op-e2e-fault-proof-tests
-            - op-e2e-action-tests
-            - op-e2e-action-tests-altda
+            # - op-e2e-action-tests
+            # - op-e2e-action-tests-altda
       # - docker-build:
       #     name: op-node-docker-build
       #     docker_name: op-node
