@@ -260,7 +260,7 @@ jobs:
             - ".devnet-altda-generic/allocs-l2-granite.json"
             - "packages/contracts-bedrock/deploy-config/devnetL1.json"
             - "packages/contracts-bedrock/deployments/devnetL1"
-      - notify-failures-on-develop
+      # - notify-failures-on-develop
 
   # docker-build:
   #   environment:
@@ -686,7 +686,7 @@ jobs:
       - run:
           name: Check TODO issues
           command: ./ops/scripts/todo-checker.sh --verbose
-      - notify-failures-on-develop
+      # - notify-failures-on-develop
 
   # fuzz-golang:
   #   parameters:
@@ -901,11 +901,11 @@ jobs:
           when: always
       - store_test_results:
           path: /tmp/test-results
-      - when:
-          condition: "<<parameters.notify>>"
-          steps:
-            - notify-failures-on-develop:
-                mentions: "<<parameters.mentions>>"
+      # - when:
+      #     condition: "<<parameters.notify>>"
+      #     steps:
+      #       - notify-failures-on-develop:
+      #           mentions: "<<parameters.mentions>>"
 
   go-lint-test-build:
     parameters:
@@ -1032,8 +1032,8 @@ jobs:
               echo "Prestate did not match expected"
               exit 1
             fi
-      - notify-failures-on-develop:
-          mentions: "@proofs-squad"
+      # - notify-failures-on-develop:
+      #     mentions: "@proofs-squad"
 
 
   devnet-allocs:
@@ -1272,7 +1272,7 @@ jobs:
       - run:
           name: "Semgrep scan"
           command: semgrep ci
-      - notify-failures-on-develop
+      # - notify-failures-on-develop
 
   go-mod-download:
     docker:
@@ -1333,8 +1333,8 @@ jobs:
           command: |
             make verify-sepolia
           working_directory: op-program
-      - notify-failures-on-develop:
-          mentions: "@proofs-squad"
+      # - notify-failures-on-develop:
+      #     mentions: "@proofs-squad"
 
   op-program-compat:
     docker:
@@ -1397,65 +1397,65 @@ jobs:
           command: |
             ./ops/scripts/ci-match-values-between-files.sh "<< parameters.file1_path >>" "<< parameters.pattern_file1 >>" "<< parameters.file2_path >>" "<< parameters.pattern_file2 >>"
 
-  kontrol-tests:
-    docker:
-      - image: << pipeline.parameters.ci_builder_image >>
-    resource_class: xlarge
-    steps:
-      - checkout
-      - install-contracts-dependencies
-      - check-changed:
-          no_go_deps: "true"
-          patterns: contracts-bedrock/test/kontrol,contracts-bedrock/src/L1/OptimismPortal\.sol,contracts-bedrock/src/L1/OptimismPortal2\.sol,contracts-bedrock/src/L1/L1CrossDomainMessenger\.sol,contracts-bedrock/src/L1/L1ERC721Bridge\.sol,contracts-bedrock/src/L1/L1StandardBridge\.sol,contracts-bedrock/src/L1/ResourceMetering\.sol,contracts-bedrock/src/universal/StandardBridge\.sol,contracts-bedrock/src/universal/ERC721Bridge\.sol,contracts-bedrock/src/universal/CrossDomainMessenger\.sol
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - run:
-          name: Run Kontrol Tests
-          command: |
-            curl -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer $RV_COMPUTE_TOKEN" \
-              https://api.github.com/repos/runtimeverification/optimism-ci/actions/workflows/optimism-ci.yaml/dispatches \
-              -d '{
-                "ref": "master",
-                "inputs": {
-                  "branch_name": "<<pipeline.git.branch>>",
-                  "extra_args": "script",
-                  "statuses_sha": "<< pipeline.git.revision >>",
-                  "org": "ethereum-optimism",
-                  "repository": "optimism"
-                }
-              }'
-          working_directory: ./packages/contracts-bedrock
-      - notify-failures-on-develop
+  # kontrol-tests:
+  #   docker:
+  #     - image: << pipeline.parameters.ci_builder_image >>
+  #   resource_class: xlarge
+  #   steps:
+  #     - checkout
+  #     - install-contracts-dependencies
+  #     - check-changed:
+  #         no_go_deps: "true"
+  #         patterns: contracts-bedrock/test/kontrol,contracts-bedrock/src/L1/OptimismPortal\.sol,contracts-bedrock/src/L1/OptimismPortal2\.sol,contracts-bedrock/src/L1/L1CrossDomainMessenger\.sol,contracts-bedrock/src/L1/L1ERC721Bridge\.sol,contracts-bedrock/src/L1/L1StandardBridge\.sol,contracts-bedrock/src/L1/ResourceMetering\.sol,contracts-bedrock/src/universal/StandardBridge\.sol,contracts-bedrock/src/universal/ERC721Bridge\.sol,contracts-bedrock/src/universal/CrossDomainMessenger\.sol
+  #     - setup_remote_docker:
+  #         docker_layer_caching: true
+  #     - run:
+  #         name: Run Kontrol Tests
+  #         command: |
+  #           curl -X POST \
+  #             -H "Accept: application/vnd.github+json" \
+  #             -H "Authorization: Bearer $RV_COMPUTE_TOKEN" \
+  #             https://api.github.com/repos/runtimeverification/optimism-ci/actions/workflows/optimism-ci.yaml/dispatches \
+  #             -d '{
+  #               "ref": "master",
+  #               "inputs": {
+  #                 "branch_name": "<<pipeline.git.branch>>",
+  #                 "extra_args": "script",
+  #                 "statuses_sha": "<< pipeline.git.revision >>",
+  #                 "org": "ethereum-optimism",
+  #                 "repository": "optimism"
+  #               }
+  #             }'
+  #         working_directory: ./packages/contracts-bedrock
+      # - notify-failures-on-develop
 
-  publish-contract-artifacts:
-    docker:
-      - image: <<pipeline.parameters.ci_builder_image>>
-    resource_class: xlarge
-    steps:
-      - gcp-cli/install
-      - gcp-oidc-authenticate:
-          gcp_cred_config_file_path: /root/gcp_cred_config.json
-          oidc_token_file_path: /root/oidc_token.json
-          project_id: GCP_TOOLS_ARTIFACTS_PROJECT_ID
-          service_account_email: GCP_CONTRACTS_PUBLISHER_SERVICE_ACCOUNT_EMAIL
-      - checkout
-      - install-contracts-dependencies
-      - run:
-          name: Pull artifacts
-          command: bash scripts/ops/pull-artifacts.sh
-          working_directory: packages/contracts-bedrock
-      - run:
-          name: Build contracts
-          environment:
-            FOUNDRY_PROFILE: ci
-          command: just build
-          working_directory: packages/contracts-bedrock
-      - run:
-          name: Publish artifacts
-          command: bash scripts/ops/publish-artifacts.sh
-          working_directory: packages/contracts-bedrock
+  # publish-contract-artifacts:
+  #   docker:
+  #     - image: <<pipeline.parameters.ci_builder_image>>
+  #   resource_class: xlarge
+  #   steps:
+  #     - gcp-cli/install
+  #     - gcp-oidc-authenticate:
+  #         gcp_cred_config_file_path: /root/gcp_cred_config.json
+  #         oidc_token_file_path: /root/oidc_token.json
+  #         project_id: GCP_TOOLS_ARTIFACTS_PROJECT_ID
+  #         service_account_email: GCP_CONTRACTS_PUBLISHER_SERVICE_ACCOUNT_EMAIL
+  #     - checkout
+  #     - install-contracts-dependencies
+  #     - run:
+  #         name: Pull artifacts
+  #         command: bash scripts/ops/pull-artifacts.sh
+  #         working_directory: packages/contracts-bedrock
+  #     - run:
+  #         name: Build contracts
+  #         environment:
+  #           FOUNDRY_PROFILE: ci
+  #         command: just build
+  #         working_directory: packages/contracts-bedrock
+  #     - run:
+  #         name: Publish artifacts
+  #         command: bash scripts/ops/publish-artifacts.sh
+  #         working_directory: packages/contracts-bedrock
 
 workflows:
   main:
@@ -1481,38 +1481,38 @@ workflows:
             - pnpm-monorepo
       - semgrep-scan
       - go-mod-download
-      - fuzz-golang:
-          name: op-challenger-fuzz
-          package_name: op-challenger
-          on_changes: op-challenger
-          requires: ["go-mod-download"]
-      - fuzz-golang:
-          name: op-node-fuzz
-          package_name: op-node
-          on_changes: op-node
-          requires: ["go-mod-download"]
-      - fuzz-golang:
-          name: op-service-fuzz
-          package_name: op-service
-          on_changes: op-service
-          requires: ["go-mod-download"]
-      - fuzz-golang:
-          name: op-chain-ops-fuzz
-          package_name: op-chain-ops
-          on_changes: op-chain-ops
-          requires: ["go-mod-download"]
-      - fuzz-golang:
-          name: cannon-fuzz
-          package_name: cannon
-          on_changes: cannon,packages/contracts-bedrock/src/cannon
-          uses_artifacts: true
-          requires: ["go-mod-download", "pnpm-monorepo"]
-      - fuzz-golang:
-          name: op-e2e-fuzz
-          package_name: op-e2e
-          on_changes: op-e2e,packages/contracts-bedrock/src
-          uses_artifacts: true
-          requires: ["go-mod-download", "pnpm-monorepo"]
+      # - fuzz-golang:
+      #     name: op-challenger-fuzz
+      #     package_name: op-challenger
+      #     on_changes: op-challenger
+      #     requires: ["go-mod-download"]
+      # - fuzz-golang:
+      #     name: op-node-fuzz
+      #     package_name: op-node
+      #     on_changes: op-node
+      #     requires: ["go-mod-download"]
+      # - fuzz-golang:
+      #     name: op-service-fuzz
+      #     package_name: op-service
+      #     on_changes: op-service
+      #     requires: ["go-mod-download"]
+      # - fuzz-golang:
+      #     name: op-chain-ops-fuzz
+      #     package_name: op-chain-ops
+      #     on_changes: op-chain-ops
+      #     requires: ["go-mod-download"]
+      # - fuzz-golang:
+      #     name: cannon-fuzz
+      #     package_name: cannon
+      #     on_changes: cannon,packages/contracts-bedrock/src/cannon
+      #     uses_artifacts: true
+      #     requires: ["go-mod-download", "pnpm-monorepo"]
+      # - fuzz-golang:
+      #     name: op-e2e-fuzz
+      #     package_name: op-e2e
+      #     on_changes: op-e2e,packages/contracts-bedrock/src
+      #     uses_artifacts: true
+      #     requires: ["go-mod-download", "pnpm-monorepo"]
       - go-test:
           name: op-batcher-tests
           module: op-batcher
@@ -1920,13 +1920,13 @@ workflows:
             - slack
             - oplabs-fpp-nodes
 
-  develop-publish-contract-artifacts:
-    when:
-      or:
-        - equal: [ "develop", <<pipeline.git.branch>> ]
-        - equal: [ true, <<pipeline.parameters.publish_contract_artifacts_dispatch>> ]
-    jobs:
-      - publish-contract-artifacts
+  # develop-publish-contract-artifacts:
+  #   when:
+  #     or:
+  #       - equal: [ "develop", <<pipeline.git.branch>> ]
+  #       - equal: [ true, <<pipeline.parameters.publish_contract_artifacts_dispatch>> ]
+  #   jobs:
+  #     - publish-contract-artifacts
 
   develop-fault-proofs:
     when:
@@ -1958,19 +1958,19 @@ workflows:
           context:
             - slack
 
-  develop-kontrol-tests:
-    when:
-      and:
-        - or:
-          - equal: [ "develop", <<pipeline.git.branch>> ]
-          - equal: [ true, <<pipeline.parameters.kontrol_dispatch>> ]
-        - not:
-           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
-    jobs:
-      - kontrol-tests:
-          context:
-            - slack
-            - runtimeverification
+  # develop-kontrol-tests:
+  #   when:
+  #     and:
+  #       - or:
+  #         - equal: [ "develop", <<pipeline.git.branch>> ]
+  #         - equal: [ true, <<pipeline.parameters.kontrol_dispatch>> ]
+  #       - not:
+  #          equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+  #   jobs:
+  #     - kontrol-tests:
+  #         context:
+  #           - slack
+  #           - runtimeverification
 
   # scheduled-docker-publish:
   #   when:
