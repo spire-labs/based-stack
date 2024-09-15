@@ -10,6 +10,6 @@ contract Election {
   address[1] public sequencers = [0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC];
 
   function electionWinner() external view returns(address _winner) {
-    _winner = sequencers[sequencers.length % block.number];
+    _winner = sequencers[block.number % sequencers.length];
   }
 }

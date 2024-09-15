@@ -12,7 +12,11 @@ contract ElectionTest is Test {
     election = new Election();
   }
 
-  function testReturnsWinner() public view {
+  function testReturnsWinner(uint256 _blockNumber) public {
+    vm.assume(_blockNumber > 0);
+
+    vm.roll(_blockNumber);
+
     address _expectedWinner = election.sequencers(0);
     address _winner = election.electionWinner();
 
