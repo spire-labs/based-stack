@@ -163,7 +163,6 @@ contract DeployImplementationsOutput_Test is Test {
 
         vm.expectRevert(expectedErr);
         dso.electionImpl();
-
     }
 
     function test_getters_whenAddrHasNoCode_reverts() public {

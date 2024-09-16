@@ -210,6 +210,10 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "L1StandardBridge", _sel: _getSel("version()") });
         _addSpec({ _name: "L1StandardBridge", _sel: _getSel("systemConfig()") });
 
+        // Election
+        _addSpec({ _name: "Election", _sel: _getSel("electionWinner()") });
+        _addSpec({ _name: "Election", _sel: _getSel("sequencers(uint256)") });
+
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("FINALIZATION_PERIOD_SECONDS()") });
