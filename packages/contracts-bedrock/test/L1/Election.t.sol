@@ -6,20 +6,20 @@ import { Test } from "forge-std/Test.sol";
 
 // TODO: Add this more seamlessly into the op test suite
 contract ElectionTest is Test {
-  Election public election;
+    Election public election;
 
-  function setUp() public {
-    election = new Election();
-  }
+    function setUp() public {
+        election = new Election();
+    }
 
-  function testReturnsWinner(uint256 _blockNumber) public {
-    vm.assume(_blockNumber > 0);
+    function testReturnsWinner(uint256 _blockNumber) public {
+        vm.assume(_blockNumber > 0);
 
-    vm.roll(_blockNumber);
+        vm.roll(_blockNumber);
 
-    address _expectedWinner = election.sequencers(0);
-    address _winner = election.electionWinner();
+        address _expectedWinner = election.sequencers(0);
+        address _winner = election.electionWinner();
 
-    vm.assertTrue(_winner == _expectedWinner);
-  }
+        vm.assertTrue(_winner == _expectedWinner);
+    }
 }
