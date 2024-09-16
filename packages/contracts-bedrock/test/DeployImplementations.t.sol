@@ -12,6 +12,7 @@ import { SystemConfig } from "src/L1/SystemConfig.sol";
 import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
+import { Election } from "src/L1/Election.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 
 import {
@@ -88,7 +89,8 @@ contract DeployImplementationsOutput_Test is Test {
             l1CrossDomainMessengerImpl: L1CrossDomainMessenger(makeAddr("l1CrossDomainMessengerImpl")),
             l1ERC721BridgeImpl: L1ERC721Bridge(makeAddr("l1ERC721BridgeImpl")),
             l1StandardBridgeImpl: L1StandardBridge(payable(makeAddr("l1StandardBridgeImpl"))),
-            optimismMintableERC20FactoryImpl: OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl"))
+            optimismMintableERC20FactoryImpl: OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl")),
+            electionImpl: Election(makeAddr("Election"))
         });
 
         vm.etch(address(output.optimismPortal2Impl), hex"01");
@@ -100,6 +102,7 @@ contract DeployImplementationsOutput_Test is Test {
         vm.etch(address(output.l1ERC721BridgeImpl), hex"01");
         vm.etch(address(output.l1StandardBridgeImpl), hex"01");
         vm.etch(address(output.optimismMintableERC20FactoryImpl), hex"01");
+        vm.etch(address(output.electionImpl), hex"01");
 
         dso.set(dso.optimismPortal2Impl.selector, address(output.optimismPortal2Impl));
         dso.set(dso.delayedWETHImpl.selector, address(output.delayedWETHImpl));
@@ -110,6 +113,7 @@ contract DeployImplementationsOutput_Test is Test {
         dso.set(dso.l1ERC721BridgeImpl.selector, address(output.l1ERC721BridgeImpl));
         dso.set(dso.l1StandardBridgeImpl.selector, address(output.l1StandardBridgeImpl));
         dso.set(dso.optimismMintableERC20FactoryImpl.selector, address(output.optimismMintableERC20FactoryImpl));
+        dso.set(dso.electionImpl.selector, address(output.electionImpl));
 
         assertEq(address(output.optimismPortal2Impl), address(dso.optimismPortal2Impl()), "100");
         assertEq(address(output.delayedWETHImpl), address(dso.delayedWETHImpl()), "200");
@@ -122,8 +126,9 @@ contract DeployImplementationsOutput_Test is Test {
         assertEq(
             address(output.optimismMintableERC20FactoryImpl), address(dso.optimismMintableERC20FactoryImpl()), "900"
         );
+        assertEq(address(output.electionImpl), address(dso.electionImpl()), "1000");
 
-        assertEq(keccak256(abi.encode(output)), keccak256(abi.encode(dso.output())), "1000");
+        assertEq(keccak256(abi.encode(output)), keccak256(abi.encode(dso.output())), "1100");
     }
 
     function test_getters_whenNotSet_revert() public {
@@ -155,6 +160,10 @@ contract DeployImplementationsOutput_Test is Test {
 
         vm.expectRevert(expectedErr);
         dso.optimismMintableERC20FactoryImpl();
+
+        vm.expectRevert(expectedErr);
+        dso.electionImpl();
+
     }
 
     function test_getters_whenAddrHasNoCode_reverts() public {
@@ -196,6 +205,10 @@ contract DeployImplementationsOutput_Test is Test {
         dso.set(dso.optimismMintableERC20FactoryImpl.selector, emptyAddr);
         vm.expectRevert(expectedErr);
         dso.optimismMintableERC20FactoryImpl();
+
+        dso.set(dso.electionImpl.selector, emptyAddr);
+        vm.expectRevert(expectedErr);
+        dso.electionImpl();
     }
 }
 
@@ -243,24 +256,25 @@ contract DeployImplementations_Test is Test {
         assertEq(
             address(output.optimismMintableERC20FactoryImpl), address(dso.optimismMintableERC20FactoryImpl()), "1400"
         );
+        assertEq(address(output.electionImpl), address(dso.electionImpl()), "1500");
 
         // Assert that the full input and output structs were properly set.
-        assertEq(keccak256(abi.encode(_input)), keccak256(abi.encode(DeployImplementationsInput(dsi).input())), "1500");
+        assertEq(keccak256(abi.encode(_input)), keccak256(abi.encode(DeployImplementationsInput(dsi).input())), "1600");
         assertEq(
-            keccak256(abi.encode(output)), keccak256(abi.encode(DeployImplementationsOutput(dso).output())), "1600"
+            keccak256(abi.encode(output)), keccak256(abi.encode(DeployImplementationsOutput(dso).output())), "1700"
         );
 
         // Assert inputs were properly passed through to the contract initializers.
-        assertEq(output.delayedWETHImpl.delay(), _input.withdrawalDelaySeconds, "1700");
-        assertEq(output.preimageOracleSingleton.challengePeriod(), _input.challengePeriodSeconds, "1800");
-        assertEq(output.preimageOracleSingleton.minProposalSize(), _input.minProposalSizeBytes, "1900");
-        assertEq(output.optimismPortal2Impl.proofMaturityDelaySeconds(), _input.proofMaturityDelaySeconds, "2000");
+        assertEq(output.delayedWETHImpl.delay(), _input.withdrawalDelaySeconds, "1800");
+        assertEq(output.preimageOracleSingleton.challengePeriod(), _input.challengePeriodSeconds, "1900");
+        assertEq(output.preimageOracleSingleton.minProposalSize(), _input.minProposalSizeBytes, "2000");
+        assertEq(output.optimismPortal2Impl.proofMaturityDelaySeconds(), _input.proofMaturityDelaySeconds, "2100");
         assertEq(
-            output.optimismPortal2Impl.disputeGameFinalityDelaySeconds(), _input.disputeGameFinalityDelaySeconds, "2100"
+            output.optimismPortal2Impl.disputeGameFinalityDelaySeconds(), _input.disputeGameFinalityDelaySeconds, "2200"
         );
 
         // Architecture assertions.
-        assertEq(address(output.mipsSingleton.oracle()), address(output.preimageOracleSingleton), "2200");
+        assertEq(address(output.mipsSingleton.oracle()), address(output.preimageOracleSingleton), "2300");
 
         // Ensure that `checkOutput` passes. This is called by the `run` function during execution,
         // so this just acts as a sanity check. It reverts on failure.

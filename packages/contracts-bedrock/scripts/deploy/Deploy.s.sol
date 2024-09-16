@@ -40,6 +40,7 @@ import { DelayedWETH } from "src/dispute/weth/DelayedWETH.sol";
 import { AnchorStateRegistry } from "src/dispute/AnchorStateRegistry.sol";
 import { PreimageOracle } from "src/cannon/PreimageOracle.sol";
 import { MIPS } from "src/cannon/MIPS.sol";
+import { Election } from "src/L1/Election.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { ProtocolVersions, ProtocolVersion } from "src/L1/ProtocolVersions.sol";
 import { StorageSetter } from "src/universal/StorageSetter.sol";
@@ -393,6 +394,7 @@ contract Deploy is Deployer {
         deployDelayedWETH();
         deployPreimageOracle();
         deployMips();
+        deployElection();
         deployAnchorStateRegistry();
     }
 
@@ -811,6 +813,15 @@ contract Deploy is Deployer {
         console.log("MIPS deployed at %s", address(mips));
 
         addr_ = address(mips);
+    }
+
+    function deployElection() public broadcast returns (address addr_) {
+        console.log("Deploying Election implementation");
+        Election election = new Election{ salt: _implSalt() }();
+        save("Election", address(election));
+        console.log("Election deployed at %s", address(election));
+
+        addr_ = address(election);
     }
 
     /// @notice Deploy the AnchorStateRegistry
