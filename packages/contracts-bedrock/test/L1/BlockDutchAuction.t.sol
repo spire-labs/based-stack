@@ -43,6 +43,51 @@ contract BlockDutchAuction_Test is Test {
     }
 }
 
+contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
+    event PendingStartPriceSet(uint256 _newStartPrice);
+
+    function testSetStartPrice_state_success() public {
+        uint256 _newStartPrice = auction.startingPrice() + 1;
+        auction.setStartPrice(_newStartPrice);
+
+        assertEq(auction.pendingStartPrice(), _newStartPrice);
+    }
+
+    function testSetStartPrice_emitsEvent_success() public {
+        uint256 _newStartPrice = auction.startingPrice() + 1;
+
+        vm.expectEmit(true, true, true, true);
+        emit PendingStartPriceSet(_newStartPrice);
+        auction.setStartPrice(_newStartPrice);
+    }
+}
+
+contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
+    event PendingDiscountRateSet(uint256 _newDiscountRate);
+
+    function testSetDiscountRate_InvalidDiscountRate_reverts() public {
+        uint256 _newDiscountRate = 101;
+
+        vm.expectRevert(InvalidDiscountRate.selector);
+        auction.setDiscountRate(_newDiscountRate);
+    }
+
+    function testSetDiscountRate_state_success() public {
+        uint256 _newDiscountRate = auction.discountRate() + 1;
+        auction.setDiscountRate(_newDiscountRate);
+
+        assertEq(auction.pendingDiscountRate(), _newDiscountRate);
+    }
+
+    function testSetDiscountRate_emitsEvent_success() public {
+        uint256 _newDiscountRate = auction.discountRate() + 1;
+
+        vm.expectEmit(true, true, true, true);
+        emit PendingDiscountRateSet(_newDiscountRate);
+        auction.setDiscountRate(_newDiscountRate);
+    }
+}
+
 contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
     function testFindStartBlock_success(uint256 _randomBlock) public {
         vm.assume(_randomBlock > auction.startBlock() + (auction.blockDuration() * 2) && _randomBlock < type(uint8).max);
