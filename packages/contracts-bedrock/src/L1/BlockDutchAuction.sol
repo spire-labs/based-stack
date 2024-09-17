@@ -134,7 +134,7 @@ abstract contract BlockDutchAuction {
 
         uint256 __ticketsLeft = _ticketsLeft;
         _ticketsLeft = __ticketsLeft - 1;
-        emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft);
+        emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);
     }
 
     /*///////////////////////////////////////////////////////////////
