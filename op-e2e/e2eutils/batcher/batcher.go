@@ -45,7 +45,7 @@ func (h *Helper) SendLargeInvalidBatch(ctx context.Context) {
 		GasTipCap: big.NewInt(1 * params.GWei),
 		GasFeeCap: big.NewInt(10 * params.GWei),
 		Gas:       5_000_000,
-		To:        &h.rollupCfg.BatchInboxAddress,
+		To:        &h.rollupCfg.BatchInboxContractAddress,
 		Value:     big.NewInt(0),
 		Data:      data,
 	})

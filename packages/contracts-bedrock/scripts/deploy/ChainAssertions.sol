@@ -97,7 +97,7 @@ library ChainAssertions {
             // Depends on start block being set to 0 in `initialize`
             uint256 cfgStartBlock = _cfg.systemConfigStartBlock();
             require(config.startBlock() == (cfgStartBlock == 0 ? block.number : cfgStartBlock));
-            require(config.batchInbox() == _cfg.batchInboxAddress());
+            require(config.batchInbox() == _contracts.BatchInbox);
             // Check _addresses
             require(config.l1CrossDomainMessenger() == _contracts.L1CrossDomainMessenger);
             require(config.l1ERC721Bridge() == _contracts.L1ERC721Bridge);

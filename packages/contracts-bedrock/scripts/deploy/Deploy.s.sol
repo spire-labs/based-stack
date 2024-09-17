@@ -35,6 +35,7 @@ import { PreimageOracle } from "src/cannon/PreimageOracle.sol";
 import { MIPS } from "src/cannon/MIPS.sol";
 import { MIPS2 } from "src/cannon/MIPS2.sol";
 import { Election } from "src/L1/Election.sol";
+import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { StorageSetter } from "src/universal/StorageSetter.sol";
 
 // Libraries
@@ -165,7 +166,8 @@ contract Deploy is Deployer {
             SystemConfig: mustGetAddress("SystemConfigProxy"),
             L1ERC721Bridge: mustGetAddress("L1ERC721BridgeProxy"),
             ProtocolVersions: mustGetAddress("ProtocolVersionsProxy"),
-            SuperchainConfig: mustGetAddress("SuperchainConfigProxy")
+            SuperchainConfig: mustGetAddress("SuperchainConfigProxy"),
+            BatchInbox: mustGetAddress("BatchInbox")
         });
     }
 
@@ -185,7 +187,8 @@ contract Deploy is Deployer {
             SystemConfig: getAddress("SystemConfigProxy"),
             L1ERC721Bridge: getAddress("L1ERC721BridgeProxy"),
             ProtocolVersions: getAddress("ProtocolVersionsProxy"),
-            SuperchainConfig: getAddress("SuperchainConfigProxy")
+            SuperchainConfig: getAddress("SuperchainConfigProxy"),
+            BatchInbox: getAddress("BatchInbox")
         });
     }
 
@@ -447,6 +450,7 @@ contract Deploy is Deployer {
         deployPreimageOracle();
         deployMips();
         deployElection();
+        deployBatchInbox();
         deployAnchorStateRegistry();
     }
 
@@ -841,6 +845,7 @@ contract Deploy is Deployer {
         addr_ = address(mips);
     }
 
+    /// @notice Deploy Election
     function deployElection() public broadcast returns (address addr_) {
         console.log("Deploying Election implementation");
         Election election = new Election{ salt: _implSalt() }();
@@ -848,6 +853,16 @@ contract Deploy is Deployer {
         console.log("Election deployed at %s", address(election));
 
         addr_ = address(election);
+    }
+
+    /// @notice Deploy BatchInbox
+    function deployBatchInbox() public broadcast returns (address addr_) {
+        console.log("Deploying Batch Inbox implementation");
+        BatchInbox batchInbox = new BatchInbox{ salt: _implSalt() }(Election(mustGetAddress("Election")));
+        save("BatchInbox", address(batchInbox));
+        console.log("Batch Inbox deployed at %s", address(batchInbox));
+
+        addr_ = address(batchInbox);
     }
 
     /// @notice Deploy MIPS2
@@ -1093,7 +1108,7 @@ contract Deploy is Deployer {
                     uint64(cfg.l2GenesisBlockGasLimit()),
                     cfg.p2pSequencerAddress(),
                     Constants.DEFAULT_RESOURCE_CONFIG(),
-                    cfg.batchInboxAddress(),
+                    mustGetAddress("BatchInbox"),
                     ISystemConfig.Addresses({
                         l1CrossDomainMessenger: mustGetAddress("L1CrossDomainMessengerProxy"),
                         l1ERC721Bridge: mustGetAddress("L1ERC721BridgeProxy"),

@@ -17,6 +17,7 @@ import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
 import { Election } from "src/L1/Election.sol";
+import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
 import { Proxy } from "src/universal/Proxy.sol";
@@ -135,6 +136,7 @@ contract DeployImplementationsOutput_Test is Test {
             OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl"));
         DisputeGameFactory disputeGameFactoryImpl = DisputeGameFactory(makeAddr("disputeGameFactoryImpl"));
         Election electionImpl = Election(makeAddr("electionImpl"));
+        BatchInbox batchInboxImpl = BatchInbox(makeAddr("batchInbox"));
 
         vm.etch(address(opsmProxy), address(opsmProxy).code);
         vm.etch(address(opsmImpl), hex"01");
@@ -149,6 +151,7 @@ contract DeployImplementationsOutput_Test is Test {
         vm.etch(address(optimismMintableERC20FactoryImpl), hex"01");
         vm.etch(address(disputeGameFactoryImpl), hex"01");
         vm.etch(address(electionImpl), hex"01");
+        vm.etch(address(batchInboxImpl), hex"01");
         dio.set(dio.opsmProxy.selector, address(opsmProxy));
         dio.set(dio.optimismPortalImpl.selector, address(optimismPortalImpl));
         dio.set(dio.delayedWETHImpl.selector, address(delayedWETHImpl));
@@ -161,6 +164,7 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.optimismMintableERC20FactoryImpl.selector, address(optimismMintableERC20FactoryImpl));
         dio.set(dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
         dio.set(dio.electionImpl.selector, address(electionImpl));
+        dio.set(dio.batchInboxImpl.selector, address(batchInboxImpl));
 
         assertEq(address(opsmProxy), address(dio.opsmProxy()), "50");
         assertEq(address(optimismPortalImpl), address(dio.optimismPortalImpl()), "100");
@@ -174,6 +178,7 @@ contract DeployImplementationsOutput_Test is Test {
         assertEq(address(optimismMintableERC20FactoryImpl), address(dio.optimismMintableERC20FactoryImpl()), "900");
         assertEq(address(disputeGameFactoryImpl), address(dio.disputeGameFactoryImpl()), "950");
         assertEq(address(electionImpl), address(dio.electionImpl()), "1000");
+        assertEq(address(batchInboxImpl), address(dio.batchInboxImpl()), "1100");
     }
 
     function test_getters_whenNotSet_revert() public {
@@ -211,6 +216,9 @@ contract DeployImplementationsOutput_Test is Test {
 
         vm.expectRevert(expectedErr);
         dio.electionImpl();
+
+        vm.expectRevert(expectedErr);
+        dio.batchInboxImpl();
     }
 
     function test_getters_whenAddrHasNoCode_reverts() public {
@@ -256,6 +264,10 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.electionImpl.selector, emptyAddr);
         vm.expectRevert(expectedErr);
         dio.electionImpl();
+
+        dio.set(dio.batchInboxImpl.selector, emptyAddr);
+        vm.expectRevert(expectedErr);
+        dio.batchInboxImpl();
     }
 }
 

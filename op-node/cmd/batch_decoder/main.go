@@ -171,8 +171,8 @@ func main() {
 						L2BlockTime = rollupCfg.BlockTime
 						fmt.Printf("L2BlockTime overridden: %v\n", L2BlockTime)
 					}
-					if BatchInboxAddress != rollupCfg.BatchInboxAddress {
-						BatchInboxAddress = rollupCfg.BatchInboxAddress
+					if BatchInboxAddress != rollupCfg.BatchInboxContractAddress {
+						BatchInboxAddress = rollupCfg.BatchInboxContractAddress
 						fmt.Printf("BatchInboxAddress overridden: %v\n", BatchInboxAddress)
 					}
 				}

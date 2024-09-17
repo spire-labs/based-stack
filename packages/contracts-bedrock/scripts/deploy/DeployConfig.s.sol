@@ -35,7 +35,6 @@ contract DeployConfig is Script {
     uint256 public sequencerWindowSize;
     uint256 public channelTimeout;
     address public p2pSequencerAddress;
-    address public batchInboxAddress;
     address public batchSenderAddress;
     uint256 public l2OutputOracleSubmissionInterval;
     int256 internal _l2OutputOracleStartingTimestamp;
@@ -115,7 +114,6 @@ contract DeployConfig is Script {
         sequencerWindowSize = stdJson.readUint(_json, "$.sequencerWindowSize");
         channelTimeout = stdJson.readUint(_json, "$.channelTimeout");
         p2pSequencerAddress = stdJson.readAddress(_json, "$.p2pSequencerAddress");
-        batchInboxAddress = stdJson.readAddress(_json, "$.batchInboxAddress");
         batchSenderAddress = stdJson.readAddress(_json, "$.batchSenderAddress");
         l2OutputOracleSubmissionInterval = stdJson.readUint(_json, "$.l2OutputOracleSubmissionInterval");
         _l2OutputOracleStartingTimestamp = stdJson.readInt(_json, "$.l2OutputOracleStartingTimestamp");

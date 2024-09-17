@@ -36,7 +36,7 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
 
     function setUp() public virtual override {
         super.setUp();
-        batchInbox = deploy.cfg().batchInboxAddress();
+        batchInbox = deploy.mustGetAddress("BatchInbox");
         owner = deploy.cfg().finalSystemOwner();
         basefeeScalar = deploy.cfg().basefeeScalar();
         blobbasefeeScalar = deploy.cfg().blobbasefeeScalar();

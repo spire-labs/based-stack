@@ -79,22 +79,22 @@ func LoadOPStackRollupConfig(chainID uint64) (*Config, error) {
 		// therefore they are read from the superchain-registry configs.
 		// Note: hardcoded values are not yet represented in the registry but should be
 		// soon, then will be read and set in the same fashion.
-		BlockTime:              chConfig.BlockTime,
-		MaxSequencerDrift:      chConfig.MaxSequencerDrift,
-		SeqWindowSize:          chConfig.SequencerWindowSize,
-		ChannelTimeoutBedrock:  300,
-		L1ChainID:              new(big.Int).SetUint64(superChain.Config.L1.ChainID),
-		L2ChainID:              new(big.Int).SetUint64(chConfig.ChainID),
-		RegolithTime:           &regolithTime,
-		CanyonTime:             chConfig.CanyonTime,
-		DeltaTime:              chConfig.DeltaTime,
-		EcotoneTime:            chConfig.EcotoneTime,
-		FjordTime:              chConfig.FjordTime,
-		GraniteTime:            chConfig.GraniteTime,
-		BatchInboxAddress:      common.Address(chConfig.BatchInboxAddr),
-		DepositContractAddress: common.Address(addrs.OptimismPortalProxy),
-		L1SystemConfigAddress:  common.Address(addrs.SystemConfigProxy),
-		AltDAConfig:            altDA,
+		BlockTime:                 chConfig.BlockTime,
+		MaxSequencerDrift:         chConfig.MaxSequencerDrift,
+		SeqWindowSize:             chConfig.SequencerWindowSize,
+		ChannelTimeoutBedrock:     300,
+		L1ChainID:                 new(big.Int).SetUint64(superChain.Config.L1.ChainID),
+		L2ChainID:                 new(big.Int).SetUint64(chConfig.ChainID),
+		RegolithTime:              &regolithTime,
+		CanyonTime:                chConfig.CanyonTime,
+		DeltaTime:                 chConfig.DeltaTime,
+		EcotoneTime:               chConfig.EcotoneTime,
+		FjordTime:                 chConfig.FjordTime,
+		GraniteTime:               chConfig.GraniteTime,
+		BatchInboxContractAddress: common.Address(chConfig.BatchInboxAddr),
+		DepositContractAddress:    common.Address(addrs.OptimismPortalProxy),
+		L1SystemConfigAddress:     common.Address(addrs.SystemConfigProxy),
+		AltDAConfig:               altDA,
 	}
 
 	if superChain.Config.ProtocolVersionsAddr != nil { // Set optional protocol versions address
