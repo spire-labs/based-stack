@@ -2,6 +2,7 @@
 pragma solidity 0.8.15;
 
 import { Test } from "forge-std/Test.sol";
+import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 
 import "src/libraries/BlockAuctionErrors.sol";
@@ -12,7 +13,7 @@ contract ForTestBlockDutchAuction is BlockDutchAuction {
         uint256 _blockDuration,
         uint256 _startingPrice,
         uint256 _discountRate,
-        address _electionTicket
+        ElectionTickets _electionTicket
     )
         BlockDutchAuction(_startBlock, _blockDuration, _startingPrice, _discountRate, _electionTicket)
     { }
@@ -32,11 +33,15 @@ contract ForTestBlockDutchAuction is BlockDutchAuction {
     function forTest_setStartBlock(uint256 _startBlock) external {
         startBlock = _startBlock;
     }
+
+    function forTest_setTicketsLeft(uint256 _amount) external {
+        _ticketsLeft = _amount;
+    }
 }
 
 contract BlockDutchAuction_Test is Test {
     ForTestBlockDutchAuction public auction;
-    address public constant electionTicket = address(0x1);
+    ElectionTickets public electionTicket = ElectionTickets(address(0x1));
 
     function setUp() public {
         auction = new ForTestBlockDutchAuction(1, 32, 1e18, 10, electionTicket);
@@ -155,5 +160,37 @@ contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
         // start block + 3 = 810000000000000000 * 0.1 = 729000000000000000
         uint256 _expectedPrice = 729000000000000000;
         assertEq(_price, _expectedPrice);
+    }
+}
+
+contract BlockDutchAuction_ticketsLeft_Test is BlockDutchAuction_Test {
+    function testTicketsLeft_AtStartingPrice_success() public {
+        vm.roll(auction.startBlock());
+        uint256 _ticketsLeft = auction.ticketsLeft();
+
+        assertEq(_ticketsLeft, auction.blockDuration());
+    }
+
+    function testTicketsLeft_DuringAuction_success(uint256 _fakeTickets) public {
+        vm.roll(auction.startBlock() + 1);
+        vm.assume(_fakeTickets < auction.blockDuration());
+
+        auction.forTest_setTicketsLeft(_fakeTickets);
+        uint256 _ticketsLeft = auction.ticketsLeft();
+
+
+        assertEq(_ticketsLeft, _fakeTickets);
+    }
+
+    function testTicketsLeft_AfterAuction_success(uint256 _fakeTickets) public {
+        vm.roll(auction.startBlock() + (auction.blockDuration() + 1));
+        vm.assume(_fakeTickets < auction.blockDuration());
+
+        auction.forTest_setTicketsLeft(_fakeTickets);
+        uint256 _ticketsLeft = auction.ticketsLeft();
+
+        // View function should ignore the state as it assumes
+        // if block.number > startBlock + blockDuration then it is in a new auction
+        assertEq(_ticketsLeft, auction.blockDuration());
     }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+
+import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
 abstract contract BlockDutchAuction {
@@ -8,7 +10,7 @@ abstract contract BlockDutchAuction {
     uint256 public constant VALIDATORS_IN_LOOKAHEAD = 32;
 
     /// @notice The address of the ElectionTicket contract
-    address public immutable ELECTION_TICKET;
+    ElectionTickets public immutable ELECTION_TICKET;
 
     /// @notice The start block of the current running auction
     uint256 public startBlock;
@@ -56,7 +58,7 @@ abstract contract BlockDutchAuction {
         uint256 _blockDuration,
         uint256 _startingPrice,
         uint256 _discountRate,
-        address _electionTicket
+        ElectionTickets _electionTicket
     ) {
         if (_discountRate > 100 || _discountRate == 0) revert InvalidDiscountRate();
         if (_blockDuration > VALIDATORS_IN_LOOKAHEAD) revert InvalidBlockDuration();
@@ -66,6 +68,9 @@ abstract contract BlockDutchAuction {
         startingPrice = _startingPrice;
         discountRate = _discountRate;
         ELECTION_TICKET = _electionTicket;
+
+        // Set the starting amount of tickets
+        _ticketsLeft = _blockDuration;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -159,6 +164,17 @@ abstract contract BlockDutchAuction {
         }
 
         _price = _getPrice(discountRate, startingPrice, _startBlock);
+    }
+
+    /// @notice Returns the amount of tickets left in the current auction
+    /// @return _amount The amount of tickets left in the current auction
+    function ticketsLeft() external view returns (uint256 _amount) {
+        uint256 _blockDuration = blockDuration;
+        if (block.number > startBlock + _blockDuration) {
+            _amount = _blockDuration;
+        } else {
+            _amount = _ticketsLeft;
+        }
     }
 
     /// @notice Returns the current price of a ticket in the auction
