@@ -27,7 +27,7 @@ contract ForTestBlockDutchAuction is BlockDutchAuction {
         view
         returns (uint256 _newStartBlock)
     {
-        _newStartBlock = _findStartBlock(_currentStartBlock, _blockDuration, n);
+        _newStartBlock = _findStartBlock(_currentStartBlock, _blockDuration);
     }
 
     function forTest_setStartBlock(uint256 _startBlock) external {

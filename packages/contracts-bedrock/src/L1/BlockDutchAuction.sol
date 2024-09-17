@@ -103,18 +103,10 @@ abstract contract BlockDutchAuction {
 
         // If the current block number is past the end of the auction, set the start block to the end of the auction
         if (block.number > _startBlock + _blockDuration) {
-            // In the rare case where an auction went by without any bidders we need to recursively find a start block
-            if (block.number > _startBlock + (_blockDuration * 2)) {
-                // NOTE: This is not a full safe solution as it can fail
-                // with stack overflow if auctions are ignored for too long
-                // TODO: Improve this
-                // perhaps if such a state is reached we can force manual intervention from the appchain
-                startBlock = _findStartBlock(_startBlock, _blockDuration, 3);
-                _startBlock = startBlock;
-            } else {
-                startBlock = _startBlock + _blockDuration + 1;
-                _startBlock = _startBlock + _blockDuration + 1;
-            }
+            // Find the start block of the next auction
+            startBlock = _findStartBlock(_startBlock, _blockDuration);
+            _startBlock = startBlock;
+
 
             if (pendingStartPrice != 0) {
                 startingPrice = pendingStartPrice;
@@ -152,15 +144,9 @@ abstract contract BlockDutchAuction {
         uint256 _startBlock = startBlock;
         uint256 _blockDuration = blockDuration;
 
-        // In most cases it will be hitting the else block
-        // In the rare case where an auction went by without any bidders we need to recursively find a start block
-        if (block.number > _startBlock + (_blockDuration * 2)) {
-            // NOTE: This is not a full safe solution as it can fail with stack overflow if auctions are ignored for too
-            // long
-            // TODO: Improve this, perhaps if such a state is reached we can force manual intervention from the appchain
-            _startBlock = _findStartBlock(_startBlock, _blockDuration, 3);
-        } else if (block.number > _startBlock + _blockDuration) {
-            _startBlock = _startBlock + _blockDuration + 1;
+        if (block.number > _startBlock + _blockDuration) {
+            // Find the expected start block
+            _startBlock = _findStartBlock(_startBlock, _blockDuration);
         }
 
         _price = _getPrice(discountRate, startingPrice, _startBlock);
@@ -203,23 +189,23 @@ abstract contract BlockDutchAuction {
     /// @notice Recursively finds the start block of the next auction
     /// @param _currentStartBlock The current start block of the auction
     /// @param _blockDuration The duration of the auction in blocks
-    /// @param _n The number of `_blockDuration`s to check for the next start block
     /// @return _newStartBlock The start block of the next auction
     function _findStartBlock(
         uint256 _currentStartBlock,
-        uint256 _blockDuration,
-        uint256 _n
+        uint256 _blockDuration
     )
         internal
         view
         returns (uint256 _newStartBlock)
     {
-        if (block.number > _currentStartBlock + (_blockDuration * _n)) {
-            _newStartBlock = _findStartBlock(_currentStartBlock, _blockDuration, _n + 1);
-        } else if (block.number == _currentStartBlock + (_blockDuration * _n) + 1) {
-            _newStartBlock = _currentStartBlock + (_blockDuration * (_n)) + 1;
+        uint256 _predictedEndBlock = _currentStartBlock + _blockDuration;
+        uint256 _difference = block.number - _predictedEndBlock;
+        uint256 _result = _difference % (_blockDuration);
+
+        if (_result == 0) {
+            _newStartBlock = block.number;
         } else {
-            _newStartBlock = _currentStartBlock + (_blockDuration * (_n - 1)) + 1;
+            _newStartBlock = block.number - _result + 1;
         }
     }
 }
