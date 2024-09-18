@@ -44,9 +44,11 @@ contract ForTestBlockDutchAuction is BlockDutchAuction {
 
 contract BlockDutchAuction_Test is Test {
     ForTestBlockDutchAuction public auction;
-    ElectionTickets public electionTicket = ElectionTickets(address(0x1));
+    ElectionTickets public electionTicket = ElectionTickets(makeAddr("electionTicket"));
+    address public owner = makeAddr("owner");
 
     function setUp() public {
+        vm.prank(owner);
         auction = new ForTestBlockDutchAuction(1, 32, 1e18, 10, electionTicket);
     }
 }
@@ -54,16 +56,23 @@ contract BlockDutchAuction_Test is Test {
 contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
     event PendingStartPriceSet(uint256 _newStartPrice);
 
+    function testSetStartPrice_OwnerOnly_reverts(uint256 _newStartPrice) public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        auction.setStartPrice(_newStartPrice);
+    }
+
     function testSetStartPrice_InvalidStartingPrice_reverts(uint256 _newStartPrice) public {
         vm.assume(_newStartPrice < 1e3);
 
         vm.expectRevert(InvalidStartingPrice.selector);
+        vm.prank(owner);
         auction.setStartPrice(_newStartPrice);
     }
 
     function testSetStartPrice_state_success(uint256 _newStartPrice) public {
         vm.assume(_newStartPrice >= 1e3 && _newStartPrice < type(uint64).max);
 
+        vm.prank(owner);
         auction.setStartPrice(_newStartPrice);
 
         assertEq(auction.pendingStartPrice(), _newStartPrice);
@@ -74,6 +83,7 @@ contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
 
         vm.expectEmit(true, true, true, true);
         emit PendingStartPriceSet(_newStartPrice);
+        vm.prank(owner);
         auction.setStartPrice(_newStartPrice);
     }
 }
@@ -81,16 +91,23 @@ contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
 contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
     event PendingDiscountRateSet(uint256 _newDiscountRate);
 
+    function testSetDiscountRate_OnlyOwner_reverts(uint256 _newDiscountRate) public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        auction.setDiscountRate(_newDiscountRate);
+    }
+
     function testSetDiscountRate_InvalidDiscountRate_reverts(uint256 _newDiscountRate) public {
         vm.assume(_newDiscountRate >= 100 || _newDiscountRate == 0);
 
         vm.expectRevert(InvalidDiscountRate.selector);
+        vm.prank(owner);
         auction.setDiscountRate(_newDiscountRate);
     }
 
     function testSetDiscountRate_state_success(uint256 _newDiscountRate) public {
         vm.assume(_newDiscountRate < 100 && _newDiscountRate != 0);
 
+        vm.prank(owner);
         auction.setDiscountRate(_newDiscountRate);
 
         assertEq(auction.pendingDiscountRate(), _newDiscountRate);
@@ -101,6 +118,7 @@ contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
 
         vm.expectEmit(true, true, true, true);
         emit PendingDiscountRateSet(_newDiscountRate);
+        vm.prank(owner);
         auction.setDiscountRate(_newDiscountRate);
     }
 }

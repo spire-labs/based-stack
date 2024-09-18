@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
-abstract contract BlockDutchAuction {
+abstract contract BlockDutchAuction is Ownable {
     /// @notice The minimum number of validators in the look ahead
     uint256 public constant VALIDATORS_IN_LOOKAHEAD = 32;
 
@@ -77,8 +78,7 @@ abstract contract BlockDutchAuction {
                               ADMIN FUNCTIONS
     ///////////////////////////////////////////////////////////////*/
 
-    // TODO: Write admin functions that connect to the larger stack through permissioned channels
-    function setStartPrice(uint256 _newStartPrice) external {
+    function setStartPrice(uint256 _newStartPrice) external onlyOwner {
         if (_newStartPrice < 1e3) revert InvalidStartingPrice();
 
         pendingStartPrice = _newStartPrice;
@@ -86,7 +86,7 @@ abstract contract BlockDutchAuction {
         emit PendingStartPriceSet(_newStartPrice);
     }
 
-    function setDiscountRate(uint256 _newDiscountRate) external {
+    function setDiscountRate(uint256 _newDiscountRate) external onlyOwner {
         if (_newDiscountRate >= 100 || _newDiscountRate == 0) revert InvalidDiscountRate();
 
         pendingDiscountRate = _newDiscountRate;
