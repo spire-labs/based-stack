@@ -24,7 +24,6 @@ contract SystemConfig_Init is CommonTest {
 }
 
 contract SystemConfig_Initialize_Test is SystemConfig_Init {
-    address batchInbox;
     address owner;
     bytes32 batcherHash;
     uint64 gasLimit;
@@ -36,7 +35,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
 
     function setUp() public virtual override {
         super.setUp();
-        batchInbox = deploy.mustGetAddress("BatchInbox");
         owner = deploy.cfg().finalSystemOwner();
         basefeeScalar = deploy.cfg().basefeeScalar();
         blobbasefeeScalar = deploy.cfg().blobbasefeeScalar();
