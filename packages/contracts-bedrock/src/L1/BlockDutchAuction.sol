@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
-
 import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
@@ -60,8 +59,9 @@ abstract contract BlockDutchAuction {
         uint256 _discountRate,
         ElectionTickets _electionTicket
     ) {
-        if (_discountRate > 100 || _discountRate == 0) revert InvalidDiscountRate();
+        if (_discountRate >= 100 || _discountRate == 0) revert InvalidDiscountRate();
         if (_blockDuration > VALIDATORS_IN_LOOKAHEAD) revert InvalidBlockDuration();
+        if (_startingPrice < 1e3) revert InvalidStartingPrice();
 
         startBlock = _startBlock;
         blockDuration = _blockDuration;
@@ -79,13 +79,15 @@ abstract contract BlockDutchAuction {
 
     // TODO: Write admin functions that connect to the larger stack through permissioned channels
     function setStartPrice(uint256 _newStartPrice) external {
+        if (_newStartPrice < 1e3) revert InvalidStartingPrice();
+
         pendingStartPrice = _newStartPrice;
 
         emit PendingStartPriceSet(_newStartPrice);
     }
 
     function setDiscountRate(uint256 _newDiscountRate) external {
-        if (_newDiscountRate > 100) revert InvalidDiscountRate();
+        if (_newDiscountRate >= 100 || _newDiscountRate == 0) revert InvalidDiscountRate();
 
         pendingDiscountRate = _newDiscountRate;
 
@@ -101,12 +103,15 @@ abstract contract BlockDutchAuction {
         uint256 _startBlock = startBlock;
         uint256 _blockDuration = blockDuration;
 
-        // If the current block number is past the end of the auction, set the start block to the end of the auction
+        // If the current block number is past the end of the auction
+        // This branch will trigger the start of a new auction
+        // View functions have this logic baked in to calculate based on what the auction would be at
         if (block.number > _startBlock + _blockDuration) {
             // Find the start block of the next auction
             startBlock = _findStartBlock(_startBlock, _blockDuration);
-            _startBlock = startBlock;
 
+            // is warm storage cheaper then calling findStartBlock again?
+            _startBlock = startBlock;
 
             if (pendingStartPrice != 0) {
                 startingPrice = pendingStartPrice;
@@ -122,6 +127,11 @@ abstract contract BlockDutchAuction {
             _ticketsLeft = _blockDuration;
         }
 
+        // This check needs to come second incase its a new auction
+        uint256 __ticketsLeft = _ticketsLeft;
+        if (__ticketsLeft == 0) revert NoTicketsLeft();
+
+
         uint256 _price = _getPrice(discountRate, startingPrice, _startBlock);
 
         if (_price > msg.value) revert InsufficientFunds();
@@ -129,7 +139,7 @@ abstract contract BlockDutchAuction {
 
         // TODO: Mint ticket
 
-        uint256 __ticketsLeft = _ticketsLeft;
+
         _ticketsLeft = __ticketsLeft - 1;
         emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);
     }
@@ -143,13 +153,24 @@ abstract contract BlockDutchAuction {
     function getPrice() external view returns (uint256 _price) {
         uint256 _startBlock = startBlock;
         uint256 _blockDuration = blockDuration;
+        uint256 _startingPrice = startingPrice;
+        uint256 _discountRate = discountRate;
 
         if (block.number > _startBlock + _blockDuration) {
             // Find the expected start block
             _startBlock = _findStartBlock(_startBlock, _blockDuration);
+
+            // Use the pending values to calculate the price
+            if (pendingDiscountRate != 0) {
+                _discountRate = pendingDiscountRate;
+            }
+
+            if (pendingStartPrice != 0) {
+                _startingPrice = pendingStartPrice;
+            }
         }
 
-        _price = _getPrice(discountRate, startingPrice, _startBlock);
+        _price = _getPrice(_discountRate, _startingPrice, _startBlock);
     }
 
     /// @notice Returns the amount of tickets left in the current auction

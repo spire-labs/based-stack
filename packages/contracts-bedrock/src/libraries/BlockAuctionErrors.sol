@@ -9,3 +9,9 @@ error InsufficientFunds();
 
 /// @notice Error for when the block duration is greater than 32
 error InvalidBlockDuration();
+
+/// @notice Error for when the starting price is invalid
+error InvalidStartingPrice();
+
+/// @notice Error when there are no tickets left to buy
+error NoTicketsLeft();
