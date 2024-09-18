@@ -15,3 +15,6 @@ error InvalidStartingPrice();
 
 /// @notice Error when there are no tickets left to buy
 error NoTicketsLeft();
+
+/// @notice Error when a low level call fails
+error FailedLowLevelCall();

@@ -62,7 +62,7 @@ abstract contract BlockDutchAuction is Ownable {
     ) {
         if (_discountRate >= 100 || _discountRate == 0) revert InvalidDiscountRate();
         if (_blockDuration > VALIDATORS_IN_LOOKAHEAD) revert InvalidBlockDuration();
-        if (_startingPrice < 1e3) revert InvalidStartingPrice();
+        if (_startingPrice < 1e3 || _startingPrice > type(uint256).max / 100) revert InvalidStartingPrice();
 
         startBlock = _startBlock;
         blockDuration = _blockDuration;
@@ -79,7 +79,7 @@ abstract contract BlockDutchAuction is Ownable {
     ///////////////////////////////////////////////////////////////*/
 
     function setStartPrice(uint256 _newStartPrice) external onlyOwner {
-        if (_newStartPrice < 1e3) revert InvalidStartingPrice();
+        if (_newStartPrice < 1e3 || _newStartPrice > type(uint256).max / 100) revert InvalidStartingPrice();
 
         pendingStartPrice = _newStartPrice;
 
@@ -135,7 +135,10 @@ abstract contract BlockDutchAuction is Ownable {
         uint256 _price = _getPrice(discountRate, startingPrice, _startBlock);
 
         if (_price > msg.value) revert InsufficientFunds();
-        else if (msg.value > _price) payable(msg.sender).transfer(_price - msg.value);
+        else if (msg.value > _price) {
+        (bool _success,) =  payable(msg.sender).call{value: msg.value - _price}("");
+            if (!_success) revert FailedLowLevelCall();
+        }
 
         // TODO: Mint ticket
 
