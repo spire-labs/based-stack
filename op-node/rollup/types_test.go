@@ -436,8 +436,8 @@ func TestConfig_Check(t *testing.T) {
 			expectedErr: ErrMissingDepositContractAddress,
 		},
 		{
-			name: "NoElectionAddr",
-			modifier: func(cfg *Config) { cfg.ElectionContractAddress = common.Address{} },
+			name:        "NoElectionAddr",
+			modifier:    func(cfg *Config) { cfg.ElectionContractAddress = common.Address{} },
 			expectedErr: ErrMissingElectionContractAddress,
 		},
 		{

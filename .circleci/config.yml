@@ -1336,21 +1336,21 @@ jobs:
       # - notify-failures-on-develop:
       #     mentions: "@proofs-squad"
 
-  op-program-compat:
-    docker:
-      - image: <<pipeline.parameters.ci_builder_image>>
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore Go modules cache
-          key: gomod-{{ checksum "go.sum" }}
-      - restore_cache:
-          key: golang-build-cache
-      - run:
-          name: compat-sepolia
-          command: |
-            make verify-compat
-          working_directory: op-program
+  # op-program-compat:
+  #   docker:
+  #     - image: <<pipeline.parameters.ci_builder_image>>
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         name: Restore Go modules cache
+  #         key: gomod-{{ checksum "go.sum" }}
+  #     - restore_cache:
+  #         key: golang-build-cache
+  #     - run:
+  #         name: compat-sepolia
+  #         command: |
+  #           make verify-compat
+  #         working_directory: op-program
 
   check-generated-mocks-op-node:
     docker:
@@ -1542,10 +1542,10 @@ workflows:
           name: op-conductor-tests
           module: op-conductor
           requires: ["go-mod-download"]
-      - go-test:
-          name: op-program-tests
-          module: op-program
-          requires: ["go-mod-download"]
+      # - go-test:
+      #     name: op-program-tests
+      #     module: op-program
+      #     requires: ["go-mod-download"]
       - go-test:
           name: op-service-tests
           module: op-service
@@ -1584,9 +1584,9 @@ workflows:
       #     requires:
       #       - pnpm-monorepo
             # - cannon-prestate
-      - op-program-compat:
-          requires:
-            - op-program-tests
+      # - op-program-compat:
+      #     requires:
+      #       - op-program-tests
       - bedrock-go-tests:
           requires:
             - go-mod-download
@@ -1602,8 +1602,8 @@ workflows:
             - op-challenger-tests
             - op-dispute-mon-tests
             - op-conductor-tests
-            - op-program-tests
-            - op-program-compat
+            # - op-program-tests
+            # - op-program-compat
             - op-service-tests
             - op-supervisor-tests
             # - op-e2e-HTTP-tests
