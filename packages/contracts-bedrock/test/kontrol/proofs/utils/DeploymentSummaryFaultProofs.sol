@@ -19,6 +19,7 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
     address internal constant delayedWETHProxyAddress = 0xEF179756ea6525AFade217cA5aB0b1b5CfE0fd92;
     address internal constant disputeGameFactoryAddress = 0x20B168142354Cee65a32f6D8cf3033E592299765;
     address internal constant disputeGameFactoryProxyAddress = 0x5207CfA0166E8de0FCdFd78B4d17b68587bE306d;
+    address internal constant electionAddress = 0x020aAb0c0fed558f282Df37Fc5BCA828B29c5407;
     address internal constant l1CrossDomainMessengerAddress = 0x094e6508ba9d9bf1ce421fff3dE06aE56e67901b;
     address internal constant l1CrossDomainMessengerProxyAddress = 0xDeF3bca8c80064589E6787477FFa7Dd616B5574F;
     address internal constant l1ERC721BridgeAddress = 0x5C4F5e749A61a9503c4AAE8a9393e89609a0e804;
@@ -45,8 +46,8 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
     address internal constant systemConfigAddress = 0x67866A5052E5302aaD08e9f352331fd8622eB6DC;
     address internal constant systemConfigProxyAddress = 0x0c8b5822b6e02CDa722174F19A1439A7495a3fA6;
     address internal constant systemOwnerSafeAddress = 0x7C0c8a15773ED7B50E7c738D1aF4c5e3a2b210BD;
-    address internal constant acc33Address = 0xb6b1579AA54e2F61e621a40d5F2704D717B3544F;
-    address internal constant acc34Address = 0x59B99034FBdd5E554661a2100cB2b6b7C5d495F8;
+    address internal constant acc34Address = 0x0Dc64Df97Bde05b43492A7c17F678E9325Eb7C62;
+    address internal constant acc35Address = 0x9B7eBf8DC485Fc034c4854eff746049aAE17C5ac;
 
     function recreateDeployment() public {
         bytes32 slot;
@@ -422,6 +423,10 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
         value = hex"da7bce9f4e8618b6bd2f4132ce798cdc7a60e7e1460a7299e3c6342a579626d2";
         vm.store(preimageOracleAddress, slot, value);
         vm.etch(mipsAddress, mipsCode);
+        vm.etch(electionAddress, electionCode);
+        slot = hex"0000000000000000000000000000000000000000000000000000000000000000";
+        value = hex"0000000000000000000000003c44cdddb6a900fa2b585dd299e03d12fa4293bc";
+        vm.store(electionAddress, slot, value);
         vm.etch(anchorStateRegistryAddress, anchorStateRegistryCode);
         slot = hex"0000000000000000000000000000000000000000000000000000000000000000";
         value = hex"00000000000000000000000000000000000000000000000000000000000000ff";
@@ -777,13 +782,13 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
         slot = hex"0000000000000000000000000000000000000000000000000000000000000000";
         value = hex"0000000000000000000000000000000000000000000000000000000000000001";
         vm.store(anchorStateRegistryProxyAddress, slot, value);
-        vm.etch(acc33Address, acc33Code);
-        slot = hex"ffdfc1249c027f9191656349feb0761381bb32c9f557e01f419fd08754bf5a1b";
-        value = hex"000000000000000000000000b6b1579aa54e2f61e621a40d5f2704d717b3544f";
-        vm.store(disputeGameFactoryProxyAddress, slot, value);
         vm.etch(acc34Address, acc34Code);
+        slot = hex"ffdfc1249c027f9191656349feb0761381bb32c9f557e01f419fd08754bf5a1b";
+        value = hex"0000000000000000000000000dc64df97bde05b43492a7c17f678e9325eb7c62";
+        vm.store(disputeGameFactoryProxyAddress, slot, value);
+        vm.etch(acc35Address, acc35Code);
         slot = hex"4d5a9bd2e41301728d41c8e705190becb4e74abe869f75bdb405b63716a35f9e";
-        value = hex"00000000000000000000000059b99034fbdd5e554661a2100cb2b6b7c5d495f8";
+        value = hex"0000000000000000000000009b7ebf8dc485fc034c4854eff746049aae17c5ac";
         vm.store(disputeGameFactoryProxyAddress, slot, value);
         slot = hex"0000000000000000000000000000000000000000000000000000000000000033";
         value = hex"0000000000000000000000007c0c8a15773ed7b50e7c738d1af4c5e3a2b210bd";

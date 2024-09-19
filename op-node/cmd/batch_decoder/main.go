@@ -289,13 +289,13 @@ type DevnetConfig struct {
 func readDevnetConfig() (cfg *rollup.Config, err error) {
 	content, err := os.ReadFile(devnetCfgPath)
 	if err != nil {
-		return nil, fmt.Errorf("error when opening file: %v", err)
+		return nil, fmt.Errorf("error when opening file: %w", err)
 	}
 
 	var config DevnetConfig
 	err = json.Unmarshal(content, &config)
 	if err != nil {
-		return nil, fmt.Errorf("error during Unmarshal(): %v", err)
+		return nil, fmt.Errorf("error during Unmarshal(): %w", err)
 	}
 
 	L2Time, _ := strconv.ParseUint(config.L1GenesisBlockTimestamp[2:], 16, 64)
