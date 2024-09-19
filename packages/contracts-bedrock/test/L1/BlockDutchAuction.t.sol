@@ -49,7 +49,7 @@ contract BlockDutchAuction_Test is Test {
 
     function setUp() public {
         vm.prank(owner);
-        auction = new Fortest_blockDutchAuction(1, 32, 1e18, 10, electionTicket);
+        auction = new TestBlockDutchAuction(1, 32, 1e18, 10, electionTicket);
     }
 }
 
