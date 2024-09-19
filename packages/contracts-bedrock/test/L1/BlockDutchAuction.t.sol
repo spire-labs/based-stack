@@ -7,7 +7,7 @@ import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 
 import "src/libraries/BlockAuctionErrors.sol";
 
-contract Fortest_blockDutchAuction is BlockDutchAuction {
+contract TestBlockDutchAuction is BlockDutchAuction {
     constructor(
         uint256 _startBlock,
         uint256 _blockDuration,
@@ -43,7 +43,7 @@ contract Fortest_blockDutchAuction is BlockDutchAuction {
 }
 
 contract BlockDutchAuction_Test is Test {
-    Fortest_blockDutchAuction public auction;
+    TestBlockDutchAuction public auction;
     ElectionTickets public electionTicket = ElectionTickets(makeAddr("electionTicket"));
     address public owner = makeAddr("owner");
 
