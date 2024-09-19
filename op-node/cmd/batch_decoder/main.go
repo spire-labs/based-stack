@@ -213,7 +213,7 @@ func main() {
 					L2GenesisTime     uint64         = rollupCfg.Genesis.L2Time
 					L2BlockTime       uint64         = rollupCfg.BlockTime
 					L2ChainID         *big.Int       = rollupCfg.L2ChainID
-					BatchInboxAddress common.Address = rollupCfg.BatchInboxAddress
+					BatchInboxAddress common.Address = rollupCfg.BatchInboxContractAddress
 				)
 
 				config := reassemble.Config{
@@ -304,9 +304,9 @@ func readDevnetConfig() (cfg *rollup.Config, err error) {
 		Genesis: rollup.Genesis{
 			L2Time: L2Time,
 		},
-		L2ChainID:         config.L2ChainID,
-		BatchInboxAddress: config.BatchInboxAddress,
-		BlockTime:         config.L2BlockTime,
+		L2ChainID:                 config.L2ChainID,
+		BatchInboxContractAddress: config.BatchInboxAddress,
+		BlockTime:                 config.L2BlockTime,
 	}
 
 	return &rollupCfg, nil

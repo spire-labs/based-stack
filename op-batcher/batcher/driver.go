@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-service/dial"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/txmgr"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/txpool"
@@ -685,9 +686,15 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 	l.Log.Info("Building Blob transaction candidate",
 		"size", size, "last_size", lastSize, "num_blobs", len(blobs))
 	l.Metr.RecordBlobUsedBytes(lastSize)
+
+	// TODO(miszke): enable other DA sources
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitSel := batchInboxAbi.Methods["submit"].ID
+
 	return &txmgr.TxCandidate{
-		To:    &l.RollupConfig.BatchInboxContractAddress,
-		Blobs: blobs,
+		TxData: submitSel,
+		To:     &l.RollupConfig.BatchInboxContractAddress,
+		Blobs:  blobs,
 	}, nil
 }
 

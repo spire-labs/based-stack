@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/testlog"
 	"github.com/ethereum-optimism/optimism/op-service/testutils"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -34,46 +35,51 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		batchInboxAddress: batchInboxAddr,
 	}
 
+	// TODO(miszke): enable other DA sources
 	// create a valid non-blob batcher transaction and make sure it's picked up
-	txData := &types.LegacyTx{
-		Nonce:    rng.Uint64(),
-		GasPrice: new(big.Int).SetUint64(rng.Uint64()),
-		Gas:      2_000_000,
-		To:       &batchInboxAddr,
-		Value:    big.NewInt(10),
-		Data:     testutils.RandomData(rng, rng.Intn(1000)),
-	}
-	calldataTx, _ := types.SignNewTx(privateKey, signer, txData)
-	txs := types.Transactions{calldataTx}
-	data, blobHashes := dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
-	require.Equal(t, 1, len(data))
-	require.Equal(t, 0, len(blobHashes))
+	// txData := &types.LegacyTx{
+	// 	Nonce:    rng.Uint64(),
+	// 	GasPrice: new(big.Int).SetUint64(rng.Uint64()),
+	// 	Gas:      2_000_000,
+	// 	To:       &batchInboxAddr,
+	// 	Value:    big.NewInt(10),
+	// 	Data:     testutils.RandomData(rng, rng.Intn(1000)),
+	// }
+	// calldataTx, _ := types.SignNewTx(privateKey, signer, txData)
+	// txs := types.Transactions{calldataTx}
+	// data, blobHashes := dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
+	// require.Equal(t, 1, len(data))
+	// require.Equal(t, 0, len(blobHashes))
 
 	// create a valid blob batcher tx and make sure it's picked up
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitSel := batchInboxAbi.Methods["submit"].ID
 	blobHash := testutils.RandomHash(rng)
 	blobTxData := &types.BlobTx{
 		Nonce:      rng.Uint64(),
 		Gas:        2_000_000,
 		To:         batchInboxAddr,
-		Data:       testutils.RandomData(rng, rng.Intn(1000)),
+		Data:       submitSel,
 		BlobHashes: []common.Hash{blobHash},
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
-	txs = types.Transactions{blobTx}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
+	txs := types.Transactions{blobTx}
+	data, blobHashes := dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
 	require.Equal(t, 1, len(data))
 	require.Equal(t, 1, len(blobHashes))
 	require.Nil(t, data[0].calldata)
 
+	// TODO(miszke): enable other DA sources
 	// try again with both the blob & calldata transactions and make sure both are picked up
-	txs = types.Transactions{blobTx, calldataTx}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
-	require.Equal(t, 2, len(data))
-	require.Equal(t, 1, len(blobHashes))
-	require.NotNil(t, data[1].calldata)
+	// txs = types.Transactions{blobTx, calldataTx}
+	// data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
+	// require.Equal(t, 2, len(data))
+	// require.Equal(t, 1, len(blobHashes))
+	// require.NotNil(t, data[1].calldata)
 
-	// make sure blob tx to the batch inbox is ignored if not signed by the batcher
-	blobTx, _ = types.SignNewTx(testutils.RandomKey(), signer, blobTxData)
+	// make sure blob tx to the batch inbox is ignored if not calling the submit fn
+	blobTxData.Data = testutils.RandomData(rng, rng.Intn(1000))
+	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
 	txs = types.Transactions{blobTx}
 	data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
 	require.Equal(t, 0, len(data))
@@ -82,6 +88,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// make sure blob tx ignored if the tx isn't going to the batch inbox addr, even if the
 	// signature is valid.
 	blobTxData.To = testutils.RandomAddress(rng)
+	blobTxData.Data = submitSel
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
 	txs = types.Transactions{blobTx}
 	data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
