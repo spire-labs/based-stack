@@ -240,7 +240,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingDiscountRate()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("ticketsLeft()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setStartPrice(uint256)") });
-        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDiscountRate(uint256)") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDiscountRate(uint8)") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("buy()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("getPrice()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("owner()") });
