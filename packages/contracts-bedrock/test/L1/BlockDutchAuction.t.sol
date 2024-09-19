@@ -72,6 +72,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
 
     /// @dev Tests that the `buy` function correctly buys a ticket if the auction round auto increments
     function test_buy_differentAuctionRound_succeeds(uint256 _n, uint256 _randomIncrement) public {
+        uint256 _firstStartBlock = auction.startBlock();
         _n = bound(_n, 2, type(uint64).max);
         vm.assume(_randomIncrement < auction.blockDuration());
 
@@ -84,6 +85,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
 
         // Tickets left should be blockDuration - 1 becuase `blockDuration` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
+        assertTrue(auction.startBlock() != _firstStartBlock);
     }
 
     /// @dev Tests that the `buy` function correctly buys a ticket if the auction round auto increments
@@ -95,6 +97,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
     )
         public
     {
+        uint256 _firstStartBlock = auction.startBlock();
         _n = bound(_n, 2, type(uint64).max);
         vm.assume(_randomIncrement < auction.blockDuration());
         _pendingStartPrice = bound(_pendingStartPrice, 1e3, type(uint256).max / 100);
@@ -112,6 +115,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
         assertEq(auction.startingPrice(), _pendingStartPrice);
         assertEq(auction.pendingStartPrice(), 0);
+        assertTrue(auction.startBlock() != _firstStartBlock);
     }
 
     /// @dev Test that the `buy` function correctly buys a ticket if the auction round auto increments
@@ -123,6 +127,8 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
     )
         public
     {
+        uint256 _firstStartBlock = auction.startBlock();
+
         _n = bound(_n, 2, type(uint64).max);
         vm.assume(_randomIncrement < auction.blockDuration());
         _pendingDiscountRate = bound(_pendingDiscountRate, 1, 100);
@@ -140,6 +146,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
         assertEq(auction.discountRate(), _pendingDiscountRate);
         assertEq(auction.pendingDiscountRate(), 0);
+        assertTrue(auction.startBlock() != _firstStartBlock);
     }
 
     /// @dev Tests that the `buy` function correctly buys a ticket.

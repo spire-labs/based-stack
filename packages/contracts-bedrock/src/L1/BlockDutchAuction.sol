@@ -6,6 +6,8 @@ import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
 abstract contract BlockDutchAuction is Ownable {
+    // TODO: Optimize storage layout
+
     /// @notice The minimum number of validators in the look ahead
     uint256 public constant VALIDATORS_IN_LOOKAHEAD = 32;
 
@@ -108,10 +110,8 @@ abstract contract BlockDutchAuction is Ownable {
         // View functions have this logic baked in to calculate based on what the auction would be at
         if (block.number > _startBlock + _blockDuration) {
             // Find the start block of the next auction
-            startBlock = _findStartBlock(_startBlock, _blockDuration);
-
-            // is warm storage cheaper then calling findStartBlock again?
-            _startBlock = startBlock;
+            _startBlock = _findStartBlock(_startBlock, _blockDuration);
+            startBlock = _startBlock;
 
             if (pendingStartPrice != 0) {
                 startingPrice = pendingStartPrice;
