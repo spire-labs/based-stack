@@ -215,19 +215,19 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "Election", _sel: _getSel("sequencers(uint256)") });
 
         // ElectionTickets
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("supportsInterface(bytes4)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("balanceOf(address)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("ownerOf(uint256)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("name()"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("symbol()"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("tokenURI(uint256)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("approve(address,uint256)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("getApproved(uint256)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("setApprovalForAll(address,bool)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("isApprovedForAll(address,address)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("transferFrom(address,address,uint256)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256)"));
-        _addSpec(_name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256,bytes)"));
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("supportsInterface(bytes4)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("balanceOf(address)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("ownerOf(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("name()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("symbol()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("tokenURI(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("approve(address,uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("getApproved(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("setApprovalForAll(address,bool)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("isApprovedForAll(address,address)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("transferFrom(address,address,uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256,bytes)") });
 
         // BlockDutchAuction
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("VALIDATORS_IN_LOOKAHEAD()") });
