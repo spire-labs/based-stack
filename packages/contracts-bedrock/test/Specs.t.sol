@@ -228,6 +228,9 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDiscountRate(uint256)") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("buy()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("getPrice()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("owner()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("renounceOwnership()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("transferOwnership(address)") });
 
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });
