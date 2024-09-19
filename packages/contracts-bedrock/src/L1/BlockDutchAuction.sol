@@ -6,8 +6,6 @@ import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
 abstract contract BlockDutchAuction is Ownable {
-    // TODO: Optimize storage layout
-
     /// @notice The minimum number of validators in the look ahead
     uint256 public constant VALIDATORS_IN_LOOKAHEAD = 32;
 
@@ -15,25 +13,25 @@ abstract contract BlockDutchAuction is Ownable {
     ElectionTickets public immutable ELECTION_TICKET;
 
     /// @notice The start block of the current running auction
-    uint256 public startBlock;
+    uint224 public startBlock;
 
     /// @notice The duration the auction will run for in blocks
-    uint256 public blockDuration;
+    uint8 public blockDuration;
+
+    /// @notice The discount rate of the auction
+    uint8 public discountRate;
+
+    /// @notice The pending new discount rate of the auction
+    uint8 public pendingDiscountRate;
+
+    /// @notice The number of tickets left in the current auction
+    uint8 internal _ticketsLeft;
 
     /// @notice The starting price of the auction
     uint256 public startingPrice;
 
-    /// @notice The discount rate of the auction
-    uint256 public discountRate;
-
     /// @notice The pending new start price of the auction
     uint256 public pendingStartPrice;
-
-    /// @notice The pending new discount rate of the auction
-    uint256 public pendingDiscountRate;
-
-    /// @notice The number of tickets left in the current auction
-    uint256 internal _ticketsLeft;
 
     /// @notice Emitted when a new pending start price is set
     /// @param _newStartPrice The new start price
@@ -41,13 +39,13 @@ abstract contract BlockDutchAuction is Ownable {
 
     /// @notice Emitted when a new pending discount rate is set
     /// @param _newDiscountRate The new discount rate
-    event PendingDiscountRateSet(uint256 _newDiscountRate);
+    event PendingDiscountRateSet(uint8 _newDiscountRate);
 
     /// @notice Emitted when a ticket is bought
     /// @param _buyer The address of the buyer
     /// @param _startBlock The start block of the current auction the ticket was bought in
     /// @param _price The price of the ticket
-    event TicketBought(address indexed _buyer, uint256 indexed _startBlock, uint256 _price, uint256 _ticketsLeft);
+    event TicketBought(address indexed _buyer, uint256 indexed _startBlock, uint256 _price, uint8 _ticketsLeft);
 
     /// @notice Constructs and initilizes the BlockDutchAuction
     /// @param _startBlock The start block of the auction
@@ -56,10 +54,10 @@ abstract contract BlockDutchAuction is Ownable {
     /// @param _discountRate The discount rate of the auction
     /// @param _electionTicket The address of the ElectionTicket contract
     constructor(
-        uint256 _startBlock,
-        uint256 _blockDuration,
+        uint224 _startBlock,
+        uint8 _blockDuration,
         uint256 _startingPrice,
-        uint256 _discountRate,
+        uint8 _discountRate,
         ElectionTickets _electionTicket
     ) {
         if (_discountRate >= 100 || _discountRate == 0) revert InvalidDiscountRate();
@@ -88,7 +86,7 @@ abstract contract BlockDutchAuction is Ownable {
         emit PendingStartPriceSet(_newStartPrice);
     }
 
-    function setDiscountRate(uint256 _newDiscountRate) external onlyOwner {
+    function setDiscountRate(uint8 _newDiscountRate) external onlyOwner {
         if (_newDiscountRate >= 100 || _newDiscountRate == 0) revert InvalidDiscountRate();
 
         pendingDiscountRate = _newDiscountRate;
@@ -111,7 +109,7 @@ abstract contract BlockDutchAuction is Ownable {
         if (block.number > _startBlock + _blockDuration) {
             // Find the start block of the next auction
             _startBlock = _findStartBlock(_startBlock, _blockDuration);
-            startBlock = _startBlock;
+            startBlock = uint224(_startBlock);
 
             if (pendingStartPrice != 0) {
                 startingPrice = pendingStartPrice;
@@ -124,14 +122,14 @@ abstract contract BlockDutchAuction is Ownable {
             }
 
             // Amount of tickets sold in an auction should always equal the block duration
-            _ticketsLeft = _blockDuration;
+            _ticketsLeft = uint8(_blockDuration);
         }
 
         // This check needs to come second incase its a new auction
-        uint256 __ticketsLeft = _ticketsLeft;
+        uint8 __ticketsLeft = _ticketsLeft;
         if (__ticketsLeft == 0) revert NoTicketsLeft();
 
-        uint256 _price = _getPrice(discountRate, startingPrice, _startBlock);
+        uint256 _price = _getPrice(uint256(discountRate), startingPrice, _startBlock);
 
         if (_price > msg.value) {
             revert InsufficientFunds();
