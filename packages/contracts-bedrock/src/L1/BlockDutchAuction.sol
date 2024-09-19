@@ -131,17 +131,16 @@ abstract contract BlockDutchAuction is Ownable {
         uint256 __ticketsLeft = _ticketsLeft;
         if (__ticketsLeft == 0) revert NoTicketsLeft();
 
-
         uint256 _price = _getPrice(discountRate, startingPrice, _startBlock);
 
-        if (_price > msg.value) revert InsufficientFunds();
-        else if (msg.value > _price) {
-        (bool _success,) =  payable(msg.sender).call{value: msg.value - _price}("");
+        if (_price > msg.value) {
+            revert InsufficientFunds();
+        } else if (msg.value > _price) {
+            (bool _success,) = payable(msg.sender).call{ value: msg.value - _price }("");
             if (!_success) revert FailedLowLevelCall();
         }
 
         // TODO: Mint ticket
-
 
         _ticketsLeft = __ticketsLeft - 1;
         emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);

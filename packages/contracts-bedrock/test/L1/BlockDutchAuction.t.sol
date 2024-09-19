@@ -7,7 +7,7 @@ import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 
 import "src/libraries/BlockAuctionErrors.sol";
 
-contract ForTestBlockDutchAuction is BlockDutchAuction {
+contract Fortest_blockDutchAuction is BlockDutchAuction {
     constructor(
         uint256 _startBlock,
         uint256 _blockDuration,
@@ -43,32 +43,35 @@ contract ForTestBlockDutchAuction is BlockDutchAuction {
 }
 
 contract BlockDutchAuction_Test is Test {
-    ForTestBlockDutchAuction public auction;
+    Fortest_blockDutchAuction public auction;
     ElectionTickets public electionTicket = ElectionTickets(makeAddr("electionTicket"));
     address public owner = makeAddr("owner");
 
     function setUp() public {
         vm.prank(owner);
-        auction = new ForTestBlockDutchAuction(1, 32, 1e18, 10, electionTicket);
+        auction = new Fortest_blockDutchAuction(1, 32, 1e18, 10, electionTicket);
     }
 }
 
 contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
     event TicketBought(address indexed _buyer, uint256 indexed _startBlock, uint256 _price, uint256 _ticketsLeft);
 
-    function testBuy_NoTicketsLeft_reverts() public {
+    /// @dev Tests that the `buy` function reverts when there are no tickets left.
+    function test_buy_noTicketsLeft_reverts() public {
         auction.forTest_setTicketsLeft(0);
 
         vm.expectRevert(NoTicketsLeft.selector);
         auction.buy();
     }
 
-    function testBuy_InsufficientFunds_reverts() public {
+    /// @dev Tests that the `buy` function reverts when the caller does not send enough funds.
+    function test_buy_insufficientFunds_reverts() public {
         vm.expectRevert(InsufficientFunds.selector);
         auction.buy();
     }
 
-    function testBuy_DifferentAuctionRound_success(uint256 _n, uint256 _randomIncrement) public {
+    /// @dev Tests that the `buy` function correctly buys a ticket if the auction round auto increments
+    function test_buy_differentAuctionRound_succeeds(uint256 _n, uint256 _randomIncrement) public {
         _n = bound(_n, 2, type(uint64).max);
         vm.assume(_randomIncrement < auction.blockDuration());
 
@@ -77,13 +80,21 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{value: _price}();
+        auction.buy{ value: _price }();
 
         // Tickets left should be blockDuration - 1 becuase `blockDuration` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
     }
 
-    function testBuy_DifferentAuctionRoundWithPendingStartPrice_success(uint256 _n, uint256 _randomIncrement, uint256 _pendingStartPrice) public {
+    /// @dev Tests that the `buy` function correctly buys a ticket if the auction round auto increments
+    ///      and the pending start price is set.
+    function test_buy_differentAuctionRoundWithPendingStartPrice_succeeds(
+        uint256 _n,
+        uint256 _randomIncrement,
+        uint256 _pendingStartPrice
+    )
+        public
+    {
         _n = bound(_n, 2, type(uint64).max);
         vm.assume(_randomIncrement < auction.blockDuration());
         _pendingStartPrice = bound(_pendingStartPrice, 1e3, type(uint256).max / 100);
@@ -95,7 +106,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{value: _price}();
+        auction.buy{ value: _price }();
 
         // Tickets left should be blockDuration - 1 becuase `blockDuration` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
@@ -103,7 +114,15 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         assertEq(auction.pendingStartPrice(), 0);
     }
 
-    function testBuy_DifferentAuctionRoundWithPendingDiscountRate_success(uint256 _n, uint256 _randomIncrement, uint256 _pendingDiscountRate) public {
+    /// @dev Test that the `buy` function correctly buys a ticket if the auction round auto increments
+    ///      and the pending discount rate is set.
+    function test_buy_differentAuctionRoundWithPendingDiscountRate_succeeds(
+        uint256 _n,
+        uint256 _randomIncrement,
+        uint256 _pendingDiscountRate
+    )
+        public
+    {
         _n = bound(_n, 2, type(uint64).max);
         vm.assume(_randomIncrement < auction.blockDuration());
         _pendingDiscountRate = bound(_pendingDiscountRate, 1, 100);
@@ -115,7 +134,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{value: _price}();
+        auction.buy{ value: _price }();
 
         // Tickets left should be blockDuration - 1 becuase `blockDuration` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
@@ -123,30 +142,33 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         assertEq(auction.pendingDiscountRate(), 0);
     }
 
-    function testBuy_success() public {
+    /// @dev Tests that the `buy` function correctly buys a ticket.
+    function test_buy_succeeds() public {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{value: _price}();
+        auction.buy{ value: _price }();
 
         // Tickets left should be blockDuration - 1 becuase `blockDuration` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.blockDuration() - 1);
     }
 
-    function testBuy_overpayment_success(uint256 _overpayment) public {
-
+    /// @dev Tests that the `buy` function correctly buys a ticket when the caller overpays
+    ///      and the overpayment is refunded.
+    function test_buy_overpayment_succeeds(uint256 _overpayment) public {
         uint256 _price = auction.getPrice();
 
         _overpayment = bound(_overpayment, 1, type(uint128).max);
 
         vm.deal(owner, _price + _overpayment);
         vm.prank(owner);
-        auction.buy{value: _price + _overpayment}();
+        auction.buy{ value: _price + _overpayment }();
 
         assertEq(owner.balance, _overpayment);
     }
 
-    function testBuy_emitsEvent_success() public {
+    /// @dev Tests that the `buy` function emits the correct event.
+    function test_buy_emitsEvent_succeeds() public {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
@@ -154,19 +176,21 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         vm.expectEmit(true, true, true, true);
         emit TicketBought(owner, auction.startBlock(), _price, auction.ticketsLeft() - 1);
         vm.prank(owner);
-        auction.buy{value: _price}();
+        auction.buy{ value: _price }();
     }
 }
 
 contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
     event PendingStartPriceSet(uint256 _newStartPrice);
 
-    function testSetStartPrice_OwnerOnly_reverts(uint256 _newStartPrice) public {
+    /// @dev Tests that the `setStartPrice` function reverts when called by a non-owner.
+    function test_setStartPrice_onlyOwner_reverts(uint256 _newStartPrice) public {
         vm.expectRevert("Ownable: caller is not the owner");
         auction.setStartPrice(_newStartPrice);
     }
 
-    function testSetStartPrice_InvalidStartingPrice_TooLow_reverts(uint256 _newStartPrice) public {
+    /// @dev Tests that the `setStartPrice` function reverts when the starting price is too low.
+    function test_setStartPrice_invalidStartingPrice_TooLow_reverts(uint256 _newStartPrice) public {
         vm.assume(_newStartPrice < 1e3);
 
         vm.expectRevert(InvalidStartingPrice.selector);
@@ -174,7 +198,8 @@ contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
         auction.setStartPrice(_newStartPrice);
     }
 
-    function testSetStartPrice_InvalidStartingPrice_TooHigh_reverts(uint256 _newStartPrice) public {
+    /// @dev Tests that the `setStartPrice` function reverts when the starting price is too high.
+    function test_setStartPrice_invalidStartingPrice_TooHigh_reverts(uint256 _newStartPrice) public {
         vm.assume(_newStartPrice > type(uint256).max / 100);
 
         vm.expectRevert(InvalidStartingPrice.selector);
@@ -182,7 +207,8 @@ contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
         auction.setStartPrice(_newStartPrice);
     }
 
-    function testSetStartPrice_state_success(uint256 _newStartPrice) public {
+    /// @dev Tests that the `setStartPrice` function correctly sets the pending starting price.
+    function test_setStartPrice_state_succeeds(uint256 _newStartPrice) public {
         _newStartPrice = bound(_newStartPrice, 1e3, type(uint256).max / 100);
 
         vm.prank(owner);
@@ -191,7 +217,8 @@ contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
         assertEq(auction.pendingStartPrice(), _newStartPrice);
     }
 
-    function testSetStartPrice_emitsEvent_success(uint256 _newStartPrice) public {
+    /// @dev Tests that the `setStartPrice` function emits the correct event.
+    function test_setStartPrice_emitsEvent_succeeds(uint256 _newStartPrice) public {
         _newStartPrice = bound(_newStartPrice, 1e3, type(uint256).max / 100);
 
         vm.expectEmit(true, true, true, true);
@@ -204,12 +231,14 @@ contract BlockDutchAuction_setStartPrice_Test is BlockDutchAuction_Test {
 contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
     event PendingDiscountRateSet(uint256 _newDiscountRate);
 
-    function testSetDiscountRate_OnlyOwner_reverts(uint256 _newDiscountRate) public {
+    /// @dev Tests that the `setDiscountRate` function reverts when called by a non-owner.
+    function test_setDiscountRate_onlyOwner_reverts(uint256 _newDiscountRate) public {
         vm.expectRevert("Ownable: caller is not the owner");
         auction.setDiscountRate(_newDiscountRate);
     }
 
-    function testSetDiscountRate_InvalidDiscountRate_reverts(uint256 _newDiscountRate) public {
+    /// @dev Tests that the `setDiscountRate` function reverts when the discount rate is invalid.
+    function test_setDiscountRate_invalidDiscountRate_reverts(uint256 _newDiscountRate) public {
         vm.assume(_newDiscountRate >= 100 || _newDiscountRate == 0);
 
         vm.expectRevert(InvalidDiscountRate.selector);
@@ -217,7 +246,8 @@ contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
         auction.setDiscountRate(_newDiscountRate);
     }
 
-    function testSetDiscountRate_state_success(uint256 _newDiscountRate) public {
+    /// @dev Tests that the `setDiscountRate` function correctly sets the pending discount rate.
+    function test_setDiscountRate_state_succeeds(uint256 _newDiscountRate) public {
         _newDiscountRate = bound(_newDiscountRate, 1, 99);
 
         vm.prank(owner);
@@ -226,7 +256,8 @@ contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
         assertEq(auction.pendingDiscountRate(), _newDiscountRate);
     }
 
-    function testSetDiscountRate_emitsEvent_success(uint256 _newDiscountRate) public {
+    /// @dev Tests that the `setDiscountRate` function emits the correct event.
+    function test_setDiscountRate_emitsEvent_succeeds(uint256 _newDiscountRate) public {
         _newDiscountRate = bound(_newDiscountRate, 1, 99);
 
         vm.expectEmit(true, true, true, true);
@@ -237,14 +268,16 @@ contract BlockDutchAuction_setDiscountRate_Test is BlockDutchAuction_Test {
 }
 
 contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
-    function testGetPrice_AtStartingPrice_success() public {
+    /// @dev Tests that the `getPrice` function returns the correct price at the starting price.
+    function test_getPrice_atStartingPrice_succeeds() public {
         vm.roll(auction.startBlock());
         uint256 _price = auction.getPrice();
 
         assertEq(_price, auction.startingPrice());
     }
 
-    function testGetPrice_AtDiscountedPrice_success() public {
+    /// @dev Tests that the `getPrice` function returns the correct price after some decay has occurred.
+    function test_getPrice_atDiscountedPrice_succeeds() public {
         vm.roll(auction.startBlock() + 3);
         uint256 _price = auction.getPrice();
 
@@ -256,7 +289,9 @@ contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
         assertEq(_price, _expectedPrice);
     }
 
-    function testGetPrice_AtDiscountedPriceInFutureAuction_success() public {
+    /// @dev Tests that the `getPrice` function returns the correct price after some decay has occurred
+    ///      in a future auction round.
+    function test_getPrice_atDiscountedPriceInFutureAuction_succeeds() public {
         vm.roll(auction.startBlock() + (auction.blockDuration() + 1) + 3);
 
         uint256 _price = auction.getPrice();
@@ -269,8 +304,10 @@ contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
         assertEq(_price, _expectedPrice);
     }
 
-    function testGetPrice_AtDiscountedPriceInMoreThenOneFutureAuction_success(uint256 _n) public {
-       _n = bound(_n, 2, type(uint64).max);
+    /// @dev Tests that the `getPrice` function returns the correct price after some decay has occurred
+    ///      in a future auction round far into the future.
+    function test_getPrice_atDiscountedPriceInMoreThenOneFutureAuction_succeeds(uint256 _n) public {
+        _n = bound(_n, 2, type(uint64).max);
 
         vm.roll(auction.startBlock() + (auction.blockDuration() * _n + 1) + 3);
 
@@ -284,7 +321,9 @@ contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
         assertEq(_price, _expectedPrice);
     }
 
-    function testGetPrice_AtDiscountedPriceInFutureAuctionWithPendingStartPrice_success() public {
+    /// @dev Tests that the `getPrice` function returns the correct price after some decay has occurred
+    ///      in a future auction round with a pending start price.
+    function test_getPrice_atDiscountedPriceInFutureAuctionWithPendingStartPrice_succeeds() public {
         vm.roll(auction.startBlock() + (auction.blockDuration() + 1) + 3);
 
         auction.forTest_setPendingStartPrice(10e18);
@@ -299,7 +338,9 @@ contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
         assertEq(_price, _expectedPrice);
     }
 
-    function testGetPrice_AtDiscountedPriceInFutureAuctionWithPendingDiscountRate_success() public {
+    /// @dev Tests that the `getPrice` function returns the correct price after some decay has occurred
+    ///      in a future auction round with a pending discount rate.
+    function test_getPrice_atDiscountedPriceInFutureAuctionWithPendingDiscountRate_succeeds() public {
         vm.roll(auction.startBlock() + (auction.blockDuration() + 1) + 3);
 
         auction.forTest_setPendingDiscountRate(5);
@@ -316,14 +357,16 @@ contract BlockDutchAuction_getPrice_Test is BlockDutchAuction_Test {
 }
 
 contract BlockDutchAuction_ticketsLeft_Test is BlockDutchAuction_Test {
-    function testTicketsLeft_AtStartingPrice_success() public {
+    /// @dev Tests that the `ticketsLeft` function returns the correct number of tickets at the start of an auction.
+    function test_ticketsLeft_atAuctionStart_succeeds() public {
         vm.roll(auction.startBlock());
         uint256 _ticketsLeft = auction.ticketsLeft();
 
         assertEq(_ticketsLeft, auction.blockDuration());
     }
 
-    function testTicketsLeft_DuringAuction_success(uint256 _fakeTickets) public {
+    /// @dev Tests that the `ticketsLeft` function returns the correct number of tickets during an auction.
+    function test_ticketsLeft_duringAuction_succeeds(uint256 _fakeTickets) public {
         vm.roll(auction.startBlock() + 1);
         vm.assume(_fakeTickets < auction.blockDuration());
 
@@ -333,7 +376,8 @@ contract BlockDutchAuction_ticketsLeft_Test is BlockDutchAuction_Test {
         assertEq(_ticketsLeft, _fakeTickets);
     }
 
-    function testTicketsLeft_AfterAuction_success(uint256 _fakeTickets) public {
+    /// @dev Tests that the `ticketsLeft` function returns the correct number of tickets after an auction.
+    function test_ticketsLeft_afterAuction_succeeds(uint256 _fakeTickets) public {
         vm.roll(auction.startBlock() + (auction.blockDuration() + 1));
         vm.assume(_fakeTickets < auction.blockDuration());
 
@@ -347,7 +391,8 @@ contract BlockDutchAuction_ticketsLeft_Test is BlockDutchAuction_Test {
 }
 
 contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
-    function testFindStartBlock_success(uint256 _randomBlock) public {
+    /// @dev Tests that the `findStartBlock` function returns the correct start block.
+    function test_findStartBlock_succeeds(uint256 _randomBlock) public {
         // Find start block is only intended to be used if the current auction is over
         vm.assume(_randomBlock > auction.startBlock() + auction.blockDuration() && _randomBlock < type(uint64).max);
 
@@ -358,7 +403,9 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
         assertLe(_newStartBlock, _randomBlock);
     }
 
-    function testFindStartBlock_AtExactMultipleOfN_success(uint256 _n) public {
+    /// @dev Tests that the `findStartBlock` function returns the correct start block
+    ///      when the current block is an exact multiple of the block duration.
+    function test_findStartBlock_atExactMultipleOfN_succeeds(uint256 _n) public {
         vm.assume(_n > 0 && _n < type(uint64).max);
 
         vm.roll(auction.startBlock() + (auction.blockDuration() * _n + 1));
