@@ -100,6 +100,7 @@ abstract contract BlockDutchAuction is Ownable {
 
     /// @notice Buys a ticket in the auction
     function buy() external payable {
+        // TODO: Batch minting/buying
         uint256 _startBlock = startBlock;
         uint256 _blockDuration = blockDuration;
 
@@ -138,7 +139,7 @@ abstract contract BlockDutchAuction is Ownable {
             if (!_success) revert FailedLowLevelCall();
         }
 
-        // TODO: Mint ticket
+        ELECTION_TICKET.mint(msg.sender);
 
         _ticketsLeft = __ticketsLeft - 1;
         emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);

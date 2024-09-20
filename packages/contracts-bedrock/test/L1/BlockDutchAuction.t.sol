@@ -47,13 +47,18 @@ contract BlockDutchAuction_Test is Test {
     ElectionTickets public electionTicket = ElectionTickets(makeAddr("electionTicket"));
     address public owner = makeAddr("owner");
 
-    function setUp() public {
+    function setUp() public virtual {
         vm.prank(owner);
         auction = new TestBlockDutchAuction(1, 32, 1e18, 10, electionTicket);
     }
 }
 
 contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
+    function setUp() public override {
+        super.setUp();
+        vm.mockCall(address(electionTicket), abi.encodeWithSelector(ElectionTickets.mint.selector, owner), abi.encode());
+    }
+
     event TicketBought(address indexed _buyer, uint256 indexed _startBlock, uint256 _price, uint8 _ticketsLeft);
 
     /// @dev Tests that the `buy` function reverts when there are no tickets left.
@@ -153,6 +158,8 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
     function test_buy_succeeds() public {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
+
+        vm.expectCall(address(electionTicket), abi.encodeWithSelector(ElectionTickets.mint.selector, owner));
         vm.prank(owner);
         auction.buy{ value: _price }();
 
