@@ -11,7 +11,7 @@ error InsufficientFunds();
 error InvalidBlockDuration();
 
 /// @notice Error for when the starting price is invalid
-error InvalidStartingPrice();
+error InvalidStartPrice();
 
 /// @notice Error when there are no tickets left to buy
 error NoTicketsLeft();
