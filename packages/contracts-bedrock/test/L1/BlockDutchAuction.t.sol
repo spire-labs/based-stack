@@ -19,7 +19,6 @@ contract TestBlockDutchAuction is BlockDutchAuction {
     { }
 
     function findStartBlock(
-        uint256 _currentStartBlock,
         uint256 _predictedEndBlock,
         uint256 _durationBlocks
     )
@@ -27,7 +26,7 @@ contract TestBlockDutchAuction is BlockDutchAuction {
         view
         returns (uint256 _newStartBlock)
     {
-        _newStartBlock = _findStartBlock(_currentStartBlock, _predictedEndBlock, _durationBlocks);
+        _newStartBlock = _findStartBlock(_predictedEndBlock, _durationBlocks);
     }
 
     function forTest_setTicketsLeft(uint8 _amount) external {
@@ -501,7 +500,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
         vm.roll(_randomBlock);
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
         uint256 _newStartBlock =
-            auction.findStartBlock(auction.startBlock(), _predictedEndBlock, auction.durationBlocks());
+            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         assertGe(_newStartBlock, _randomBlock - auction.durationBlocks());
         assertLe(_newStartBlock, _randomBlock);
@@ -515,7 +514,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
         vm.roll(auction.startBlock() + (auction.durationBlocks() * _n + 1));
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
         uint256 _newStartBlock =
-            auction.findStartBlock(auction.startBlock(), _predictedEndBlock, auction.durationBlocks());
+            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         // Should recognize that the current block is the start block
         assertEq(_newStartBlock, block.number);
@@ -534,7 +533,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
         vm.roll(_randomBlock);
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
         uint256 _newStartBlock =
-            auction.findStartBlock(auction.startBlock(), _predictedEndBlock, auction.durationBlocks());
+            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         assertGe(_newStartBlock, _randomBlock - auction.durationBlocks());
         assertLe(_newStartBlock, _randomBlock);
@@ -557,7 +556,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
         vm.roll(auction.startBlock() + (auction.durationBlocks() * _n + 1));
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
         uint256 _newStartBlock =
-            auction.findStartBlock(auction.startBlock(), _predictedEndBlock, auction.durationBlocks());
+            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         // Should recognize that the current block is the start block
         assertEq(_newStartBlock, block.number);

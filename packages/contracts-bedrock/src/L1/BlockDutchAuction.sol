@@ -146,7 +146,7 @@ abstract contract BlockDutchAuction is Ownable {
             }
 
             // Find the start block of the next auction
-            _startBlock = _findStartBlock(_startBlock, _predictedEndBlock, _durationBlocks);
+            _startBlock = _findStartBlock(_predictedEndBlock, _durationBlocks);
             startBlock = uint216(_startBlock);
 
             if (pendingStartPrice != 0) {
@@ -205,7 +205,7 @@ abstract contract BlockDutchAuction is Ownable {
             }
 
             // Find the expected start block
-            _startBlock = _findStartBlock(_startBlock, _predictedEndBlock, _durationBlocks);
+            _startBlock = _findStartBlock(_predictedEndBlock, _durationBlocks);
 
             // Use the pending values to calculate the price
             if (pendingDiscountRate != 0) {
@@ -259,13 +259,11 @@ abstract contract BlockDutchAuction is Ownable {
 
     /// @notice Recursively finds the start block of the next auction
     ///
-    /// @param _currentStartBlock The current start block of the auction
     /// @param _predictedEndBlock The predicted end block of the auction
     /// @param _durationBlocks The duration of the auction in blocks
     ///
     /// @return newStartBlock_ The start block of the next auction
     function _findStartBlock(
-        uint256 _currentStartBlock,
         uint256 _predictedEndBlock,
         uint256 _durationBlocks
     )
