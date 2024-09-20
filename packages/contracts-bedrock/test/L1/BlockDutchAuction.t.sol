@@ -499,8 +499,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
 
         vm.roll(_randomBlock);
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
-        uint256 _newStartBlock =
-            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
+        uint256 _newStartBlock = auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         assertGe(_newStartBlock, _randomBlock - auction.durationBlocks());
         assertLe(_newStartBlock, _randomBlock);
@@ -513,8 +512,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
 
         vm.roll(auction.startBlock() + (auction.durationBlocks() * _n + 1));
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
-        uint256 _newStartBlock =
-            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
+        uint256 _newStartBlock = auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         // Should recognize that the current block is the start block
         assertEq(_newStartBlock, block.number);
@@ -532,8 +530,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
 
         vm.roll(_randomBlock);
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
-        uint256 _newStartBlock =
-            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
+        uint256 _newStartBlock = auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         assertGe(_newStartBlock, _randomBlock - auction.durationBlocks());
         assertLe(_newStartBlock, _randomBlock);
@@ -555,8 +552,7 @@ contract BlockDutchAuction_findStartBlock_Test is BlockDutchAuction_Test {
 
         vm.roll(auction.startBlock() + (auction.durationBlocks() * _n + 1));
         uint256 _predictedEndBlock = auction.startBlock() + auction.durationBlocks();
-        uint256 _newStartBlock =
-            auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
+        uint256 _newStartBlock = auction.findStartBlock(_predictedEndBlock, auction.durationBlocks());
 
         // Should recognize that the current block is the start block
         assertEq(_newStartBlock, block.number);
