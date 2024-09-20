@@ -233,8 +233,8 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("VALIDATORS_IN_LOOKAHEAD()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("ELECTION_TICKET()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startBlock()") });
-        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("blockDuration()") });
-        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startingPrice()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("durationBlocks()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startPrice()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("discountRate()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingStartPrice()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingDiscountRate()") });
