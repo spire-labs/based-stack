@@ -263,7 +263,7 @@ abstract contract BlockDutchAuction is Ownable {
     /// @param _predictedEndBlock The predicted end block of the auction
     /// @param _durationBlocks The duration of the auction in blocks
     ///
-    /// @return _newStartBlock The start block of the next auction
+    /// @return newStartBlock_ The start block of the next auction
     function _findStartBlock(
         uint256 _currentStartBlock,
         uint256 _predictedEndBlock,
