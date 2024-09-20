@@ -13,10 +13,13 @@ abstract contract BlockDutchAuction is Ownable {
     ElectionTickets public immutable ELECTION_TICKET;
 
     /// @notice The start block of the current running auction
-    uint224 public startBlock;
+    uint216 public startBlock;
 
     /// @notice The duration the auction will run for in blocks
     uint8 public durationBlocks;
+
+    /// @notice The pending new block duration of the auction
+    uint8 public pendingDurationBlocks;
 
     /// @notice The discount rate of the auction
     uint8 public discountRate;
@@ -41,6 +44,10 @@ abstract contract BlockDutchAuction is Ownable {
     /// @param _newDiscountRate The new discount rate
     event PendingDiscountRateSet(uint8 _newDiscountRate);
 
+    /// @notice Emitted when a new pending duration blocks is set
+    /// @param _newDurationBlocks The new duration blocks
+    event PendingDurationBlocksSet(uint8 _newDurationBlocks);
+
     /// @notice Emitted when a ticket is bought
     /// @param _buyer The address of the buyer
     /// @param _startBlock The start block of the current auction the ticket was bought in
@@ -54,7 +61,7 @@ abstract contract BlockDutchAuction is Ownable {
     /// @param _discountRate The discount rate of the auction
     /// @param _electionTicket The address of the ElectionTicket contract
     constructor(
-        uint224 _startBlock,
+        uint216 _startBlock,
         uint8 _durationBlocks,
         uint256 _startPrice,
         uint8 _discountRate,
@@ -78,6 +85,8 @@ abstract contract BlockDutchAuction is Ownable {
                               ADMIN FUNCTIONS
     ///////////////////////////////////////////////////////////////*/
 
+    /// @notice Sets the starting price of the auction
+    /// @param _newStartPrice The new starting price
     function setStartPrice(uint256 _newStartPrice) external onlyOwner {
         if (_newStartPrice < 1e3 || _newStartPrice > type(uint256).max / 100) revert InvalidStartPrice();
 
@@ -86,12 +95,24 @@ abstract contract BlockDutchAuction is Ownable {
         emit PendingStartPriceSet(_newStartPrice);
     }
 
+    /// @notice Sets the discount rate of the auction
+    /// @param _newDiscountRate The new discount rate
     function setDiscountRate(uint8 _newDiscountRate) external onlyOwner {
         if (_newDiscountRate >= 100 || _newDiscountRate == 0) revert InvalidDiscountRate();
 
         pendingDiscountRate = _newDiscountRate;
 
         emit PendingDiscountRateSet(_newDiscountRate);
+    }
+
+    /// @notice Sets the block duration of the auction
+    /// @param _newDurationBlocks The new block duration
+    function setDurationBlocks(uint8 _newDurationBlocks) external onlyOwner {
+        if (_newDurationBlocks > VALIDATORS_IN_LOOKAHEAD) revert InvalidBlockDuration();
+
+        pendingDurationBlocks = _newDurationBlocks;
+
+        emit PendingDurationBlocksSet(_newDurationBlocks);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -107,9 +128,19 @@ abstract contract BlockDutchAuction is Ownable {
         // This branch will trigger the start of a new auction
         // View functions have this logic baked in to calculate based on what the auction would be at
         if (block.number > _startBlock + _durationBlocks) {
+            // Need to define this up here incase duration blocks is changed
+            uint256 _predictedEndBlock = _startBlock + _durationBlocks;
+
+            // If there is a change in duration, we need to update this value before finding the start block
+            if (pendingDurationBlocks != 0) {
+                _durationBlocks = pendingDurationBlocks;
+                durationBlocks = uint8(_durationBlocks);
+                pendingDurationBlocks = 0;
+            }
+
             // Find the start block of the next auction
-            _startBlock = _findStartBlock(_startBlock, _durationBlocks);
-            startBlock = uint224(_startBlock);
+            _startBlock = _findStartBlock(_startBlock, _predictedEndBlock, _durationBlocks);
+            startBlock = uint216(_startBlock);
 
             if (pendingStartPrice != 0) {
                 startPrice = pendingStartPrice;
@@ -157,8 +188,16 @@ abstract contract BlockDutchAuction is Ownable {
         uint256 _discountRate = discountRate;
 
         if (block.number > _startBlock + _durationBlocks) {
+            // Need to define this up here incase duration blocks is changed
+            uint256 _predictedEndBlock = _startBlock + _durationBlocks;
+
+            // If there is a change in duration, we need to update this value before finding the start block
+            if (pendingDurationBlocks != 0) {
+                _durationBlocks = pendingDurationBlocks;
+            }
+
             // Find the expected start block
-            _startBlock = _findStartBlock(_startBlock, _durationBlocks);
+            _startBlock = _findStartBlock(_startBlock, _predictedEndBlock, _durationBlocks);
 
             // Use the pending values to calculate the price
             if (pendingDiscountRate != 0) {
@@ -209,17 +248,18 @@ abstract contract BlockDutchAuction is Ownable {
 
     /// @notice Recursively finds the start block of the next auction
     /// @param _currentStartBlock The current start block of the auction
+    /// @param _predictedEndBlock The predicted end block of the auction
     /// @param _durationBlocks The duration of the auction in blocks
     /// @return _newStartBlock The start block of the next auction
     function _findStartBlock(
         uint256 _currentStartBlock,
+        uint256 _predictedEndBlock,
         uint256 _durationBlocks
     )
         internal
         view
         returns (uint256 _newStartBlock)
     {
-        uint256 _predictedEndBlock = _currentStartBlock + _durationBlocks;
         uint256 _difference = block.number - _predictedEndBlock;
         uint256 _result = _difference % (_durationBlocks);
 
