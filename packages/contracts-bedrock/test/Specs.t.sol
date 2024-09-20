@@ -234,6 +234,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("ELECTION_TICKET()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startBlock()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("durationBlocks()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingDurationBlocks()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startPrice()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("discountRate()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingStartPrice()") });
@@ -241,6 +242,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("ticketsLeft()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setStartPrice(uint256)") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDiscountRate(uint8)") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDurationBlocks(uint8)") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("buy()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("getPrice()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("owner()") });
