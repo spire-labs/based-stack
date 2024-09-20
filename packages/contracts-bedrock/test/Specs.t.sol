@@ -230,6 +230,9 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256,bytes)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("mint(address)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("burn(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("election()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("batchInbox()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("tokenId()") });
 
         // BlockDutchAuction
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("VALIDATORS_IN_LOOKAHEAD()") });
