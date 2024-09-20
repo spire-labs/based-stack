@@ -199,6 +199,19 @@ target "cannon" {
   tags = [for tag in split(",", IMAGE_TAGS) : "${REGISTRY}/${REPOSITORY}/cannon:${tag}"]
 }
 
+target "proofs-tools" {
+  dockerfile = "./ops/docker/proofs-tools/Dockerfile"
+  context = "."
+  args = {
+    CHALLENGER_VERSION="2fcbe4bab16a682bd51c2f0e6bd9be7f8d81c7a1"
+    KONA_VERSION="kona-client-v0.1.0-alpha.3"
+    ASTERISC_VERSION="v1.0.2"
+  }
+  target="proofs-tools"
+  platforms = split(",", PLATFORMS)
+  tags = [for tag in split(",", IMAGE_TAGS) : "${REGISTRY}/${REPOSITORY}/proofs-tools:${tag}"]
+}
+
 target "ci-builder" {
   dockerfile = "./ops/docker/ci-builder/Dockerfile"
   context = "."
@@ -219,6 +232,7 @@ target "contracts-bedrock" {
   dockerfile = "./ops/docker/Dockerfile.packages"
   context = "."
   target = "contracts-bedrock"
-  platforms = split(",", PLATFORMS)
+  # See comment in Dockerfile.packages for why we only build for linux/amd64.
+  platforms = ["linux/amd64"]
   tags = [for tag in split(",", IMAGE_TAGS) : "${REGISTRY}/${REPOSITORY}/contracts-bedrock:${tag}"]
 }
