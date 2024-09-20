@@ -37,24 +37,28 @@ abstract contract BlockDutchAuction is Ownable {
     uint256 public pendingStartPrice;
 
     /// @notice Emitted when a new pending start price is set
-    /// @param _newStartPrice The new start price
-    event PendingStartPriceSet(uint256 _newStartPrice);
+    ///
+    /// @param newStartPrice The new start price
+    event PendingStartPriceSet(uint256 newStartPrice);
 
-    /// @notice Emitted when a new pending discount rate is set
-    /// @param _newDiscountRate The new discount rate
-    event PendingDiscountRateSet(uint8 _newDiscountRate);
+    /// @notice Emitted when a new pending discount rate is
+    ///
+    /// @param newDiscountRate The new discount rate
+    event PendingDiscountRateSet(uint8 newDiscountRate);
 
     /// @notice Emitted when a new pending duration blocks is set
-    /// @param _newDurationBlocks The new duration blocks
-    event PendingDurationBlocksSet(uint8 _newDurationBlocks);
+    /// @param newDurationBlocks The new duration blocks
+    event PendingDurationBlocksSet(uint8 newDurationBlocks);
 
     /// @notice Emitted when a ticket is bought
-    /// @param _buyer The address of the buyer
-    /// @param _startBlock The start block of the current auction the ticket was bought in
-    /// @param _price The price of the ticket
-    event TicketBought(address indexed _buyer, uint256 indexed _startBlock, uint256 _price, uint8 _ticketsLeft);
+    ///
+    /// @param buyer The address of the buyer
+    /// @param startBlock The start block of the current auction the ticket was bought in
+    /// @param price The price of the ticket
+    event TicketBought(address indexed buyer, uint256 indexed startBlock, uint256 price, uint8 ticketsLeft);
 
     /// @notice Constructs and initilizes the BlockDutchAuction
+    ///
     /// @param _startBlock The start block of the auction
     /// @param _durationBlocks The duration of the auction in blocks
     /// @param _startPrice The starting price of the auction
@@ -86,6 +90,7 @@ abstract contract BlockDutchAuction is Ownable {
     ///////////////////////////////////////////////////////////////*/
 
     /// @notice Sets the starting price of the auction
+    ///
     /// @param _newStartPrice The new starting price
     function setStartPrice(uint256 _newStartPrice) external onlyOwner {
         if (_newStartPrice < 1e3 || _newStartPrice > type(uint256).max / 100) revert InvalidStartPrice();
@@ -96,6 +101,7 @@ abstract contract BlockDutchAuction is Ownable {
     }
 
     /// @notice Sets the discount rate of the auction
+    ///
     /// @param _newDiscountRate The new discount rate
     function setDiscountRate(uint8 _newDiscountRate) external onlyOwner {
         if (_newDiscountRate >= 100 || _newDiscountRate == 0) revert InvalidDiscountRate();
@@ -106,6 +112,7 @@ abstract contract BlockDutchAuction is Ownable {
     }
 
     /// @notice Sets the block duration of the auction
+    ///
     /// @param _newDurationBlocks The new block duration
     function setDurationBlocks(uint8 _newDurationBlocks) external onlyOwner {
         if (_newDurationBlocks > VALIDATORS_IN_LOOKAHEAD) revert InvalidBlockDuration();
@@ -180,8 +187,9 @@ abstract contract BlockDutchAuction is Ownable {
     ///////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the current price of a ticket in the auction
-    /// @return _price The current price of a ticket
-    function getPrice() external view returns (uint256 _price) {
+    ///
+    /// @return price_ The current price of a ticket
+    function getPrice() external view returns (uint256 price_) {
         uint256 _startBlock = startBlock;
         uint256 _durationBlocks = durationBlocks;
         uint256 _startPrice = startPrice;
@@ -209,25 +217,28 @@ abstract contract BlockDutchAuction is Ownable {
             }
         }
 
-        _price = _getPrice(_discountRate, _startPrice, _startBlock);
+        price_ = _getPrice(_discountRate, _startPrice, _startBlock);
     }
 
     /// @notice Returns the amount of tickets left in the current auction
-    /// @return _amount The amount of tickets left in the current auction
-    function ticketsLeft() external view returns (uint256 _amount) {
+    ///
+    /// @return amount_ The amount of tickets left in the current auction
+    function ticketsLeft() external view returns (uint256 amount_) {
         uint256 _durationBlocks = durationBlocks;
         if (block.number > startBlock + _durationBlocks) {
-            _amount = _durationBlocks;
+            amount_ = _durationBlocks;
         } else {
-            _amount = _ticketsLeft;
+            amount_ = _ticketsLeft;
         }
     }
 
     /// @notice Returns the current price of a ticket in the auction
+    ///
     /// @param _discountRate The discount rate of the auction
     /// @param _startPrice The starting price of the auction
     /// @param _startBlock The start block of the auction
-    /// @return _price The current price of a ticket
+    ///
+    /// @return price_ The current price of a ticket
     function _getPrice(
         uint256 _discountRate,
         uint256 _startPrice,
@@ -235,21 +246,23 @@ abstract contract BlockDutchAuction is Ownable {
     )
         internal
         view
-        returns (uint256 _price)
+        returns (uint256 price_)
     {
         uint256 blocksSinceStart = block.number - _startBlock;
-        _price = _startPrice;
+        price_ = _startPrice;
 
         // NOTE: Is this the math we want to go with?
         for (uint256 i; i < blocksSinceStart; i++) {
-            _price = _price - ((_price * _discountRate) / 100);
+            price_ = price_ - ((price_ * _discountRate) / 100);
         }
     }
 
     /// @notice Recursively finds the start block of the next auction
+    ///
     /// @param _currentStartBlock The current start block of the auction
     /// @param _predictedEndBlock The predicted end block of the auction
     /// @param _durationBlocks The duration of the auction in blocks
+    ///
     /// @return _newStartBlock The start block of the next auction
     function _findStartBlock(
         uint256 _currentStartBlock,
@@ -258,15 +271,15 @@ abstract contract BlockDutchAuction is Ownable {
     )
         internal
         view
-        returns (uint256 _newStartBlock)
+        returns (uint256 newStartBlock_)
     {
         uint256 _difference = block.number - _predictedEndBlock;
         uint256 _result = _difference % (_durationBlocks);
 
         if (_result == 0) {
-            _newStartBlock = block.number;
+            newStartBlock_ = block.number;
         } else {
-            _newStartBlock = block.number - _result + 1;
+            newStartBlock_ = block.number - _result + 1;
         }
     }
 }
