@@ -5,7 +5,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "_winner",
+        "name": "winner_",
         "type": "address"
       }
     ],
