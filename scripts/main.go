@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
 	"os"
@@ -70,6 +71,31 @@ func main() {
 				start := clx.Int("start")
 				end := clx.Int("end")
 				decodeBatch(start, end)
+				return nil
+			},
+		},
+		{
+			Name:  "beacon-lookahead",
+			Usage: "Fetches validator duties for a specific epoch from the beacon chain",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "epoch",
+					Required: true,
+					Usage:    "The epoch to fetch validator duties for",
+				},
+			},
+			Action: func(clx *cli.Context) error {
+				epoch := clx.String("epoch")
+				duties, err := fetchValidatorLookahead(epoch)
+				if err != nil {
+					return fmt.Errorf("error fetching validator lookahead: %w", err)
+				}
+
+				fmt.Printf("Dependent Root: %s\n", duties.DependentRoot)
+				for _, duty := range duties.Data {
+					fmt.Printf("Validator %s is assigned to slot %s\n", duty.Pubkey, duty.Slot)
+				}
+
 				return nil
 			},
 		},
