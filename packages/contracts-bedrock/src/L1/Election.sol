@@ -6,10 +6,15 @@ pragma solidity 0.8.15;
 contract Election {
     // TODO: Remove this from being hardcoded
     // Currently set to the batcher address that runs in devnet
-    // Set as an array for now as we are going to add more addresses
+    // Set as an array for now as we are going to add more
+
+    /// @notice The list of sequencers that are allowed to submit batches
     address[1] public sequencers = [0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC];
 
-    function electionWinner() external view returns (address _winner) {
-        _winner = sequencers[block.number % sequencers.length];
+    /// @notice The winner of the election
+    ///
+    /// @return winner_ The address of the winner
+    function electionWinner() external view returns (address winner_) {
+        winner_ = sequencers[block.number % sequencers.length];
     }
 }

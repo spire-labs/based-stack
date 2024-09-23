@@ -214,6 +214,41 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "Election", _sel: _getSel("electionWinner()") });
         _addSpec({ _name: "Election", _sel: _getSel("sequencers(uint256)") });
 
+        // ElectionTickets
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("supportsInterface(bytes4)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("balanceOf(address)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("ownerOf(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("name()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("symbol()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("tokenURI(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("approve(address,uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("getApproved(uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("setApprovalForAll(address,bool)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("isApprovedForAll(address,address)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("transferFrom(address,address,uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256)") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256,bytes)") });
+
+        // BlockDutchAuction
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("VALIDATORS_IN_LOOKAHEAD()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("ELECTION_TICKET()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startBlock()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("durationBlocks()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingDurationBlocks()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("startPrice()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("discountRate()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingStartPrice()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("pendingDiscountRate()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("ticketsLeft()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setStartPrice(uint256)") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDiscountRate(uint8)") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("setDurationBlocks(uint8)") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("buy()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("getPrice()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("owner()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("renounceOwnership()") });
+        _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("transferOwnership(address)") });
+
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("FINALIZATION_PERIOD_SECONDS()") });
