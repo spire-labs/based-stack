@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"strconv"
 )
 
 type ProposerDuty struct {
@@ -19,8 +20,60 @@ type ProposerDutiesResponse struct {
 	Data                []ProposerDuty `json:"data"`
 }
 
+type BeaconHeadResponse struct {
+	ExecutionOptimistic bool `json:"execution_optimistic"`
+	Finalized           bool `json:"finalized"`
+	Data                struct {
+		Root      string `json:"root"`
+		Canonical bool   `json:"canonical"`
+		Header    struct {
+			Message struct {
+				Slot          string `json:"slot"`
+				ProposerIndex string `json:"proposer_index"`
+				ParentRoot    string `json:"parent_root"`
+				StateRoot     string `json:"state_root"`
+				BodyRoot      string `json:"body_root"`
+			} `json:"message"`
+			Signature string `json:"signature"`
+		} `json:"header"`
+	} `json:"data"`
+}
+
+// fetch the latest slot and convert to an epoch
+func getLatestEpoch() (string, error) {
+	apiKey := ""
+	beaconUrl := "https://ethereum-mainnet.core.chainstack.com/beacon/" + apiKey + "/eth/v1/beacon/headers/head"
+
+	resp, err := http.Get(beaconUrl)
+	if err != nil {
+		return "", fmt.Errorf("error making the request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body: %w", err)
+	}
+
+	var headResp BeaconHeadResponse
+	err = json.Unmarshal(body, &headResp)
+	if err != nil {
+		return "", fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	slot, err := strconv.ParseUint(headResp.Data.Header.Message.Slot, 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("error parsing slot: %w", err)
+	}
+
+	// Calculate the head epoch by dividing the slot by 32, and then get the next epoch
+	epoch := slot/32 + 1
+
+	return strconv.FormatUint(epoch, 10), nil
+}
+
+// Fetch validator duties for the given epoch
 func fetchValidatorLookahead(epoch string) (ProposerDutiesResponse, error) {
-	// Fetch validator duties for the given epoch
 	apiKey := ""
 	beaconUrl := "https://ethereum-mainnet.core.chainstack.com/beacon/" + apiKey + "/eth/v1/validator/duties/proposer/" + epoch
 
@@ -39,7 +92,7 @@ func fetchValidatorLookahead(epoch string) (ProposerDutiesResponse, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return ProposerDutiesResponse{}, fmt.Errorf("error reading response body: %w", err)
 	}
@@ -55,4 +108,13 @@ func fetchValidatorLookahead(epoch string) (ProposerDutiesResponse, error) {
 	}
 
 	return duties, nil
+}
+
+func fetchNextLookahead() (ProposerDutiesResponse, error) {
+	epoch, err := getLatestEpoch()
+	if err != nil {
+		return ProposerDutiesResponse{}, fmt.Errorf("error getting latest epoch: %w", err)
+	}
+
+	return fetchValidatorLookahead(epoch)
 }

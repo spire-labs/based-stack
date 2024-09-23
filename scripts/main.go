@@ -76,17 +76,9 @@ func main() {
 		},
 		{
 			Name:  "beacon-lookahead",
-			Usage: "Fetches validator duties for a specific epoch from the beacon chain",
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:     "epoch",
-					Required: true,
-					Usage:    "The epoch to fetch validator duties for",
-				},
-			},
+			Usage: "Fetches validator duties for the latest epoch from the beacon chain",
 			Action: func(clx *cli.Context) error {
-				epoch := clx.String("epoch")
-				duties, err := fetchValidatorLookahead(epoch)
+				duties, err := fetchNextLookahead()
 				if err != nil {
 					return fmt.Errorf("error fetching validator lookahead: %w", err)
 				}
