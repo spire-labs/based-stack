@@ -258,7 +258,7 @@ contract Specification_Test is CommonTest {
 
         // BatchInbox
         _addSpec({ _name: "BatchInbox", _sel: _getSel("submit()") });
-        _addSpec({ _name: "BatchInbox", _sel: _getSel("electionAddress()") });
+        _addSpec({ _name: "BatchInbox", _sel: _getSel("election()") });
 
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });

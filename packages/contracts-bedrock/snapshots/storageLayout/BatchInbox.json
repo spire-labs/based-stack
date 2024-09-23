@@ -1,7 +1,7 @@
 [
   {
     "bytes": "20",
-    "label": "electionAddress",
+    "label": "election",
     "offset": 0,
     "slot": "0",
     "type": "contract Election"

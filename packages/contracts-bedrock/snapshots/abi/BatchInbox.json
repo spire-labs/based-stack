@@ -12,7 +12,7 @@
   },
   {
     "inputs": [],
-    "name": "electionAddress",
+    "name": "election",
     "outputs": [
       {
         "internalType": "contract Election",
@@ -29,5 +29,16 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "OnlyElectionWinner",
+    "type": "error"
   }
 ]

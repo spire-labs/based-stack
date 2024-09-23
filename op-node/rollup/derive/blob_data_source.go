@@ -131,10 +131,6 @@ func dataAndHashesFromTxs(txs types.Transactions, config *DataSourceConfig, batc
 			data = append(data, blobOrCalldata{nil, &calldata})
 			continue
 		}
-		// handle blob batcher transactions by extracting their blob hashes, ignoring any calldata.
-		if len(tx.Data()) > 4 {
-			log.Warn("blob tx has calldata, which will be ignored", "txhash", tx.Hash())
-		}
 		for _, h := range tx.BlobHashes() {
 			idh := eth.IndexedBlobHash{
 				Index: uint64(blobIndex),
