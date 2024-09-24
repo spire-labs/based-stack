@@ -73,6 +73,13 @@ var (
 		EnvVars:  prefixEnvVars("L1_BEACON"),
 		Category: RollupCategory,
 	}
+	SupervisorAddr = &cli.StringFlag{
+		Name: "supervisor",
+		Usage: "RPC address of interop supervisor service for cross-chain safety verification." +
+			"Applies only to Interop-enabled networks.",
+		Hidden:  true, // hidden for now during early testing.
+		EnvVars: prefixEnvVars("SUPERVISOR"),
+	}
 	/* Optional Flags */
 	BeaconHeader = &cli.StringFlag{
 		Name:     "l1.beacon-header",
@@ -252,7 +259,7 @@ var (
 	MetricsAddrFlag = &cli.StringFlag{
 		Name:     "metrics.addr",
 		Usage:    "Metrics listening address",
-		Value:    "0.0.0.0", // TODO(CLI-4159): Switch to 127.0.0.1
+		Value:    "0.0.0.0", // TODO: Switch to 127.0.0.1
 		EnvVars:  prefixEnvVars("METRICS_ADDR"),
 		Category: OperationsCategory,
 	}
@@ -374,6 +381,7 @@ var requiredFlags = []cli.Flag{
 }
 
 var optionalFlags = []cli.Flag{
+	SupervisorAddr,
 	BeaconAddr,
 	BeaconHeader,
 	BeaconFallbackAddrs,
