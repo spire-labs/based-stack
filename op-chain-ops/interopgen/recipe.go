@@ -125,7 +125,6 @@ func prefundL2Accounts(l1Cfg *L1Config, l2Cfg *L2Config, addrs devkeys.Addresses
 
 func InteropL2DevConfig(l1ChainID, l2ChainID uint64, addrs devkeys.Addresses) (*L2Config, error) {
 	// Padded chain ID, hex encoded, prefixed with 0xff like inboxes, then 0x02 to signify devnet.
-	batchInboxAddress := common.HexToAddress(fmt.Sprintf("0xff02%016x", l2ChainID))
 	chainOps := devkeys.ChainOperatorKeys(new(big.Int).SetUint64(l2ChainID))
 
 	deployer, err := addrs.Address(chainOps(devkeys.DeployerRole))
@@ -239,7 +238,6 @@ func InteropL2DevConfig(l1ChainID, l2ChainID uint64, addrs devkeys.Addresses) (*
 				MaxSequencerDrift:         300,
 				SequencerWindowSize:       200,
 				ChannelTimeoutBedrock:     120,
-				BatchInboxAddress:         batchInboxAddress,
 				SystemConfigStartBlock:    0,
 			},
 			AltDADeployConfig: genesis.AltDADeployConfig{
