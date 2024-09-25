@@ -473,8 +473,6 @@ type L2CoreDeployConfig struct {
 	SequencerWindowSize uint64 `json:"sequencerWindowSize"`
 	// ChannelTimeoutBedrock is the number of L1 blocks that a frame stays valid when included in L1.
 	ChannelTimeoutBedrock uint64 `json:"channelTimeout"`
-	// BatchInboxAddress is the L1 account that batches are sent to.
-	BatchInboxAddress common.Address `json:"batchInboxAddress"`
 
 	// SystemConfigStartBlock represents the block at which the op-node should start syncing
 	// from. It is an override to set this value on legacy networks where it is not set by
@@ -499,9 +497,6 @@ func (d *L2CoreDeployConfig) Check(log log.Logger) error {
 	}
 	if d.ChannelTimeoutBedrock == 0 {
 		return fmt.Errorf("%w: ChannelTimeout cannot be 0", ErrInvalidDeployConfig)
-	}
-	if d.BatchInboxAddress == (common.Address{}) {
-		return fmt.Errorf("%w: BatchInboxAddress cannot be address(0)", ErrInvalidDeployConfig)
 	}
 	if d.L2BlockTime == 0 {
 		return fmt.Errorf("%w: L2BlockTime cannot be 0", ErrInvalidDeployConfig)
@@ -729,8 +724,12 @@ type L1DependenciesConfig struct {
 	// OptimismPortalProxy represents the address of the OptimismPortalProxy on L1 and is used
 	// as part of the derivation pipeline.
 	OptimismPortalProxy common.Address `json:"optimismPortalProxy"`
-	// Election represents the address of the election contract on L1
+	// Election represents the address of the election contract on L1 and is used
+	// as part of the derivation pipeline.
 	Election common.Address `json:"election"`
+	// BatchInbox represents the address or the BatchInbox contract on L1 and is
+	// as an address where batches are sent to.
+	BatchInbox common.Address `json:"batchInbox"`
 
 	// DAChallengeProxy represents the L1 address of the DataAvailabilityChallenge contract.
 	DAChallengeProxy common.Address `json:"daChallengeProxy"`
@@ -760,6 +759,12 @@ func (d *L1DependenciesConfig) CheckAddresses(dependencyContext DependencyContex
 	}
 	if d.OptimismPortalProxy == (common.Address{}) {
 		return fmt.Errorf("%w: OptimismPortalProxy cannot be address(0)", ErrInvalidDeployConfig)
+	}
+	if d.Election == (common.Address{}) {
+		return fmt.Errorf("%w: Election cannot be address(0)", ErrInvalidDeployConfig)
+	}
+	if d.BatchInbox == (common.Address{}) {
+		return fmt.Errorf("%w: BatchInbox cannot be address(0)", ErrInvalidDeployConfig)
 	}
 
 	if dependencyContext.UseAltDA && dependencyContext.DACommitmentType == altda.KeccakCommitmentString && d.DAChallengeProxy == (common.Address{}) {
@@ -878,6 +883,7 @@ func (d *DeployConfig) SetDeployments(deployments *L1Deployments) {
 	d.OptimismPortalProxy = deployments.OptimismPortalProxy
 	d.DAChallengeProxy = deployments.DataAvailabilityChallengeProxy
 	d.Election = deployments.Election
+	d.BatchInbox = deployments.BatchInbox
 }
 
 // RollupConfig converts a DeployConfig to a rollup.Config. If Ecotone is active at genesis, the
@@ -919,25 +925,25 @@ func (d *DeployConfig) RollupConfig(l1StartBlock *types.Header, l2GenesisBlockHa
 				GasLimit:    uint64(d.L2GenesisBlockGasLimit),
 			},
 		},
-		BlockTime:               d.L2BlockTime,
-		MaxSequencerDrift:       d.MaxSequencerDrift,
-		SeqWindowSize:           d.SequencerWindowSize,
-		ChannelTimeoutBedrock:   d.ChannelTimeoutBedrock,
-		L1ChainID:               new(big.Int).SetUint64(d.L1ChainID),
-		L2ChainID:               new(big.Int).SetUint64(d.L2ChainID),
-		BatchInboxAddress:       d.BatchInboxAddress,
-		DepositContractAddress:  d.OptimismPortalProxy,
-		L1SystemConfigAddress:   d.SystemConfigProxy,
-		ElectionContractAddress: d.Election,
-		RegolithTime:            d.RegolithTime(l1StartTime),
-		CanyonTime:              d.CanyonTime(l1StartTime),
-		DeltaTime:               d.DeltaTime(l1StartTime),
-		EcotoneTime:             d.EcotoneTime(l1StartTime),
-		FjordTime:               d.FjordTime(l1StartTime),
-		GraniteTime:             d.GraniteTime(l1StartTime),
-		InteropTime:             d.InteropTime(l1StartTime),
-		ProtocolVersionsAddress: d.ProtocolVersionsProxy,
-		AltDAConfig:             altDA,
+		BlockTime:                 d.L2BlockTime,
+		MaxSequencerDrift:         d.MaxSequencerDrift,
+		SeqWindowSize:             d.SequencerWindowSize,
+		ChannelTimeoutBedrock:     d.ChannelTimeoutBedrock,
+		L1ChainID:                 new(big.Int).SetUint64(d.L1ChainID),
+		L2ChainID:                 new(big.Int).SetUint64(d.L2ChainID),
+		BatchInboxContractAddress: d.BatchInbox,
+		DepositContractAddress:    d.OptimismPortalProxy,
+		L1SystemConfigAddress:     d.SystemConfigProxy,
+		ElectionContractAddress:   d.Election,
+		RegolithTime:              d.RegolithTime(l1StartTime),
+		CanyonTime:                d.CanyonTime(l1StartTime),
+		DeltaTime:                 d.DeltaTime(l1StartTime),
+		EcotoneTime:               d.EcotoneTime(l1StartTime),
+		FjordTime:                 d.FjordTime(l1StartTime),
+		GraniteTime:               d.GraniteTime(l1StartTime),
+		InteropTime:               d.InteropTime(l1StartTime),
+		ProtocolVersionsAddress:   d.ProtocolVersionsProxy,
+		AltDAConfig:               altDA,
 	}, nil
 }
 
@@ -993,6 +999,7 @@ type L1Deployments struct {
 	DataAvailabilityChallenge         common.Address `json:"DataAvailabilityChallenge"`
 	DataAvailabilityChallengeProxy    common.Address `json:"DataAvailabilityChallengeProxy"`
 	Election                          common.Address `json:"Election"`
+	BatchInbox                        common.Address `json:"BatchInbox"`
 }
 
 // GetName will return the name of the contract given an address.

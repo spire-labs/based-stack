@@ -33,6 +33,7 @@ import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
 import { Election } from "src/L1/Election.sol";
+import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 
 import { OPStackManagerInterop } from "src/L1/OPStackManagerInterop.sol";
@@ -174,6 +175,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
     OptimismMintableERC20Factory internal _optimismMintableERC20FactoryImpl;
     DisputeGameFactory internal _disputeGameFactoryImpl;
     Election internal _electionImpl;
+    BatchInbox internal _batchInboxImpl;
 
     function set(bytes4 sel, address _addr) public {
         require(_addr != address(0), "DeployImplementationsOutput: cannot set zero address");
@@ -191,6 +193,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
         else if (sel == this.optimismMintableERC20FactoryImpl.selector) _optimismMintableERC20FactoryImpl = OptimismMintableERC20Factory(_addr);
         else if (sel == this.disputeGameFactoryImpl.selector) _disputeGameFactoryImpl = DisputeGameFactory(_addr);
         else if (sel == this.electionImpl.selector) _electionImpl = Election(_addr);
+        else if (sel == this.batchInboxImpl.selector) _batchInboxImpl = BatchInbox(_addr);
         else revert("DeployImplementationsOutput: unknown selector");
         // forgefmt: disable-end
     }
@@ -239,6 +242,11 @@ contract DeployImplementationsOutput is BaseDeployIO {
     function electionImpl() public view returns (Election) {
         DeployUtils.assertValidContractAddress(address(_electionImpl));
         return _electionImpl;
+    }
+
+    function batchInboxImpl() public view returns (BatchInbox) {
+        DeployUtils.assertValidContractAddress(address(_batchInboxImpl));
+        return _batchInboxImpl;
     }
 
     function preimageOracleSingleton() public view returns (PreimageOracle) {
@@ -472,6 +480,7 @@ contract DeployImplementations is Script {
         deployMipsSingleton(_dii, _dio);
         deployDisputeGameFactoryImpl(_dii, _dio);
         deployElection(_dii, _dio);
+        deployBatchInbox(_dii, _dio);
 
         // Deploy the OP Stack Manager with the new implementations set.
         deployOPStackManager(_dii, _dio);
@@ -747,6 +756,16 @@ contract DeployImplementations is Script {
 
         vm.label(address(election), "Election");
         _dso.set(_dso.electionImpl.selector, address(election));
+    }
+
+    function deployBatchInbox(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+        Election election = Election(_dso.electionImpl());
+
+        vm.broadcast(msg.sender);
+        BatchInbox batchInbox = new BatchInbox(election);
+
+        vm.label(address(batchInbox), "BatchInbox");
+        _dso.set(_dso.batchInboxImpl.selector, address(batchInbox));
     }
 
     // -------- Utilities --------

@@ -247,7 +247,7 @@ def devnet_deploy(paths):
     # Print out the addresses being used for easier debugging.
     l2_output_oracle = addresses['L2OutputOracleProxy']
     dispute_game_factory = addresses['DisputeGameFactoryProxy']
-    batch_inbox_address = rollup_config['batch_inbox_address']
+    batch_inbox_address = addresses['BatchInbox']
     log.info(f'Using L2OutputOracle {l2_output_oracle}')
     log.info(f'Using DisputeGameFactory {dispute_game_factory}')
     log.info(f'Using batch inbox {batch_inbox_address}')

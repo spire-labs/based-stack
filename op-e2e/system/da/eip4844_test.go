@@ -177,7 +177,7 @@ func testSystem4844E2E(t *testing.T, multiBlob bool, daType batcherFlags.DataAva
 	blobBlock, err := gethutils.FindBlock(l1Client, int(tip.Number.Int64()), 0, 5*time.Second,
 		func(b *types.Block) (bool, error) {
 			for _, tx := range b.Transactions() {
-				if tx.To().Cmp(cfg.DeployConfig.BatchInboxAddress) != 0 {
+				if tx.To().Cmp(cfg.DeployConfig.BatchInbox) != 0 {
 					continue
 				}
 				switch daType {
@@ -299,7 +299,7 @@ func TestBatcherAutoDA(t *testing.T) {
 			b, err := l1Client.BlockByNumber(ctx, nil)
 			require.NoError(t, err)
 			for _, tx := range b.Transactions() {
-				if tx.To().Cmp(cfg.DeployConfig.BatchInboxAddress) != 0 {
+				if tx.To().Cmp(cfg.DeployConfig.BatchInbox) != 0 {
 					continue
 				}
 				if typ := tx.Type(); typ == txType {

@@ -15,6 +15,7 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
     address internal constant addressManagerAddress = 0x50EEf481cae4250d252Ae577A09bF514f224C6C4;
     address internal constant anchorStateRegistryAddress = 0x3FF2A9151cB8a04c0281E5E611ae00a4C8916459;
     address internal constant anchorStateRegistryProxyAddress = 0x970670459734a83899773A0fd45941B5afC1200e;
+    address internal constant batchInboxAddress = 0x7e804b214944c5eC552dfD199f665cC001ABA460;
     address internal constant delayedWETHAddress = 0x86514f7Febf0867C577973f4737800CF694763D3;
     address internal constant delayedWETHProxyAddress = 0xEF179756ea6525AFade217cA5aB0b1b5CfE0fd92;
     address internal constant disputeGameFactoryAddress = 0xdc2ba9096Cc439Ef483dAf69673ac77919fF6421;
@@ -427,6 +428,10 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
         slot = hex"0000000000000000000000000000000000000000000000000000000000000000";
         value = hex"0000000000000000000000003c44cdddb6a900fa2b585dd299e03d12fa4293bc";
         vm.store(electionAddress, slot, value);
+        vm.etch(batchInboxAddress, batchInboxCode);
+        slot = hex"0000000000000000000000000000000000000000000000000000000000000000";
+        value = hex"000000000000000000000000020aab0c0fed558f282df37fc5bca828b29c5407";
+        vm.store(batchInboxAddress, slot, value);
         vm.etch(anchorStateRegistryAddress, anchorStateRegistryCode);
         slot = hex"0000000000000000000000000000000000000000000000000000000000000000";
         value = hex"00000000000000000000000000000000000000000000000000000000000000ff";
@@ -498,7 +503,7 @@ contract DeploymentSummaryFaultProofs is DeploymentSummaryFaultProofsCode {
         value = hex"0000000000000000000000009965507d1a55bcc2695c58ba16fb37d819b0a4dc";
         vm.store(systemConfigProxyAddress, slot, value);
         slot = hex"71ac12829d66ee73d8d95bff50b3589745ce57edae70a3fb111a2342464dc597";
-        value = hex"000000000000000000000000ff00000000000000000000000000000000000000";
+        value = hex"0000000000000000000000007e804b214944c5ec552dfd199f665cc001aba460";
         vm.store(systemConfigProxyAddress, slot, value);
         slot = hex"383f291819e6d54073bc9a648251d97421076bdd101933c0c022219ce9580636";
         value = hex"000000000000000000000000def3bca8c80064589e6787477ffa7dd616b5574f";

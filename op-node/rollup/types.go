@@ -17,25 +17,25 @@ import (
 )
 
 var (
-	ErrBlockTimeZero                  = errors.New("block time cannot be 0")
-	ErrMissingChannelTimeout          = errors.New("channel timeout must be set, this should cover at least a L1 block time")
-	ErrInvalidSeqWindowSize           = errors.New("sequencing window size must at least be 2")
-	ErrInvalidMaxSeqDrift             = errors.New("maximum sequencer drift must be greater than 0")
-	ErrMissingGenesisL1Hash           = errors.New("genesis L1 hash cannot be empty")
-	ErrMissingGenesisL2Hash           = errors.New("genesis L2 hash cannot be empty")
-	ErrGenesisHashesSame              = errors.New("achievement get! rollup inception: L1 and L2 genesis cannot be the same")
-	ErrMissingGenesisL2Time           = errors.New("missing L2 genesis time")
-	ErrMissingBatcherAddr             = errors.New("missing genesis system config batcher address")
-	ErrMissingScalar                  = errors.New("missing genesis system config scalar")
-	ErrMissingGasLimit                = errors.New("missing genesis system config gas limit")
-	ErrMissingBatchInboxAddress       = errors.New("missing batch inbox address")
-	ErrMissingDepositContractAddress  = errors.New("missing deposit contract address")
-	ErrMissingElectionContractAddress = errors.New("missing election contract address")
-	ErrMissingL1ChainID               = errors.New("L1 chain ID must not be nil")
-	ErrMissingL2ChainID               = errors.New("L2 chain ID must not be nil")
-	ErrChainIDsSame                   = errors.New("L1 and L2 chain IDs must be different")
-	ErrL1ChainIDNotPositive           = errors.New("L1 chain ID must be non-zero and positive")
-	ErrL2ChainIDNotPositive           = errors.New("L2 chain ID must be non-zero and positive")
+	ErrBlockTimeZero                    = errors.New("block time cannot be 0")
+	ErrMissingChannelTimeout            = errors.New("channel timeout must be set, this should cover at least a L1 block time")
+	ErrInvalidSeqWindowSize             = errors.New("sequencing window size must at least be 2")
+	ErrInvalidMaxSeqDrift               = errors.New("maximum sequencer drift must be greater than 0")
+	ErrMissingGenesisL1Hash             = errors.New("genesis L1 hash cannot be empty")
+	ErrMissingGenesisL2Hash             = errors.New("genesis L2 hash cannot be empty")
+	ErrGenesisHashesSame                = errors.New("achievement get! rollup inception: L1 and L2 genesis cannot be the same")
+	ErrMissingGenesisL2Time             = errors.New("missing L2 genesis time")
+	ErrMissingBatcherAddr               = errors.New("missing genesis system config batcher address")
+	ErrMissingScalar                    = errors.New("missing genesis system config scalar")
+	ErrMissingGasLimit                  = errors.New("missing genesis system config gas limit")
+	ErrMissingBatchInboxContractAddress = errors.New("missing batch inbox contract address")
+	ErrMissingDepositContractAddress    = errors.New("missing deposit contract address")
+	ErrMissingElectionContractAddress   = errors.New("missing election contract address")
+	ErrMissingL1ChainID                 = errors.New("L1 chain ID must not be nil")
+	ErrMissingL2ChainID                 = errors.New("L2 chain ID must not be nil")
+	ErrChainIDsSame                     = errors.New("L1 and L2 chain IDs must be different")
+	ErrL1ChainIDNotPositive             = errors.New("L1 chain ID must be non-zero and positive")
+	ErrL2ChainIDNotPositive             = errors.New("L2 chain ID must be non-zero and positive")
 )
 
 type Genesis struct {
@@ -126,8 +126,8 @@ type Config struct {
 	// Note: below addresses are part of the block-derivation process,
 	// and required to be the same network-wide to stay in consensus.
 
-	// L1 address that batches are sent to.
-	BatchInboxAddress common.Address `json:"batch_inbox_address"`
+	// L1 Batch Inbox Contract Address
+	BatchInboxContractAddress common.Address `json:"batch_inbox_contract_address"`
 	// L1 Deposit Contract Address
 	DepositContractAddress common.Address `json:"deposit_contract_address"`
 	// L1 Election Contract Address
@@ -286,8 +286,8 @@ func (cfg *Config) Check() error {
 	if cfg.Genesis.SystemConfig.GasLimit == 0 {
 		return ErrMissingGasLimit
 	}
-	if cfg.BatchInboxAddress == (common.Address{}) {
-		return ErrMissingBatchInboxAddress
+	if cfg.BatchInboxContractAddress == (common.Address{}) {
+		return ErrMissingBatchInboxContractAddress
 	}
 	if cfg.DepositContractAddress == (common.Address{}) {
 		return ErrMissingDepositContractAddress

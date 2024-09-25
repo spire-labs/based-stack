@@ -256,6 +256,10 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("renounceOwnership()") });
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("transferOwnership(address)") });
 
+        // BatchInbox
+        _addSpec({ _name: "BatchInbox", _sel: _getSel("submit()") });
+        _addSpec({ _name: "BatchInbox", _sel: _getSel("election()") });
+
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("FINALIZATION_PERIOD_SECONDS()") });

@@ -19,5 +19,6 @@
   "SystemConfigProxy": "0x14065A373936533A0c88b7986CADabDD62d471e6",
   "ProtocolVersions": "0x883C06a27D76B1CEbdf7EB376f5556c355afC8e5",
   "ProtocolVersionsProxy": "0x3732a4D4Ab006cA4825822baEA1569A107683fa1",
-  "Election": "0x72997970c51812dc3a010c7d01b50e0d17dc79c8"
+  "Election": "0x72997970c51812dc3a010c7d01b50e0d17dc79c8",
+  "BatchInbox": "0x7e804b214944c5ec552dfd199f665cc001aba460"
 }

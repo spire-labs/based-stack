@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -100,7 +97,6 @@ func CombineDeployConfig(intent *Intent, chainIntent *ChainIntent, state *State,
 		BatchSenderAddress:  chainIntent.Roles.Batcher,
 		P2PSequencerAddress: chainIntent.Roles.UnsafeBlockSigner,
 	}
-	cfg.BatchInboxAddress = calculateBatchInboxAddr(chainState.ID)
 	cfg.L1ChainID = intent.L1ChainID
 
 	return cfg, nil
@@ -149,10 +145,4 @@ func mustHexBigFromHex(hex string) *hexutil.Big {
 func u64UtilPtr(in uint64) *hexutil.Uint64 {
 	util := hexutil.Uint64(in)
 	return &util
-}
-
-func calculateBatchInboxAddr(chainID common.Hash) common.Address {
-	var out common.Address
-	copy(out[1:], crypto.Keccak256(chainID[:])[:19])
-	return out
 }

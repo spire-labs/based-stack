@@ -1,6 +1,7 @@
 package derive
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -11,6 +12,7 @@ import (
 	altda "github.com/ethereum-optimism/optimism/op-alt-da"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
 
 type DataIter interface {
@@ -50,7 +52,7 @@ type DataSourceFactory struct {
 func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
 	config := DataSourceConfig{
 		l1Signer:          cfg.L1Signer(),
-		batchInboxAddress: cfg.BatchInboxAddress,
+		batchInboxAddress: cfg.BatchInboxContractAddress,
 		altDAEnabled:      cfg.AltDAEnabled(),
 	}
 	return &DataSourceFactory{
@@ -96,6 +98,17 @@ type DataSourceConfig struct {
 func isValidBatchTx(tx *types.Transaction, l1Signer types.Signer, batchInboxAddr, batcherAddr common.Address, logger log.Logger) bool {
 	to := tx.To()
 	if to == nil || *to != batchInboxAddr {
+		return false
+	}
+	if tx.Type() != 3 {
+		// TODO(miszke): enable other DA sources
+		log.Warn("not a blob tx")
+		return false
+	}
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitSel := batchInboxAbi.Methods["submit"].ID
+	if !bytes.Equal(tx.Data()[:4], submitSel) {
+		log.Warn("tx in inbox with invalid selector", "hash", tx.Hash())
 		return false
 	}
 	seqDataSubmitter, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct

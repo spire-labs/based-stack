@@ -276,7 +276,7 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 		rawTx := &types.DynamicFeeTx{
 			ChainID:   s.rollupCfg.L1ChainID,
 			Nonce:     nonce,
-			To:        &s.rollupCfg.BatchInboxAddress,
+			To:        &s.rollupCfg.BatchInboxContractAddress,
 			GasTipCap: gasTipCap,
 			GasFeeCap: gasFeeCap,
 			Data:      payload,
@@ -301,7 +301,7 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 			blobFeeCap = uint256.NewInt(params.GWei)
 		}
 		txData = &types.BlobTx{
-			To:         s.rollupCfg.BatchInboxAddress,
+			To:         s.rollupCfg.BatchInboxContractAddress,
 			Data:       nil,
 			Gas:        params.TxGas, // intrinsic gas only
 			BlobHashes: blobHashes,
@@ -383,7 +383,7 @@ func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
 		blobFeeCap = uint256.NewInt(params.GWei)
 	}
 	txData := &types.BlobTx{
-		To:         s.rollupCfg.BatchInboxAddress,
+		To:         s.rollupCfg.BatchInboxContractAddress,
 		Data:       nil,
 		Gas:        params.TxGas, // intrinsic gas only
 		BlobHashes: blobHashes,

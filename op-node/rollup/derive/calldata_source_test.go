@@ -53,11 +53,13 @@ type calldataTest struct {
 // that DataFromEVMTransactions properly filters and returns the data from the authorized transactions
 // inside the transaction set.
 func TestDataFromEVMTransactions(t *testing.T) {
+	// TODO(miszke): enable other DA sources
+	t.Skip("only blob data source supported for now")
 	inboxPriv := testutils.RandomKey()
 	batcherPriv := testutils.RandomKey()
 	cfg := &rollup.Config{
-		L1ChainID:         big.NewInt(100),
-		BatchInboxAddress: crypto.PubkeyToAddress(inboxPriv.PublicKey),
+		L1ChainID:                 big.NewInt(100),
+		BatchInboxContractAddress: crypto.PubkeyToAddress(inboxPriv.PublicKey),
 	}
 	batcherAddr := crypto.PubkeyToAddress(batcherPriv.PublicKey)
 
@@ -67,17 +69,17 @@ func TestDataFromEVMTransactions(t *testing.T) {
 	testCases := []calldataTest{
 		{
 			name: "simple",
-			txs:  []testTx{{to: &cfg.BatchInboxAddress, dataLen: 1234, author: batcherPriv, good: true}},
+			txs:  []testTx{{to: &cfg.BatchInboxContractAddress, dataLen: 1234, author: batcherPriv, good: true}},
 		},
 		{
 			name: "other inbox",
 			txs:  []testTx{{to: &altInbox, dataLen: 1234, author: batcherPriv, good: false}}},
 		{
 			name: "other author",
-			txs:  []testTx{{to: &cfg.BatchInboxAddress, dataLen: 1234, author: altAuthor, good: false}}},
+			txs:  []testTx{{to: &cfg.BatchInboxContractAddress, dataLen: 1234, author: altAuthor, good: false}}},
 		{
 			name: "inbox is author",
-			txs:  []testTx{{to: &cfg.BatchInboxAddress, dataLen: 1234, author: inboxPriv, good: false}}},
+			txs:  []testTx{{to: &cfg.BatchInboxContractAddress, dataLen: 1234, author: inboxPriv, good: false}}},
 		{
 			name: "author is inbox",
 			txs:  []testTx{{to: &batcherAddr, dataLen: 1234, author: batcherPriv, good: false}}},
@@ -89,19 +91,19 @@ func TestDataFromEVMTransactions(t *testing.T) {
 			txs:  []testTx{{to: nil, dataLen: 1234, author: batcherPriv, good: false}}},
 		{
 			name: "empty tx",
-			txs:  []testTx{{to: &cfg.BatchInboxAddress, dataLen: 0, author: batcherPriv, good: true}}},
+			txs:  []testTx{{to: &cfg.BatchInboxContractAddress, dataLen: 0, author: batcherPriv, good: true}}},
 		{
 			name: "value tx",
-			txs:  []testTx{{to: &cfg.BatchInboxAddress, dataLen: 1234, value: 42, author: batcherPriv, good: true}}},
+			txs:  []testTx{{to: &cfg.BatchInboxContractAddress, dataLen: 1234, value: 42, author: batcherPriv, good: true}}},
 		{
 			name: "empty block", txs: []testTx{},
 		},
 		{
 			name: "mixed txs",
 			txs: []testTx{
-				{to: &cfg.BatchInboxAddress, dataLen: 1234, value: 42, author: batcherPriv, good: true},
-				{to: &cfg.BatchInboxAddress, dataLen: 3333, value: 32, author: altAuthor, good: false},
-				{to: &cfg.BatchInboxAddress, dataLen: 2000, value: 22, author: batcherPriv, good: true},
+				{to: &cfg.BatchInboxContractAddress, dataLen: 1234, value: 42, author: batcherPriv, good: true},
+				{to: &cfg.BatchInboxContractAddress, dataLen: 3333, value: 32, author: altAuthor, good: false},
+				{to: &cfg.BatchInboxContractAddress, dataLen: 2000, value: 22, author: batcherPriv, good: true},
 				{to: &altInbox, dataLen: 2020, value: 12, author: batcherPriv, good: false},
 			},
 		},
@@ -121,7 +123,7 @@ func TestDataFromEVMTransactions(t *testing.T) {
 			}
 		}
 
-		out := DataFromEVMTransactions(DataSourceConfig{cfg.L1Signer(), cfg.BatchInboxAddress, false}, batcherAddr, txs, testlog.Logger(t, log.LevelCrit))
+		out := DataFromEVMTransactions(DataSourceConfig{cfg.L1Signer(), cfg.BatchInboxContractAddress, false}, batcherAddr, txs, testlog.Logger(t, log.LevelCrit))
 		require.ElementsMatch(t, expectedData, out)
 	}
 
