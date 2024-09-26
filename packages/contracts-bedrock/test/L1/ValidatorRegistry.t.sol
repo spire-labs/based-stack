@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
 import { Test } from "forge-std/Test.sol";
@@ -60,6 +61,8 @@ contract ValidatorRegistry_Test is Test {
     uint256 internal constant _FORK_BLOCK = 20814319;
 
     function setUp() public {
+      // random free tier public infura key cause archive node needed for this block fork
+      // remove for env variable in production
         vm.createSelectFork(vm.rpcUrl("https://mainnet.infura.io/v3/1a2bbfa3895b4335b74a963eda5aadc5"), _FORK_BLOCK);
         registry = new ValidatorRegistry();
     }
