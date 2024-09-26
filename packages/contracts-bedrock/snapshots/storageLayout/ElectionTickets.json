@@ -40,5 +40,12 @@
     "offset": 0,
     "slot": "5",
     "type": "mapping(address => mapping(address => bool))"
+  },
+  {
+    "bytes": "32",
+    "label": "tokenId",
+    "offset": 0,
+    "slot": "6",
+    "type": "uint256"
   }
 ]
