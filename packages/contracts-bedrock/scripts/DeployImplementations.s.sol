@@ -491,8 +491,7 @@ contract DeployImplementations is Script {
         deployPreimageOracleSingleton(_dii, _dio);
         deployMipsSingleton(_dii, _dio);
         deployDisputeGameFactoryImpl(_dii, _dio);
-        deployBatchInbox(_dii, _dio);
-        deployElectionAndElectionTickets(_dii, _dio);
+        deployElectionAndElectionTicketsAndBatchInbox(_dii, _dio);
 
         // Deploy the OP Stack Manager with the new implementations set.
         deployOPStackManager(_dii, _dio);
@@ -762,31 +761,31 @@ contract DeployImplementations is Script {
         _dio.set(_dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
     }
 
-    function deployElectionAndElectionTickets(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+    function deployElectionAndElectionTicketsAndBatchInbox(
+        DeployImplementationsInput,
+        DeployImplementationsOutput _dso
+    )
+        public
+    {
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
         ElectionTickets electionTicket =
-            ElectionTickets(_precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1));
+            ElectionTickets(_precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 2));
 
         vm.startBroadcast(msg.sender);
         Election election = new Election(startBlock, durationBlocks, startPrice, discountRate, electionTicket);
-        electionTicket = new ElectionTickets(address(election), address(_dso.batchInboxImpl()));
+        BatchInbox batchInbox = new BatchInbox(election);
+        electionTicket = new ElectionTickets(address(election), address(batchInbox));
+        vm.stopBroadcast();
 
         vm.label(address(election), "Election");
         _dso.set(_dso.electionImpl.selector, address(election));
 
         vm.label(address(electionTicket), "ElectionTickets");
         _dso.set(_dso.electionTicketImpl.selector, address(electionTicket));
-    }
-
-    function deployBatchInbox(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
-        Election election = Election(_dso.electionImpl());
-
-        vm.broadcast(msg.sender);
-        BatchInbox batchInbox = new BatchInbox(election);
 
         vm.label(address(batchInbox), "BatchInbox");
         _dso.set(_dso.batchInboxImpl.selector, address(batchInbox));

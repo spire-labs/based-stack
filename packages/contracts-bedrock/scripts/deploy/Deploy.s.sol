@@ -450,8 +450,7 @@ contract Deploy is Deployer {
         deployDelayedWETH();
         deployPreimageOracle();
         deployMips();
-        deployBatchInbox();
-        deployElectionAndElectionTickets();
+        deployElectionAndElectionTicketsAndBatchInbox();
         deployAnchorStateRegistry();
     }
 
@@ -846,41 +845,42 @@ contract Deploy is Deployer {
         addr_ = address(mips);
     }
 
-    /// @notice Deploy Election and ElectionTickets
+    /// @notice Deploy Election, ElectionTickets and BatchInbox
     ///
-    /// @dev Done in one function due to circular dependency
-    function deployElectionAndElectionTickets() public broadcast returns (address election_, address electionTicket_) {
+    /// @dev Done in one function due to triangular dependency
+    function deployElectionAndElectionTicketsAndBatchInbox()
+        public
+        broadcast
+        returns (address election_, address electionTicket_, address batchInbox_)
+    {
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
 
-        address _precalculatedTicketAddress = _precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1);
+        address _precalculatedTicketAddress = _precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 2);
 
         console.log("Deploying Election implementation");
         Election election = new Election{ salt: _implSalt() }(
             startBlock, durationBlocks, startPrice, discountRate, ElectionTickets(_precalculatedTicketAddress)
         );
 
-        ElectionTickets electionTicket = new ElectionTickets(address(election), mustGetAddress("BatchInbox"));
+        console.log("Deploying Batch Inbox implementation");
+        BatchInbox batchInbox = new BatchInbox{ salt: _implSalt() }(election);
+
+        console.log("Deploying ElectionTickets implementation");
+        ElectionTickets electionTicket = new ElectionTickets(address(election), address(batchInbox));
         save("Election", address(election));
         save("ElectionTickets", address(electionTicket));
+        save("BatchInbox", address(batchInbox));
         console.log("Election deployed at %s", address(election));
         console.log("ElectionTickets deployed at %s", address(electionTicket));
+        console.log("BatchInbox deployed at %s", address(batchInbox));
 
         election_ = address(election);
         electionTicket_ = address(electionTicket);
-    }
-
-    /// @notice Deploy BatchInbox
-    function deployBatchInbox() public broadcast returns (address addr_) {
-        console.log("Deploying Batch Inbox implementation");
-        BatchInbox batchInbox = new BatchInbox{ salt: _implSalt() }(Election(mustGetAddress("Election")));
-        save("BatchInbox", address(batchInbox));
-        console.log("Batch Inbox deployed at %s", address(batchInbox));
-
-        addr_ = address(batchInbox);
+        batchInbox_ = address(batchInbox);
     }
 
     /// @notice Deploy MIPS2
