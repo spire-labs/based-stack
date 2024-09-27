@@ -17,6 +17,7 @@ import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
 import { Election } from "src/L1/Election.sol";
+import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
@@ -112,6 +113,22 @@ contract DeployImplementationsInput_Test is Test {
 contract DeployImplementationsOutput_Test is Test {
     DeployImplementationsOutput dio;
 
+    // Put these in storage to avoid stack too deep errors
+    OptimismPortal2 optimismPortalImpl = OptimismPortal2(payable(makeAddr("optimismPortalImpl")));
+    DelayedWETH delayedWETHImpl = DelayedWETH(payable(makeAddr("delayedWETHImpl")));
+    PreimageOracle preimageOracleSingleton = PreimageOracle(makeAddr("preimageOracleSingleton"));
+    MIPS mipsSingleton = MIPS(makeAddr("mipsSingleton"));
+    SystemConfig systemConfigImpl = SystemConfig(makeAddr("systemConfigImpl"));
+    L1CrossDomainMessenger l1CrossDomainMessengerImpl = L1CrossDomainMessenger(makeAddr("l1CrossDomainMessengerImpl"));
+    L1ERC721Bridge l1ERC721BridgeImpl = L1ERC721Bridge(makeAddr("l1ERC721BridgeImpl"));
+    L1StandardBridge l1StandardBridgeImpl = L1StandardBridge(payable(makeAddr("l1StandardBridgeImpl")));
+    OptimismMintableERC20Factory optimismMintableERC20FactoryImpl =
+        OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl"));
+    DisputeGameFactory disputeGameFactoryImpl = DisputeGameFactory(makeAddr("disputeGameFactoryImpl"));
+    Election electionImpl = Election(makeAddr("electionImpl"));
+    ElectionTickets electionTicketImpl = ElectionTickets(makeAddr("electionTicketImpl"));
+    BatchInbox batchInboxImpl = BatchInbox(makeAddr("batchInbox"));
+
     function setUp() public {
         dio = new DeployImplementationsOutput();
     }
@@ -123,20 +140,6 @@ contract DeployImplementationsOutput_Test is Test {
         proxy.upgradeTo(opsmImpl);
 
         OPStackManager opsmProxy = OPStackManager(address(proxy));
-        OptimismPortal2 optimismPortalImpl = OptimismPortal2(payable(makeAddr("optimismPortalImpl")));
-        DelayedWETH delayedWETHImpl = DelayedWETH(payable(makeAddr("delayedWETHImpl")));
-        PreimageOracle preimageOracleSingleton = PreimageOracle(makeAddr("preimageOracleSingleton"));
-        MIPS mipsSingleton = MIPS(makeAddr("mipsSingleton"));
-        SystemConfig systemConfigImpl = SystemConfig(makeAddr("systemConfigImpl"));
-        L1CrossDomainMessenger l1CrossDomainMessengerImpl =
-            L1CrossDomainMessenger(makeAddr("l1CrossDomainMessengerImpl"));
-        L1ERC721Bridge l1ERC721BridgeImpl = L1ERC721Bridge(makeAddr("l1ERC721BridgeImpl"));
-        L1StandardBridge l1StandardBridgeImpl = L1StandardBridge(payable(makeAddr("l1StandardBridgeImpl")));
-        OptimismMintableERC20Factory optimismMintableERC20FactoryImpl =
-            OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl"));
-        DisputeGameFactory disputeGameFactoryImpl = DisputeGameFactory(makeAddr("disputeGameFactoryImpl"));
-        Election electionImpl = Election(makeAddr("electionImpl"));
-        BatchInbox batchInboxImpl = BatchInbox(makeAddr("batchInbox"));
 
         vm.etch(address(opsmProxy), address(opsmProxy).code);
         vm.etch(address(opsmImpl), hex"01");
@@ -152,6 +155,8 @@ contract DeployImplementationsOutput_Test is Test {
         vm.etch(address(disputeGameFactoryImpl), hex"01");
         vm.etch(address(electionImpl), hex"01");
         vm.etch(address(batchInboxImpl), hex"01");
+        vm.etch(address(electionTicketImpl), hex"01");
+
         dio.set(dio.opsmProxy.selector, address(opsmProxy));
         dio.set(dio.optimismPortalImpl.selector, address(optimismPortalImpl));
         dio.set(dio.delayedWETHImpl.selector, address(delayedWETHImpl));
@@ -165,6 +170,7 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
         dio.set(dio.electionImpl.selector, address(electionImpl));
         dio.set(dio.batchInboxImpl.selector, address(batchInboxImpl));
+        dio.set(dio.electionTicketImpl.selector, address(electionTicketImpl));
 
         assertEq(address(opsmProxy), address(dio.opsmProxy()), "50");
         assertEq(address(optimismPortalImpl), address(dio.optimismPortalImpl()), "100");
@@ -179,6 +185,7 @@ contract DeployImplementationsOutput_Test is Test {
         assertEq(address(disputeGameFactoryImpl), address(dio.disputeGameFactoryImpl()), "950");
         assertEq(address(electionImpl), address(dio.electionImpl()), "1000");
         assertEq(address(batchInboxImpl), address(dio.batchInboxImpl()), "1100");
+        assertEq(address(electionTicketImpl), address(dio.electionTicketImpl()), "1200");
     }
 
     function test_getters_whenNotSet_revert() public {
@@ -219,6 +226,9 @@ contract DeployImplementationsOutput_Test is Test {
 
         vm.expectRevert(expectedErr);
         dio.batchInboxImpl();
+
+        vm.expectRevert(expectedErr);
+        dio.electionTicketImpl();
     }
 
     function test_getters_whenAddrHasNoCode_reverts() public {
@@ -268,6 +278,10 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.batchInboxImpl.selector, emptyAddr);
         vm.expectRevert(expectedErr);
         dio.batchInboxImpl();
+
+        dio.set(dio.electionTicketImpl.selector, emptyAddr);
+        vm.expectRevert(expectedErr);
+        dio.electionTicketImpl();
     }
 }
 

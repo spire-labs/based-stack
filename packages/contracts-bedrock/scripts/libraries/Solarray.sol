@@ -255,6 +255,43 @@ library Solarray {
         return arr;
     }
 
+    function addresses(
+        address a,
+        address b,
+        address c,
+        address d,
+        address e,
+        address f,
+        address g,
+        address h,
+        address i,
+        address j,
+        address k,
+        address l,
+        address m
+    )
+        internal
+        pure
+        returns (address[] memory)
+    {
+        address[] memory arr = new address[](13);
+        arr[0] = a;
+        arr[1] = b;
+        arr[2] = c;
+        arr[3] = d;
+        arr[4] = e;
+        arr[5] = f;
+        arr[6] = g;
+        arr[7] = h;
+        arr[8] = i;
+        arr[9] = j;
+        arr[10] = k;
+        arr[11] = l;
+        arr[12] = m;
+
+        return arr;
+    }
+
     function extend(address[] memory arr1, address[] memory arr2) internal pure returns (address[] memory newArr) {
         uint256 length1 = arr1.length;
         uint256 length2 = arr2.length;

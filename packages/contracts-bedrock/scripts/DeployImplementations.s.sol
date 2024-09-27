@@ -33,6 +33,7 @@ import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
 import { Election } from "src/L1/Election.sol";
+import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 
@@ -176,6 +177,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
     DisputeGameFactory internal _disputeGameFactoryImpl;
     Election internal _electionImpl;
     BatchInbox internal _batchInboxImpl;
+    ElectionTickets internal _electionTicketImpl;
 
     function set(bytes4 sel, address _addr) public {
         require(_addr != address(0), "DeployImplementationsOutput: cannot set zero address");
@@ -194,6 +196,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
         else if (sel == this.disputeGameFactoryImpl.selector) _disputeGameFactoryImpl = DisputeGameFactory(_addr);
         else if (sel == this.electionImpl.selector) _electionImpl = Election(_addr);
         else if (sel == this.batchInboxImpl.selector) _batchInboxImpl = BatchInbox(_addr);
+        else if (sel == this.electionTicketImpl.selector) _electionTicketImpl = ElectionTickets(_addr);
         else revert("DeployImplementationsOutput: unknown selector");
         // forgefmt: disable-end
     }
@@ -216,7 +219,8 @@ contract DeployImplementationsOutput is BaseDeployIO {
             address(this.l1StandardBridgeImpl()),
             address(this.optimismMintableERC20FactoryImpl()),
             address(this.disputeGameFactoryImpl()),
-            address(this.electionImpl())
+            address(this.electionImpl()),
+            address(this.electionTicketImpl())
         );
         DeployUtils.assertValidContractAddresses(addrs);
 
@@ -289,6 +293,14 @@ contract DeployImplementationsOutput is BaseDeployIO {
         return _disputeGameFactoryImpl;
     }
 
+    function electionTicketImpl() public view returns (ElectionTickets) {
+        DeployUtils.assertValidContractAddress(address(_electionTicketImpl));
+        return _electionTicketImpl;
+    }
+
+    // TODO: Add assertions for what we make a proxy in the future
+    // Currently we dont deploy contracts as proxies, there is a task to set this up
+    // Once we get a better idea of what should be a proxy and what should be immutable
     // -------- Deployment Assertions --------
     function assertValidDeploy(DeployImplementationsInput _dii) public {
         assertValidDelayedWETHImpl(_dii);
@@ -479,6 +491,7 @@ contract DeployImplementations is Script {
         deployPreimageOracleSingleton(_dii, _dio);
         deployMipsSingleton(_dii, _dio);
         deployDisputeGameFactoryImpl(_dii, _dio);
+        deployElectionTickets(_dii, _dio);
         deployElection(_dii, _dio);
         deployBatchInbox(_dii, _dio);
 
@@ -750,9 +763,25 @@ contract DeployImplementations is Script {
         _dio.set(_dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
     }
 
-    function deployElection(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+    function deployElectionTickets(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
         vm.broadcast(msg.sender);
-        Election election = new Election();
+        ElectionTickets electionTicket =
+            new ElectionTickets(address(_dso.electionImpl()), address(_dso.batchInboxImpl()));
+
+        vm.label(address(electionTicket), "ElectionTickets");
+        _dso.set(_dso.electionTicketImpl.selector, address(electionTicket));
+    }
+
+    function deployElection(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+        // TODO: Setup a way to easily configure these and read them in from somewhere
+        uint216 startBlock = 1;
+        uint8 durationBlocks = 32;
+        uint256 startPrice = 1e18;
+        uint8 discountRate = 10;
+        ElectionTickets electionTicket = _dso.electionTicketImpl();
+
+        vm.broadcast(msg.sender);
+        Election election = new Election(startBlock, durationBlocks, startPrice, discountRate, electionTicket);
 
         vm.label(address(election), "Election");
         _dso.set(_dso.electionImpl.selector, address(election));

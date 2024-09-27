@@ -35,6 +35,7 @@ import { PreimageOracle } from "src/cannon/PreimageOracle.sol";
 import { MIPS } from "src/cannon/MIPS.sol";
 import { MIPS2 } from "src/cannon/MIPS2.sol";
 import { Election } from "src/L1/Election.sol";
+import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { StorageSetter } from "src/universal/StorageSetter.sol";
 
@@ -449,6 +450,7 @@ contract Deploy is Deployer {
         deployDelayedWETH();
         deployPreimageOracle();
         deployMips();
+        deployElectionTickets();
         deployElection();
         deployBatchInbox();
         deployAnchorStateRegistry();
@@ -845,10 +847,29 @@ contract Deploy is Deployer {
         addr_ = address(mips);
     }
 
+    /// @notice Deploy ElectionTickets
+    function deployElectionTickets() public broadcast returns (address addr_) {
+        console.log("Deploying ElectionTickets implementation");
+        ElectionTickets electionTicket =
+            new ElectionTickets{ salt: _implSalt() }(mustGetAddress("Election"), mustGetAddress("BatchInbox"));
+        save("ElectionTickets", address(electionTicket));
+        console.log("ElectionTickets deployed at %s", address(electionTicket));
+
+        addr_ = address(electionTicket);
+    }
+
     /// @notice Deploy Election
     function deployElection() public broadcast returns (address addr_) {
+        // TODO: Setup a way to easily configure these and read them in from somewhere
+        uint216 startBlock = 1;
+        uint8 durationBlocks = 32;
+        uint256 startPrice = 1e18;
+        uint8 discountRate = 10;
+
         console.log("Deploying Election implementation");
-        Election election = new Election{ salt: _implSalt() }();
+        Election election = new Election{ salt: _implSalt() }(
+            startBlock, durationBlocks, startPrice, discountRate, ElectionTickets(mustGetAddress("ElectionTickets"))
+        );
         save("Election", address(election));
         console.log("Election deployed at %s", address(election));
 
