@@ -491,9 +491,8 @@ contract DeployImplementations is Script {
         deployPreimageOracleSingleton(_dii, _dio);
         deployMipsSingleton(_dii, _dio);
         deployDisputeGameFactoryImpl(_dii, _dio);
-        deployElectionTickets(_dii, _dio);
-        deployElection(_dii, _dio);
         deployBatchInbox(_dii, _dio);
+        deployElectionAndElectionTickets(_dii, _dio);
 
         // Deploy the OP Stack Manager with the new implementations set.
         deployOPStackManager(_dii, _dio);
@@ -763,28 +762,24 @@ contract DeployImplementations is Script {
         _dio.set(_dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
     }
 
-    function deployElectionTickets(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
-        vm.broadcast(msg.sender);
-        ElectionTickets electionTicket =
-            new ElectionTickets(address(_dso.electionImpl()), address(_dso.batchInboxImpl()));
-
-        vm.label(address(electionTicket), "ElectionTickets");
-        _dso.set(_dso.electionTicketImpl.selector, address(electionTicket));
-    }
-
-    function deployElection(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+    function deployElectionAndElectionTickets(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
-        ElectionTickets electionTicket = _dso.electionTicketImpl();
+        ElectionTickets electionTicket =
+            ElectionTickets(_precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1));
 
-        vm.broadcast(msg.sender);
+        vm.startBroadcast(msg.sender);
         Election election = new Election(startBlock, durationBlocks, startPrice, discountRate, electionTicket);
+        electionTicket = new ElectionTickets(address(election), address(_dso.batchInboxImpl()));
 
         vm.label(address(election), "Election");
         _dso.set(_dso.electionImpl.selector, address(election));
+
+        vm.label(address(electionTicket), "ElectionTickets");
+        _dso.set(_dso.electionTicketImpl.selector, address(electionTicket));
     }
 
     function deployBatchInbox(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
@@ -815,6 +810,55 @@ contract DeployImplementations is Script {
             newContract_ := create2(0, add(_bytecode, 0x20), mload(_bytecode), _salt)
         }
         require(newContract_ != address(0), "DeployImplementations: create2 failed");
+    }
+
+    /// @notice Precalculates the address of a contract that will be deployed thorugh `CREATE` opcode
+    ///
+    /// @param _deployer The deployer address
+    /// @param _nonce The next nonce of the deployer address
+    ///
+    /// @return precalculatedAddress_ The address where the contract will be stored
+    function _precalculateCreateAddress(
+        address _deployer,
+        uint256 _nonce
+    )
+        internal
+        pure
+        returns (address precalculatedAddress_)
+    {
+        bytes memory _data;
+        bytes1 _len = bytes1(0x94);
+
+        // A one-byte integer in the [0x00, 0x7f] range uses its own value as a length prefix, there is no
+        // additional "0x80 + length" prefix that precedes it.
+
+        if (_nonce <= 0x7f) {
+            _data = abi.encodePacked(bytes1(0xd6), _len, _deployer, uint8(_nonce));
+        }
+        // In the case of `_nonce > 0x7f` and `_nonce <= type(uint8).max`, we have the following encoding scheme
+        // (the same calculation can be carried over for higher _nonce bytes):
+        // 0xda = 0xc0 (short RLP prefix) + 0x1a (= the bytes length of: 0x94 + address + 0x84 + _nonce, in hex),
+        // 0x94 = 0x80 + 0x14 (= the bytes length of an address, 20 bytes, in hex),
+        // 0x84 = 0x80 + 0x04 (= the bytes length of the _nonce, 4 bytes, in hex).
+        else if (_nonce <= type(uint8).max) {
+            _data = abi.encodePacked(bytes1(0xd7), _len, _deployer, bytes1(0x81), uint8(_nonce));
+        } else if (_nonce <= type(uint16).max) {
+            _data = abi.encodePacked(bytes1(0xd8), _len, _deployer, bytes1(0x82), uint16(_nonce));
+        } else if (_nonce <= type(uint24).max) {
+            _data = abi.encodePacked(bytes1(0xd9), _len, _deployer, bytes1(0x83), uint24(_nonce));
+        } else if (_nonce <= type(uint32).max) {
+            _data = abi.encodePacked(bytes1(0xda), _len, _deployer, bytes1(0x84), uint32(_nonce));
+        } else if (_nonce <= type(uint40).max) {
+            _data = abi.encodePacked(bytes1(0xdb), _len, _deployer, bytes1(0x85), uint40(_nonce));
+        } else if (_nonce <= type(uint48).max) {
+            _data = abi.encodePacked(bytes1(0xdc), _len, _deployer, bytes1(0x86), uint48(_nonce));
+        } else if (_nonce <= type(uint56).max) {
+            _data = abi.encodePacked(bytes1(0xdd), _len, _deployer, bytes1(0x87), uint56(_nonce));
+        } else {
+            _data = abi.encodePacked(bytes1(0xde), _len, _deployer, bytes1(0x88), uint64(_nonce));
+        }
+
+        precalculatedAddress_ = address(uint160(uint256(keccak256(_data))));
     }
 }
 

@@ -450,9 +450,8 @@ contract Deploy is Deployer {
         deployDelayedWETH();
         deployPreimageOracle();
         deployMips();
-        deployElectionTickets();
-        deployElection();
         deployBatchInbox();
+        deployElectionAndElectionTickets();
         deployAnchorStateRegistry();
     }
 
@@ -847,33 +846,31 @@ contract Deploy is Deployer {
         addr_ = address(mips);
     }
 
-    /// @notice Deploy ElectionTickets
-    function deployElectionTickets() public broadcast returns (address addr_) {
-        console.log("Deploying ElectionTickets implementation");
-        ElectionTickets electionTicket =
-            new ElectionTickets{ salt: _implSalt() }(mustGetAddress("Election"), mustGetAddress("BatchInbox"));
-        save("ElectionTickets", address(electionTicket));
-        console.log("ElectionTickets deployed at %s", address(electionTicket));
-
-        addr_ = address(electionTicket);
-    }
-
-    /// @notice Deploy Election
-    function deployElection() public broadcast returns (address addr_) {
+    /// @notice Deploy Election and ElectionTickets
+    ///
+    /// @dev Done in one function due to circular dependency
+    function deployElectionAndElectionTickets() public broadcast returns (address election_, address electionTicket_) {
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
 
+        address _precalculatedTicketAddress = _precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1);
+
         console.log("Deploying Election implementation");
         Election election = new Election{ salt: _implSalt() }(
-            startBlock, durationBlocks, startPrice, discountRate, ElectionTickets(mustGetAddress("ElectionTickets"))
+            startBlock, durationBlocks, startPrice, discountRate, ElectionTickets(_precalculatedTicketAddress)
         );
-        save("Election", address(election));
-        console.log("Election deployed at %s", address(election));
 
-        addr_ = address(election);
+        ElectionTickets electionTicket = new ElectionTickets(address(election), mustGetAddress("BatchInbox"));
+        save("Election", address(election));
+        save("ElectionTickets", address(electionTicket));
+        console.log("Election deployed at %s", address(election));
+        console.log("ElectionTickets deployed at %s", address(electionTicket));
+
+        election_ = address(election);
+        electionTicket_ = address(electionTicket);
     }
 
     /// @notice Deploy BatchInbox
@@ -1752,5 +1749,54 @@ contract Deploy is Deployer {
         require(addr_ != address(0), "deployment failed");
         save(_nickname, addr_);
         console.log("%s deployed at %s", _nickname, addr_);
+    }
+
+    /// @notice Precalculates the address of a contract that will be deployed thorugh `CREATE` opcode
+    ///
+    /// @param _deployer The deployer address
+    /// @param _nonce The next nonce of the deployer address
+    ///
+    /// @return precalculatedAddress_ The address where the contract will be stored
+    function _precalculateCreateAddress(
+        address _deployer,
+        uint256 _nonce
+    )
+        internal
+        pure
+        returns (address precalculatedAddress_)
+    {
+        bytes memory _data;
+        bytes1 _len = bytes1(0x94);
+
+        // A one-byte integer in the [0x00, 0x7f] range uses its own value as a length prefix, there is no
+        // additional "0x80 + length" prefix that precedes it.
+
+        if (_nonce <= 0x7f) {
+            _data = abi.encodePacked(bytes1(0xd6), _len, _deployer, uint8(_nonce));
+        }
+        // In the case of `_nonce > 0x7f` and `_nonce <= type(uint8).max`, we have the following encoding scheme
+        // (the same calculation can be carried over for higher _nonce bytes):
+        // 0xda = 0xc0 (short RLP prefix) + 0x1a (= the bytes length of: 0x94 + address + 0x84 + _nonce, in hex),
+        // 0x94 = 0x80 + 0x14 (= the bytes length of an address, 20 bytes, in hex),
+        // 0x84 = 0x80 + 0x04 (= the bytes length of the _nonce, 4 bytes, in hex).
+        else if (_nonce <= type(uint8).max) {
+            _data = abi.encodePacked(bytes1(0xd7), _len, _deployer, bytes1(0x81), uint8(_nonce));
+        } else if (_nonce <= type(uint16).max) {
+            _data = abi.encodePacked(bytes1(0xd8), _len, _deployer, bytes1(0x82), uint16(_nonce));
+        } else if (_nonce <= type(uint24).max) {
+            _data = abi.encodePacked(bytes1(0xd9), _len, _deployer, bytes1(0x83), uint24(_nonce));
+        } else if (_nonce <= type(uint32).max) {
+            _data = abi.encodePacked(bytes1(0xda), _len, _deployer, bytes1(0x84), uint32(_nonce));
+        } else if (_nonce <= type(uint40).max) {
+            _data = abi.encodePacked(bytes1(0xdb), _len, _deployer, bytes1(0x85), uint40(_nonce));
+        } else if (_nonce <= type(uint48).max) {
+            _data = abi.encodePacked(bytes1(0xdc), _len, _deployer, bytes1(0x86), uint48(_nonce));
+        } else if (_nonce <= type(uint56).max) {
+            _data = abi.encodePacked(bytes1(0xdd), _len, _deployer, bytes1(0x87), uint56(_nonce));
+        } else {
+            _data = abi.encodePacked(bytes1(0xde), _len, _deployer, bytes1(0x88), uint64(_nonce));
+        }
+
+        precalculatedAddress_ = address(uint160(uint256(keccak256(_data))));
     }
 }
