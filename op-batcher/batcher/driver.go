@@ -19,7 +19,6 @@ import (
 	"github.com/ethereum-optimism/optimism/op-service/txmgr"
 	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
@@ -662,17 +661,9 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef
 	return nil
 }
 
-// sendTx uses the txmgr queue to send the given transaction candidate after setting its
-// gaslimit. It will block if the txmgr queue has reached its MaxPendingTransactions limit.
+// sendTx uses the txmgr queue to send the given transaction candidate.
+// It will block if the txmgr queue has reached its MaxPendingTransactions limit.
 func (l *BatchSubmitter) sendTx(txdata txData, isCancel bool, candidate *txmgr.TxCandidate, queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef]) {
-	intrinsicGas, err := core.IntrinsicGas(candidate.TxData, nil, false, true, true, false)
-	if err != nil {
-		// we log instead of return an error here because txmgr can do its own gas estimation
-		l.Log.Error("Failed to calculate intrinsic gas", "err", err)
-	} else {
-		candidate.GasLimit = intrinsicGas
-	}
-
 	queue.Send(txRef{id: txdata.ID(), isCancel: isCancel, isBlob: txdata.asBlob}, *candidate, receiptsCh)
 }
 
