@@ -701,6 +701,8 @@ func (l *BatchSubmitter) handleReceipt(r txmgr.TxReceipt[txRef]) {
 	// Record TX Status
 	if r.Err != nil {
 		l.recordFailedTx(r.ID.id, r.Err)
+	} else if r.Receipt.Status == 0 {
+		l.recordFailedTx(r.ID.id, errors.New("Transaction execution failed!"))
 	} else {
 		l.recordConfirmedTx(r.ID.id, r.Receipt)
 	}
