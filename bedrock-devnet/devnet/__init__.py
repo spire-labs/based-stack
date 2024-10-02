@@ -239,7 +239,6 @@ def devnet_deploy(paths):
             '--outfile.rollup', paths.rollup_config_path
         ], cwd=paths.op_node_dir)
 
-    rollup_config = read_json(paths.rollup_config_path)
     addresses = read_json(paths.addresses_json_path)
 
     # Start the L2.
@@ -269,9 +268,6 @@ def devnet_deploy(paths):
         'ALTDA_GENERIC_DA': 'true' if config.get("genericAltDA", False) else 'false',
         'ALTDA_SERVICE': 'true' if config.get("altDAService", False) else 'false',
     }
-
-    print("Docker env/n")
-    print(docker_env)
 
     if config.get("useL2OOAddress", False):
         docker_env['L2OO_ADDRESS'] = l2_output_oracle
