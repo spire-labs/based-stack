@@ -21,14 +21,12 @@ parser.add_argument('--allocs', help='Only create the allocs and exit', type=boo
 
 log = logging.getLogger()
 
+# Set config globally
+config = {}
+
 # Global constants
 FORKS = ["delta", "ecotone", "fjord", "granite"]
 
-# Global environment variables
-DEVNET_NO_BUILD = os.getenv('DEVNET_NO_BUILD') == "true"
-DEVNET_L2OO = os.getenv('DEVNET_L2OO') == "true"
-DEVNET_ALTDA = os.getenv('DEVNET_ALTDA') == "true"
-GENERIC_ALTDA = os.getenv('GENERIC_ALTDA') == "true"
 
 class Bunch:
     def __init__(self, **kwds):
@@ -93,6 +91,13 @@ def main():
 
     os.makedirs(devnet_dir, exist_ok=True)
 
+    # Fetch the devnet config globally
+    config_path = 'bedrock-devnet/devnet.json'
+    abs_config_path = pjoin(monorepo_dir, config_path)
+    with open(abs_config_path, 'r') as f:
+        config = json.load(f)
+
+
     if args.allocs:
         devnet_l1_allocs(paths)
         devnet_l2_allocs(paths)
@@ -102,7 +107,7 @@ def main():
     git_date = subprocess.run(['git', 'show', '-s', "--format=%ct"], capture_output=True, text=True).stdout.strip()
 
     # CI loads the images from workspace, and does not otherwise know the images are good as-is
-    if DEVNET_NO_BUILD:
+    if config.get("devnetNoBuild", False):
         log.info('Skipping docker images build')
     else:
         log.info(f'Building docker images for git commit {git_commit} ({git_date})')
@@ -121,12 +126,15 @@ def init_devnet_l1_deploy_config(paths, update_timestamp=False):
     deploy_config = read_json(paths.devnet_config_template_path)
     if update_timestamp:
         deploy_config['l1GenesisBlockTimestamp'] = '{:#x}'.format(int(time.time()))
-    if DEVNET_L2OO:
-        deploy_config['useFaultProofs'] = False
-    if DEVNET_ALTDA:
-        deploy_config['useAltDA'] = True
-    if GENERIC_ALTDA:
-        deploy_config['daCommitmentType'] = "GenericCommitment"
+
+    # Will be true if config.l2oo_address is set
+    deploy_config['useFaultProofs'] = True if config.get("useL2OOAddress", False) else False
+
+    deploy_config['useAltDA'] = True if config.get("isAltDa", False) else False
+
+    if config.get("genericAltDA", False):
+        deploy_config['daCommitmentType'] = config.get("daCommitmentType", "GenericCommitment")
+
     write_json(paths.devnet_config_path, deploy_config)
 
 def devnet_l1_allocs(paths):
@@ -175,7 +183,7 @@ def devnet_deploy(paths):
         log.info('L1 genesis already generated.')
     else:
         log.info('Generating L1 genesis.')
-        if not os.path.exists(paths.allocs_l1_path) or DEVNET_L2OO or DEVNET_ALTDA:
+        if not os.path.exists(paths.allocs_l1_path) or config.get("useL2OOAddress", False) == True or config.get("isAltDa", False) == True:
             # If this is a devnet variant then we need to generate the allocs
             # file here always. This is because CI will run devnet-allocs
             # without setting the appropriate env var which means the allocs will be wrong.
@@ -214,7 +222,7 @@ def devnet_deploy(paths):
     else:
         log.info('Generating L2 genesis and rollup configs.')
         l2_allocs_path = pjoin(paths.devnet_dir, f'allocs-l2-{FORKS[-1]}.json')
-        if os.path.exists(l2_allocs_path) == False or DEVNET_L2OO == True:
+        if os.path.exists(l2_allocs_path) == False or config.get("useL2OOAddress", False) == True:
             # Also regenerate if L2OO.
             # The L2OO flag may affect the L1 deployments addresses, which may affect the L2 genesis.
             devnet_l2_allocs(paths)
@@ -255,43 +263,36 @@ def devnet_deploy(paths):
     # Set up the base docker environment.
     docker_env = {
         'PWD': paths.ops_bedrock_dir,
-        'SEQUENCER_BATCH_INBOX_ADDRESS': batch_inbox_address
+        'SEQUENCER_BATCH_INBOX_ADDRESS': batch_inbox_address,
+        'DA_TYPE': config.get("daType", "blobs"),
+        'ALTDA_ENABLED': 'true' if config.get("isAltDa", False) else 'false',
+        'ALTDA_GENERIC_DA': 'true' if config.get("genericAltDA", False) else 'false',
+        'ALTDA_SERVICE': 'true' if config.get("altDAService", False) else 'false',
     }
 
-    # Selectively set the L2OO_ADDRESS or DGF_ADDRESS if using L2OO.
-    # Must be done selectively because op-proposer throws if both are set.
-    if DEVNET_L2OO:
+    print("Docker env/n")
+    print(docker_env)
+
+    if config.get("useL2OOAddress", False):
         docker_env['L2OO_ADDRESS'] = l2_output_oracle
     else:
         docker_env['DGF_ADDRESS'] = dispute_game_factory
-        docker_env['DG_TYPE'] = '254'
-        docker_env['PROPOSAL_INTERVAL'] = '12s'
+        docker_env['DG_TYPE'] = config.get("dgType", "254")
+        docker_env['PROPOSAL_INTERVAL'] = config.get("proposalInterval", "12s")
 
-    if DEVNET_ALTDA:
-        docker_env['ALTDA_ENABLED'] = 'true'
-        docker_env['DA_TYPE'] = 'calldata'
-    else:
-        docker_env['ALTDA_ENABLED'] = 'false'
-        docker_env['DA_TYPE'] = 'blobs'
 
-    if GENERIC_ALTDA:
-        docker_env['ALTDA_GENERIC_DA'] = 'true'
-        docker_env['ALTDA_SERVICE'] = 'true'
-    else:
-        docker_env['ALTDA_GENERIC_DA'] = 'false'
-        docker_env['ALTDA_SERVICE'] = 'false'
 
     # Bring up the rest of the services.
     log.info('Bringing up `op-node`, `op-proposer` and `op-batcher`.')
     run_command(['docker', 'compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher', 'artifact-server'], cwd=paths.ops_bedrock_dir, env=docker_env)
 
     # Optionally bring up op-challenger.
-    if not DEVNET_L2OO:
+    if not config.get("useL2OOAddress", False):
         log.info('Bringing up `op-challenger`.')
         run_command(['docker', 'compose', 'up', '-d', 'op-challenger'], cwd=paths.ops_bedrock_dir, env=docker_env)
 
     # Optionally bring up Alt-DA Mode components.
-    if DEVNET_ALTDA:
+    if config.get("isAltDa", False):
         log.info('Bringing up `da-server`, `sentinel`.') # TODO(10141): We don't have public sentinel images yet
         run_command(['docker', 'compose', 'up', '-d', 'da-server'], cwd=paths.ops_bedrock_dir, env=docker_env)
 
