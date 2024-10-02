@@ -1,7 +1,6 @@
 package derive
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -21,6 +20,7 @@ type DataIter interface {
 
 type L1TransactionFetcher interface {
 	InfoAndTxsByHash(ctx context.Context, hash common.Hash) (eth.BlockInfo, types.Transactions, error)
+	FetchReceipts(ctx context.Context, hast common.Hash) (eth.BlockInfo, types.Receipts, error)
 }
 
 type L1BlobsFetcher interface {
@@ -95,31 +95,23 @@ type DataSourceConfig struct {
 // isValidBatchTx returns true if:
 //  1. the transaction has a To() address that matches the batch inbox address, and
 //  2. the transaction has a valid signature from the batcher address
-func isValidBatchTx(tx *types.Transaction, l1Signer types.Signer, batchInboxAddr, batcherAddr common.Address, logger log.Logger) bool {
-	to := tx.To()
-	if to == nil || *to != batchInboxAddr {
-		return false
-	}
-	if tx.Type() != 3 {
+func isValidBatchTx(receipt *types.Receipt, batchInboxAddr common.Address, logger log.Logger) bool {
+	if receipt.Type != types.BlobTxType {
 		// TODO(miszke): enable other DA sources
-		log.Warn("not a blob tx")
+		logger.Warn("not a blob tx")
 		return false
 	}
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitSel := batchInboxAbi.Methods["submit"].ID
-	if !bytes.Equal(tx.Data()[:4], submitSel) {
-		log.Warn("tx in inbox with invalid selector", "hash", tx.Hash())
-		return false
+	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
+	for _, log := range receipt.Logs {
+		if log.Address != batchInboxAddr {
+			continue
+		}
+		if log.Topics[0] != topic0 {
+			continue
+		}
+		return true
 	}
-	seqDataSubmitter, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
-	if err != nil {
-		logger.Warn("tx in inbox with invalid signature", "hash", tx.Hash(), "err", err)
-		return false
-	}
-	// some random L1 user might have sent a transaction to our batch inbox, ignore them
-	if seqDataSubmitter != batcherAddr {
-		logger.Warn("tx in inbox with unauthorized submitter", "addr", seqDataSubmitter, "hash", tx.Hash(), "err", err)
-		return false
-	}
-	return true
+
+	return false
 }

@@ -58,7 +58,7 @@ type BatchWithDelay struct {
 
 const (
 	execPath     = "../op-node/cmd/batch_decoder"
-	batchInbox   = "0xff00000000000000000000000000000000000901"
+	batchInbox   = "0x7e804b214944c5eC552dfD199f665cC001ABA460"
 	batchSender  = "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
 	cacheDir     = "/tmp/batch_decoder/"
 	txCache      = cacheDir + "transactions_cache"

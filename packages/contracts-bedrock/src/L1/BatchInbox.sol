@@ -10,8 +10,11 @@ contract BatchInbox {
     /// @notice Address of Election contract.
     Election public election;
 
+    /// @notice Event emitted when a batch was successfully submitted.
+    event BatchSubmitted();
+
     /// @notice Error for when the caller is not the current election winner.
-    error OnlyElectionWinner(address caller);
+    error OnlyElectionWinner(address caller, address winner);
 
     /// @notice Constructs the BatchInboc contract.
     ///
@@ -24,10 +27,14 @@ contract BatchInbox {
     //          in the specified block IF the sequencer is not the L1 proposer.
     modifier onlyElectionWinner() {
         address electionWinner = election.electionWinner();
-        if (msg.sender != electionWinner) revert OnlyElectionWinner(msg.sender);
+        if (msg.sender != electionWinner) {
+            revert OnlyElectionWinner(msg.sender, electionWinner);
+        }
         _;
     }
 
     /// @notice Submits a new batch.
-    function submit() public onlyElectionWinner { }
+    function submit() public onlyElectionWinner {
+        emit BatchSubmitted();
+    }
 }
