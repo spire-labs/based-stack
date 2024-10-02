@@ -9,7 +9,7 @@ PYTHON?=python3
 help: ## Prints this help message
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-build: build-go build-contracts ## Builds Go components and contracts-bedrock
+build: build-config build-go build-contracts ## Builds Go components and contracts-bedrock
 .PHONY: build
 
 build-go: submodules op-node op-proposer op-batcher ## Builds op-node, op-proposer and op-batcher
@@ -18,6 +18,10 @@ build-go: submodules op-node op-proposer op-batcher ## Builds op-node, op-propos
 build-contracts:
 	(cd packages/contracts-bedrock && just build)
 .PHONY: build-contracts
+
+build-config:
+	$(PYTHON) ./ops/scripts/generate-config.py
+.PHONY: build-config
 
 lint-go: ## Lints Go code with specific linters
 	golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell,errorlint --timeout 5m -e "errors.As" -e "errors.Is" ./...
