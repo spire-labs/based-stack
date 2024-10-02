@@ -85,8 +85,16 @@ func (ds *BlobDataSource) open(ctx context.Context) ([]blobOrCalldata, error) {
 		}
 		return nil, NewTemporaryError(fmt.Errorf("failed to open blob data source: %w", err))
 	}
+	_, receipts, err := ds.fetcher.FetchReceipts(ctx, ds.ref.Hash)
+	if err != nil {
+		return nil, NewTemporaryError(fmt.Errorf("failed to fetch tx receipts: %w", err))
+	}
+	txsWithReceipts := make([]TxWithReceipt, len(txs))
+	for i, tx := range txs {
+		txsWithReceipts[i] = TxWithReceipt{tx: tx, receipt: receipts[i]}
+	}
 
-	data, hashes := dataAndHashesFromTxs(txs, &ds.dsCfg, ds.batcherAddr, ds.log)
+	data, hashes := dataAndHashesFromTxs(txsWithReceipts, &ds.dsCfg, ds.log)
 
 	if len(hashes) == 0 {
 		// there are no blobs to fetch so we can return immediately
@@ -112,26 +120,32 @@ func (ds *BlobDataSource) open(ctx context.Context) ([]blobOrCalldata, error) {
 	return data, nil
 }
 
+type TxWithReceipt struct {
+	tx      *types.Transaction
+	receipt *types.Receipt
+}
+
 // dataAndHashesFromTxs extracts calldata and datahashes from the input transactions and returns them. It
 // creates a placeholder blobOrCalldata element for each returned blob hash that must be populated
 // by fillBlobPointers after blob bodies are retrieved.
-func dataAndHashesFromTxs(txs types.Transactions, config *DataSourceConfig, batcherAddr common.Address, logger log.Logger) ([]blobOrCalldata, []eth.IndexedBlobHash) {
+func dataAndHashesFromTxs(txs []TxWithReceipt, config *DataSourceConfig, logger log.Logger) ([]blobOrCalldata, []eth.IndexedBlobHash) {
 	data := []blobOrCalldata{}
 	var hashes []eth.IndexedBlobHash
 	blobIndex := 0 // index of each blob in the block's blob sidecar
 	for _, tx := range txs {
 		// skip any non-batcher transactions
-		if !isValidBatchTx(tx, config.l1Signer, config.batchInboxAddress, batcherAddr, logger) {
-			blobIndex += len(tx.BlobHashes())
+		if !isValidBatchTx(tx.receipt, config.batchInboxAddress, logger) {
+			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}
+		// TODO(miszke): enable other DA sources
 		// handle non-blob batcher transactions by extracting their calldata
-		if tx.Type() != types.BlobTxType {
-			calldata := eth.Data(tx.Data())
-			data = append(data, blobOrCalldata{nil, &calldata})
-			continue
-		}
-		for _, h := range tx.BlobHashes() {
+		// if tx.tx.Type() != types.BlobTxType {
+		// 	calldata := eth.Data(tx.tx.Data())
+		// 	data = append(data, blobOrCalldata{nil, &calldata})
+		// 	continue
+		// }
+		for _, h := range tx.tx.BlobHashes() {
 			idh := eth.IndexedBlobHash{
 				Index: uint64(blobIndex),
 				Hash:  h,

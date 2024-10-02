@@ -31,10 +31,21 @@
     "type": "function"
   },
   {
+    "anonymous": false,
+    "inputs": [],
+    "name": "BatchSubmitted",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
         "name": "caller",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "winner",
         "type": "address"
       }
     ],

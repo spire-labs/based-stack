@@ -1,7 +1,6 @@
 package derive
 
 import (
-	"crypto/ecdsa"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/testlog"
@@ -23,10 +21,11 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// test setup
 	rng := rand.New(rand.NewSource(12345))
 	privateKey := testutils.InsecureRandomKey(rng)
-	publicKey, _ := privateKey.Public().(*ecdsa.PublicKey)
-	batcherAddr := crypto.PubkeyToAddress(*publicKey)
 	batchInboxAddr := testutils.RandomAddress(rng)
 	logger := testlog.Logger(t, log.LvlInfo)
+
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	batchSubmittedEventTopic := batchInboxAbi.Events["BatchSubmitted"].ID
 
 	chainId := new(big.Int).SetUint64(rng.Uint64())
 	signer := types.NewCancunSigner(chainId)
@@ -52,19 +51,23 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// require.Equal(t, 0, len(blobHashes))
 
 	// create a valid blob batcher tx and make sure it's picked up
-	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitSel := batchInboxAbi.Methods["submit"].ID
 	blobHash := testutils.RandomHash(rng)
 	blobTxData := &types.BlobTx{
 		Nonce:      rng.Uint64(),
 		Gas:        2_000_000,
 		To:         batchInboxAddr,
-		Data:       submitSel,
 		BlobHashes: []common.Hash{blobHash},
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
-	txs := types.Transactions{blobTx}
-	data, blobHashes := dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
+	receipt := &types.Receipt{
+		Type: types.BlobTxType,
+		Logs: []*types.Log{{
+			Address: batchInboxAddr,
+			Topics:  []common.Hash{batchSubmittedEventTopic},
+		}},
+	}
+	txs := []TxWithReceipt{{tx: blobTx, receipt: receipt}}
+	data, blobHashes := dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 1, len(data))
 	require.Equal(t, 1, len(blobHashes))
 	require.Nil(t, data[0].calldata)
@@ -80,18 +83,17 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// make sure blob tx to the batch inbox is ignored if not calling the submit fn
 	blobTxData.Data = testutils.RandomData(rng, rng.Intn(1000))
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
-	txs = types.Transactions{blobTx}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
+	txs = []TxWithReceipt{{tx: blobTx, receipt: &types.Receipt{}}}
+	data, blobHashes = dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 0, len(data))
 	require.Equal(t, 0, len(blobHashes))
 
 	// make sure blob tx ignored if the tx isn't going to the batch inbox addr, even if the
 	// signature is valid.
 	blobTxData.To = testutils.RandomAddress(rng)
-	blobTxData.Data = submitSel
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
-	txs = types.Transactions{blobTx}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
+	txs = []TxWithReceipt{{tx: blobTx, receipt: &types.Receipt{}}}
+	data, blobHashes = dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 0, len(data))
 	require.Equal(t, 0, len(blobHashes))
 }
