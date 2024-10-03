@@ -209,19 +209,9 @@ def devnet_deploy(paths):
     wait_up(8545)
     wait_for_rpc_server('127.0.0.1:8545')
 
-    log.info('Starting beacon chain.')
-    run_command(['docker', 'compose', 'up', '-d', 'beacon-chain'], cwd=paths.ops_bedrock_dir, env={
-        'PWD': paths.ops_bedrock_dir
-    })
-    print("Waiting for beacon chain to start...")
-    wait_up(3500)
-    print("Beacon chain started, attempting to ping it...")
-    wait_for_beacon_chain('127.0.0.1:3500')
-
-    log.info('Startring validators')
-    run_command(['docker', 'compose', 'up', '-d', 'validator'], cwd=paths.ops_bedrock_dir, env={
-        'PWD': paths.ops_bedrock_dir
-    })
+    # waiting for beacon node
+    wait_up(5052)
+    wait_for_beacon_chain('127.0.0.1:5052')
 
     if os.path.exists(paths.genesis_l2_path):
         log.info('L2 genesis and rollup configs already generated.')
@@ -344,8 +334,6 @@ def wait_for_beacon_chain(url):
             conn = http.client.HTTPConnection(url)
             conn.request('GET', '/eth/v1/beacon/genesis', body=None, headers=headers)
             response = conn.getresponse()
-            if url == "127.0.0.1:3500":
-                print(response)
             if response.status < 300:
                 log.info(f'Beacon chain at {url} ready')
                 return
