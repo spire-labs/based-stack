@@ -271,6 +271,73 @@ services:
       --private-key=0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
       --config=/rollup.json
 
+  # create-beacon-chain-genesis:
+  #   image: "gcr.io/prysmaticlabs/prysm/cmd/prysmctl:v5.0.0"
+  #   command:
+  #     - testnet
+  #     - generate-genesis
+  #     - --fork=deneb
+  #     - --num-validators=128
+  #     - --genesis-time-delay=15
+  #     - --output-ssz=/devnet/genesis-l1.ssz
+  #     - --chain-config-file=/beacon-data/config.yaml
+  #     - --geth-genesis-json-in=/devnet/genesis-l1.json
+  #     - --geth-genesis-json-out=/devnet/genesis-l1.json
+  #   volumes:
+  #     - ./beacon-data:/beacon-data
+  #     - ${PWD}/../.devnet:/devnet
+
+  # Runs a Prysm beacon chain from a specified genesis state created in the previous step
+  # and connects to go-ethereum in the same network as the execution client.
+  # The account used in go-ethereum is set as the suggested fee recipient for transactions
+  # proposed via the validators attached to the beacon node.
+  beacon-chain:
+    image: "gcr.io/prysmaticlabs/prysm/beacon-chain:v5.1.0"
+    depends_on:
+      - l1
+    command:
+      - --datadir=/devnet/beacon-chain
+      # No peers to sync with in this testnet, so setting to 0
+      - --min-sync-peers=0
+      - --genesis-state=/devnet/genesis-l1.ssz
+      - --bootstrap-node=
+      - --interop-eth1data-votes
+      # The chain configuration file used for setting up Prysm
+      - --chain-config-file=/beacon-data/config.yaml
+      # We specify the chain id used by our execution client
+      - --contract-deployment-block=0
+      - --chain-id=900
+      - --rpc-host=0.0.0.0
+      - --grpc-gateway-host=0.0.0.0
+      - --execution-endpoint=http://l1:8545
+      - --accept-terms-of-use
+      - --suggested-fee-recipient=0x123463a4b065722e99115d6c222f267d9cabb524
+      - --minimum-peers-per-subnet=0
+      - --enable-debug-rpc-endpoints
+      - --force-clear-db
+    ports:
+      - 4000:4000
+      - 3500:3500
+    volumes:
+      - ./beacon-data:/beacon-data
+      - ${PWD}/../.devnet:/devnet
+
+  validator:
+    image: "gcr.io/prysmaticlabs/prysm/validator:v5.1.0"
+    command:
+      - --beacon-rpc-provider=beacon-chain:4000
+      - --datadir=/beacon-data/validatordata
+      - --accept-terms-of-use
+      - --interop-num-validators=64
+      - --interop-start-index=0
+      - --chain-config-file=/beacon-data/config.yaml
+      - --force-clear-db
+    depends_on:
+      beacon-chain:
+        condition: service_started
+    volumes:
+      - ./beacon-data:/beacon-data
+
   artifact-server:
     depends_on:
       - l1
