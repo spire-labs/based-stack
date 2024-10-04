@@ -338,8 +338,6 @@ def wait_for_beacon_chain(url):
                 log.info(f'Beacon chain at {url} ready')
                 return
         except Exception as e:
-            print(f'Waiting for beacon chain at {url}')
-            print(e)
             log.info(f'Waiting for beacon chain at {url}')
             time.sleep(1)
         finally:
