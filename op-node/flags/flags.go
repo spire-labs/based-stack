@@ -69,7 +69,7 @@ var (
 	BeaconAddr = &cli.StringFlag{
 		Name:     "l1.beacon",
 		Usage:    "Address of L1 Beacon-node HTTP endpoint to use.",
-		Required: false,
+		Required: true,
 		EnvVars:  prefixEnvVars("L1_BEACON"),
 		Category: RollupCategory,
 	}
@@ -376,13 +376,13 @@ var (
 
 var requiredFlags = []cli.Flag{
 	L1NodeAddr,
+	BeaconAddr,
 	L2EngineAddr,
 	L2EngineJWTSecret,
 }
 
 var optionalFlags = []cli.Flag{
 	SupervisorAddr,
-	BeaconAddr,
 	BeaconHeader,
 	BeaconFallbackAddrs,
 	BeaconCheckIgnore,
