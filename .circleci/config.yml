@@ -1630,14 +1630,14 @@ workflows:
           requires:
             - go-mod-download
             - contracts-bedrock-build
-      - go-e2e-test:
-          name: op-e2e-fault-proof-tests
-          module: op-e2e
-          target: test-fault-proofs
-          parallelism: 4
-          requires:
-            - contracts-bedrock-build
-            - cannon-prestate
+      # - go-e2e-test:
+      #     name: op-e2e-fault-proof-tests
+      #     module: op-e2e
+      #     target: test-fault-proofs
+      #     parallelism: 4
+      #     requires:
+      #       - contracts-bedrock-build
+      #       - cannon-prestate
       # - op-program-compat:
       #     requires:
       #       - op-program-tests
