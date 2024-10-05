@@ -92,6 +92,10 @@ func (cl *BeaconHTTPClient) apiReq(ctx context.Context, dest any, reqPath string
 	return nil
 }
 
+func (b *L1BeaconClient) GetHTTPClient() BeaconClient {
+	return b.cl
+}
+
 func (cl *BeaconHTTPClient) NodeVersion(ctx context.Context) (string, error) {
 	var resp eth.APIVersionResponse
 	if err := cl.apiReq(ctx, &resp, versionMethod, nil); err != nil {
