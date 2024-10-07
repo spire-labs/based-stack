@@ -280,7 +280,7 @@ def devnet_deploy(paths):
 
     # Bring up the rest of the services.
     log.info('Bringing up `op-node`, `op-proposer` and `op-batcher`.')
-    run_command(['docker', 'compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher', 'artifact-server'], cwd=paths.ops_bedrock_dir, env=docker_env)
+    run_command(['docker', 'compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher', 'op-batcher-2', 'artifact-server'], cwd=paths.ops_bedrock_dir, env=docker_env)
 
     # Optionally bring up op-challenger.
     if not config.get("useL2OOAddress", False):

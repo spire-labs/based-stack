@@ -81,7 +81,7 @@ var (
 		NetworkTimeout:            10 * time.Second,
 		TxSendTimeout:             10 * time.Minute,
 		TxNotInMempoolTimeout:     2 * time.Minute,
-		ReceiptQueryInterval:      12 * time.Second,
+		ReceiptQueryInterval:      3 * time.Second,
 	}
 	DefaultChallengerFlagValues = DefaultFlagValues{
 		NumConfirmations:          uint64(3),
