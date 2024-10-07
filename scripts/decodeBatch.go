@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +10,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type FileData struct {
@@ -57,9 +61,9 @@ type BatchWithDelay struct {
 }
 
 const (
-	execPath     = "../op-node/cmd/batch_decoder"
-	batchInbox   = "0x7e804b214944c5eC552dfD199f665cC001ABA460"
-	batchSender  = "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+	execPath = "../op-node/cmd/batch_decoder"
+	// TODO: read this address from config as it changes often
+	batchInbox   = "0xA5674eC547712f85504eADC50C88d9197165332E"
 	cacheDir     = "/tmp/batch_decoder/"
 	txCache      = cacheDir + "transactions_cache"
 	channelCache = cacheDir + "channel_cache"
@@ -85,7 +89,10 @@ func decodeBatch(start, end int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	runCommand("go", "run", ".", "fetch", "--start", fmt.Sprintf("%d", start), "--end", fmt.Sprintf("%d", end), "--inbox", batchInbox, "--sender", batchSender, "--l1", l1Url, "--l1.beacon", l1Beacon, "--out", txCache)
+
+	sanityCheck()
+
+	runCommand("go", "run", ".", "fetch", "--start", fmt.Sprintf("%d", start), "--end", fmt.Sprintf("%d", end), "--inbox", batchInbox, "--l1", l1Url, "--l1.beacon", l1Beacon, "--out", txCache)
 	runCommand("go", "run", ".", "reassemble-devnet", "--in", txCache, "--out", channelCache)
 
 	// read all reassembled channels
@@ -146,6 +153,20 @@ func decodeBatch(start, end int) {
 		curr := batches[i].inner
 		prev := batches[i-1].inner
 		fmt.Printf("%+v; deltaSec: %d, \n", batches[i], curr.Timestamp-prev.Timestamp)
+	}
+}
+
+func sanityCheck() {
+	l1Client, err := ethclient.Dial(l1Url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	code, err := l1Client.CodeAt(context.Background(), common.HexToAddress(batchInbox), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(code) == 0 {
+		log.Fatalf("Sanity check failed: no code deployed at %v (should be BatchInbox contract)", batchInbox)
 	}
 }
 
