@@ -545,6 +545,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: _getSel("basefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("blobbasefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("maximumGasLimit()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("electionConfig()") });
 
         // SystemConfigInterop
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
@@ -589,6 +590,7 @@ contract Specification_Test is CommonTest {
             _sel: ISystemConfig.setElectionConfig.selector,
             _auth: Role.SYSTEMCONFIGOWNER
         });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionConfig()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("minimumPreconfirmationCollateral()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionFallbackList()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.unsafeBlockSigner.selector });

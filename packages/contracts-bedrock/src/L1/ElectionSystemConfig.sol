@@ -57,41 +57,34 @@ abstract contract ElectionSystemConfig {
     }
 
     /// @notice The storage slot that the election config is stored at
-    bytes32 public constant ELECTION_CONFIG_SLOT =
-        bytes32(uint256(keccak256("electionsystemconfig.electionconfig")) - 1);
+    ///
+    /// @dev Set as internal and exposes a getter function to make it return a struct instead of tuple
+    ElectionConfig internal _electionConfig;
 
     /// @notice Fetches the minimum preconfirmation collateral that is set
     ///
     /// @return minimumPreconfirmationCollateral_ The minimum preconfirmation collateral
     function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_) {
-        bytes32 _slot = ELECTION_CONFIG_SLOT;
-        ElectionConfig memory _config;
-        assembly {
-            _config := sload(_slot)
-        }
-
-        minimumPreconfirmationCollateral_ = _config.rules.minimumPreconfirmationCollateral;
+        minimumPreconfirmationCollateral_ = _electionConfig.rules.minimumPreconfirmationCollateral;
     }
 
     /// @notice Fetches the election fallback list that is set
     ///
     /// @return electionFallbackList_ The election fallback list
     function electionFallbackList() external view returns (bytes32 electionFallbackList_) {
-        bytes32 _slot = ELECTION_CONFIG_SLOT;
-        ElectionConfig memory _config;
-        assembly {
-            _config := sload(_slot)
-        }
+        electionFallbackList_ = _electionConfig.precedence.electionFallbackList;
+    }
 
-        electionFallbackList_ = _config.precedence.electionFallbackList;
+    /// @notice Fetches the election config that is set
+    ///
+    /// @return electionConfig_ The election config
+    function electionConfig() external view returns (ElectionConfig memory electionConfig_) {
+        electionConfig_ = _electionConfig;
     }
 
     /// @notice Updates the election queried by the offchain node for computing the election
     /// @param _config The config to update to
     function _setElectionConfig(ElectionConfig memory _config) internal {
-        bytes32 _slot = ELECTION_CONFIG_SLOT;
-        assembly {
-            sstore(_slot, _config)
-        }
+        _electionConfig = _config;
     }
 }

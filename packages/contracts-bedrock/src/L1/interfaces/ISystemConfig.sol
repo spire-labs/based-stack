@@ -108,4 +108,5 @@ interface ISystemConfig {
     function setElectionConfig(ElectionConfig memory _config) external;
     function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
     function electionFallbackList() external view returns (bytes32 electionFallbackList_);
+    function electionConfig() external view returns (ElectionConfig memory electionConfig_);
 }
