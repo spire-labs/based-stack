@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 interface ISystemConfig {
     enum UpdateType {
@@ -20,19 +21,6 @@ interface ISystemConfig {
         NEXT_PROPOSER_WITH_CONFIG,
         RANDOM_TICKET_HOLDER,
         PERMISSIONLESS
-    }
-
-    struct ElectionPrecedence {
-        bytes32 electionFallbackList;
-    }
-
-    struct ElectionConfigRules {
-        uint256 minimumPreconfirmationCollateral;
-    }
-
-    struct ElectionConfig {
-        ElectionConfigRules rules;
-        ElectionPrecedence precedence;
     }
 
     struct Addresses {
@@ -78,7 +66,7 @@ interface ISystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         Addresses memory _addresses,
-        ElectionConfig memory _electionConfig
+        ElectionSystemConfig.ElectionConfig memory _electionConfig
     )
         external;
     function isCustomGasToken() external view returns (bool);
@@ -105,8 +93,8 @@ interface ISystemConfig {
     function version() external pure returns (string memory);
 
     // ElectionSystemConfig
-    function setElectionConfig(ElectionConfig memory _config) external;
+    function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external;
     function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
     function electionFallbackList() external view returns (bytes32 electionFallbackList_);
-    function electionConfig() external view returns (ElectionConfig memory electionConfig_);
+    function electionConfig() external view returns (ElectionSystemConfig.ElectionConfig memory electionConfig_);
 }

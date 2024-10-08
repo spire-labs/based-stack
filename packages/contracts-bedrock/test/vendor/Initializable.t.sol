@@ -23,6 +23,9 @@ import { ISuperchainConfig } from "src/L1/interfaces/ISuperchainConfig.sol";
 import { ProtocolVersion } from "src/L1/interfaces/IProtocolVersions.sol";
 import { IAnchorStateRegistry } from "src/dispute/interfaces/IAnchorStateRegistry.sol";
 
+// Contracts
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
+
 /// @title Initializer_Test
 /// @dev Ensures that the `initialize()` function on contracts cannot be called more than
 ///      once. This contract inherits from `ERC721Bridge_Initializer` because it is the
@@ -201,9 +204,9 @@ contract Initializer_Test is Bridge_Initializer {
                             optimismMintableERC20Factory: address(0),
                             gasPayingToken: Constants.ETHER
                         }),
-                        ISystemConfig.ElectionConfig({
-                            rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                            precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+                        ElectionSystemConfig.ElectionConfig({
+                            rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
                         })
                     )
                 )
@@ -241,9 +244,9 @@ contract Initializer_Test is Bridge_Initializer {
                             optimismMintableERC20Factory: address(0),
                             gasPayingToken: Constants.ETHER
                         }),
-                        ISystemConfig.ElectionConfig({
-                            rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                            precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+                        ElectionSystemConfig.ElectionConfig({
+                            rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
                         })
                     )
                 )

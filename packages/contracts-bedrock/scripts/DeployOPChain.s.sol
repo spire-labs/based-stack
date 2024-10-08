@@ -12,6 +12,7 @@ import { BaseDeployIO } from "scripts/utils/BaseDeployIO.sol";
 import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
 import { ISuperchainConfig } from "src/L1/interfaces/ISuperchainConfig.sol";
 import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 import { Constants } from "src/libraries/Constants.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
 
@@ -447,11 +448,11 @@ contract DeployOPChain is Script {
             challenger: _doi.challenger()
         });
 
-        ISystemConfig.ElectionConfig memory electionConfig = ISystemConfig.ElectionConfig({
-            rules: ISystemConfig.ElectionConfigRules({
+        ElectionSystemConfig.ElectionConfig memory electionConfig = ElectionSystemConfig.ElectionConfig({
+            rules: ElectionSystemConfig.ElectionConfigRules({
                 minimumPreconfirmationCollateral: _doi.minimumPreconfirmationCollateral()
             }),
-            precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
+            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
         });
 
         OPStackManager.DeployInput memory deployInput = OPStackManager.DeployInput({

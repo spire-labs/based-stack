@@ -202,7 +202,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         SystemConfig.Addresses memory _addresses,
-        ElectionSystemConfig.ElectionConfig memory _electionConfig
+        ElectionConfig memory _electionConfig
     )
         public
         initializer
@@ -346,7 +346,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
 
     /// @notice Updates the election queried by the offchain node for computing the election
     /// @param _config The config to update to
-    function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external onlyOwner {
+    function setElectionConfig(ElectionConfig memory _config) external onlyOwner {
         _setElectionConfig(_config);
 
         bytes memory data = abi.encode(_config);

@@ -8,6 +8,7 @@ import { EIP1967Helper } from "test/mocks/EIP1967Helper.sol";
 // Contracts
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Proxy } from "src/universal/Proxy.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 // Libraries
 import { Constants } from "src/libraries/Constants.sol";
@@ -151,9 +152,9 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _electionConfig: ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -185,9 +186,9 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _electionConfig: ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
         assertEq(systemConfig.startBlock(), block.number);
@@ -220,9 +221,9 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _electionConfig: ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
         assertEq(systemConfig.startBlock(), 1);
@@ -319,9 +320,9 @@ contract SystemConfig_Init_ResourceConfig is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _electionConfig: ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -361,9 +362,9 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _gasPayingToken
             }),
-            _electionConfig: ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -534,9 +535,9 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
     function test_setElectionConfig_notOwner_reverts() external {
         vm.expectRevert("Ownable: caller is not the owner");
         systemConfig.setElectionConfig(
-            ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         );
     }
@@ -582,9 +583,9 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
     )
         external
     {
-        ISystemConfig.ElectionConfig memory _electionConfig = ISystemConfig.ElectionConfig({
-            rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
-            precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
+        ElectionSystemConfig.ElectionConfig memory _electionConfig = ElectionSystemConfig.ElectionConfig({
+            rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
+            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
         });
 
         bytes memory _data = abi.encode(_electionConfig);

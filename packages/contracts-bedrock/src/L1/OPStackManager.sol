@@ -9,6 +9,7 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { ISemver } from "src/universal/interfaces/ISemver.sol";
 import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
 import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 import { Proxy } from "src/universal/Proxy.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
@@ -53,7 +54,7 @@ contract OPStackManager is ISemver, Initializable {
     /// @notice The full set of inputs to deploy a new OP Stack chain.
     struct DeployInput {
         Roles roles;
-        ISystemConfig.ElectionConfig electionConfig;
+        ElectionSystemConfig.ElectionConfig electionConfig;
         uint32 basefeeScalar;
         uint32 blobBasefeeScalar;
         uint256 l2ChainId;

@@ -10,7 +10,7 @@ import { OPStackManager } from "src/L1/OPStackManager.sol";
 import { SuperchainConfig } from "src/L1/SuperchainConfig.sol";
 import { ProtocolVersions } from "src/L1/ProtocolVersions.sol";
 
-import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 // Exposes internal functions for testing.
 contract OPStackManager_Harness is OPStackManager {
@@ -64,11 +64,11 @@ contract OPStackManager_Deploy_Test is DeployOPChain_TestBase {
                 proposer: _doi.proposer(),
                 challenger: _doi.challenger()
             }),
-            electionConfig: ISystemConfig.ElectionConfig({
-                rules: ISystemConfig.ElectionConfigRules({
+            electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({
                     minimumPreconfirmationCollateral: _doi.minimumPreconfirmationCollateral()
                 }),
-                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
             }),
             basefeeScalar: _doi.basefeeScalar(),
             blobBasefeeScalar: _doi.blobBaseFeeScalar(),
