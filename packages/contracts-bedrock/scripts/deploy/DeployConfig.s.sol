@@ -165,10 +165,6 @@ contract DeployConfig is Script {
         preimageOracleMinProposalSize = stdJson.readUint(_json, "$.preimageOracleMinProposalSize");
         preimageOracleChallengePeriod = stdJson.readUint(_json, "$.preimageOracleChallengePeriod");
 
-        // Election system config
-        minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
-        electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
-
         useAltDA = _readOr(_json, "$.useAltDA", false);
         daCommitmentType = _readOr(_json, "$.daCommitmentType", "KeccakCommitment");
         daChallengeWindow = _readOr(_json, "$.daChallengeWindow", 1000);
@@ -180,6 +176,10 @@ contract DeployConfig is Script {
         customGasTokenAddress = _readOr(_json, "$.customGasTokenAddress", address(0));
 
         useInterop = _readOr(_json, "$.useInterop", false);
+
+        // Election system config
+        minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
+        electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
     }
 
     function fork() public view returns (Fork fork_) {
