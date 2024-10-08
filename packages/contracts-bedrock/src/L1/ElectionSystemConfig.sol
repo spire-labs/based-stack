@@ -2,8 +2,6 @@
 pragma solidity 0.8.15;
 
 abstract contract ElectionSystemConfig {
-    error NotParallelArrays();
-
     /// @notice Enum representing different fallback rules
     ///
     /// @custom:value NO_FALLBACK                       Indicates there is no fallback left

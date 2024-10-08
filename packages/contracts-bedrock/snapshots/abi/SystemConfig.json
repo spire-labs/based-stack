@@ -32,19 +32,6 @@
   },
   {
     "inputs": [],
-    "name": "ELECTION_CONFIG_SLOT",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "L1_CROSS_DOMAIN_MESSENGER_SLOT",
     "outputs": [
       {
@@ -207,6 +194,45 @@
         "internalType": "address",
         "name": "addr_",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "electionConfig",
+    "outputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "minimumPreconfirmationCollateral",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
+            "name": "rules",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "electionFallbackList",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
+            "name": "precedence",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.ElectionConfig",
+        "name": "electionConfig_",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
