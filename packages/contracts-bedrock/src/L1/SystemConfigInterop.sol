@@ -74,7 +74,7 @@ contract SystemConfigInterop is SystemConfig {
 
     /// @custom:semver +interop
     function version() public pure override returns (string memory) {
-        return string.concat(super.version(), "+interop");
+        return string.concat(super.version(), "+interop-1");
     }
 
     /// @notice Internal setter for the gas paying token address, includes validation.
