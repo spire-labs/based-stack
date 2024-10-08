@@ -636,6 +636,12 @@ contract Specification_Test is CommonTest {
             )
         });
 
+        // ElectionSystemConfig
+        _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("electionFallbackList()") });
+        _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("minimumPreconfirmationCollateral()") });
+        _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("electionConfig()") });
+
+
         // ProxyAdmin
         _addSpec({ _name: "ProxyAdmin", _sel: _getSel("addressManager()") });
         _addSpec({

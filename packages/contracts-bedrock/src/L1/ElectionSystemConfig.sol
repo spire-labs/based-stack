@@ -59,6 +59,9 @@ abstract contract ElectionSystemConfig {
     /// @dev Set as internal and exposes a getter function to make it return a struct instead of tuple
     ElectionConfig internal _electionConfig;
 
+    /// @notice Storage gap for future upgrades
+    uint256[50] private __gap;
+
     /// @notice Fetches the minimum preconfirmation collateral that is set
     ///
     /// @return minimumPreconfirmationCollateral_ The minimum preconfirmation collateral
