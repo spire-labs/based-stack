@@ -11,6 +11,7 @@ import { ForgeArtifacts, Abi, AbiEntry } from "scripts/libraries/ForgeArtifacts.
 
 // Contracts
 import { OPStackManager } from "src/L1/OPStackManager.sol";
+import { SystemConfigInterop } from "src/L1/SystemConfigInterop.sol";
 
 // Interfaces
 import { IOptimismPortal } from "src/L1/interfaces/IOptimismPortal.sol";
@@ -553,7 +554,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("VERSION()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("batcherHash()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("gasLimit()") });
-        _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.initialize.selector });
+        _addSpec({ _name: "SystemConfigInterop", _sel: SystemConfigInterop.initialize.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.minimumGasLimit.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("overhead()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("owner()") });
