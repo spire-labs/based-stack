@@ -99,6 +99,8 @@ type CLIConfig struct {
 	// Should only be used for testing purposes.
 	TestUseMaxTxSizeForBlobs bool
 
+	EvenBlocks bool
+
 	TxMgrConfig   txmgr.CLIConfig
 	LogConfig     oplog.CLIConfig
 	MetricsConfig opmetrics.CLIConfig
@@ -183,6 +185,7 @@ func NewConfig(ctx *cli.Context) *CLIConfig {
 		CompressionAlgo:              derive.CompressionAlgo(ctx.String(flags.CompressionAlgoFlag.Name)),
 		Stopped:                      ctx.Bool(flags.StoppedFlag.Name),
 		WaitNodeSync:                 ctx.Bool(flags.WaitNodeSyncFlag.Name),
+		EvenBlocks:                   ctx.Bool(flags.EvenBlocksFlag.Name),
 		CheckRecentTxsDepth:          ctx.Int(flags.CheckRecentTxsDepthFlag.Name),
 		BatchType:                    ctx.Uint(flags.BatchTypeFlag.Name),
 		DataAvailabilityType:         flags.DataAvailabilityType(ctx.String(flags.DataAvailabilityTypeFlag.Name)),

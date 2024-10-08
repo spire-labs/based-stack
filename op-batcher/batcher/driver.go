@@ -473,7 +473,15 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 			l.Log.Info("txpool state is not good, aborting state publishing")
 			return
 		}
-		err := l.publishTxToL1(l.killCtx, queue, receiptsCh, daGroup)
+		if err := l.updateL1Tip(); err != nil {
+			l.Log.Error("Failed to query L1 tip", "err", err)
+			return
+		}
+		if !l.shouldPublish() {
+			l.Log.Debug("Not our turn to publish")
+			return
+		}
+		err := l.publishTxToL1(queue, receiptsCh, daGroup)
 		if err != nil {
 			if err != io.EOF {
 				l.Log.Error("Error publishing tx to l1", "err", err)
@@ -523,18 +531,10 @@ func (l *BatchSubmitter) clearState(ctx context.Context) {
 }
 
 // publishTxToL1 submits a single state tx to the L1
-func (l *BatchSubmitter) publishTxToL1(ctx context.Context, queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group) error {
-	// send all available transactions
-	l1tip, err := l.l1Tip(ctx)
-	if err != nil {
-		l.Log.Error("Failed to query L1 tip", "err", err)
-		return err
-	}
-	l.recordL1Tip(l1tip)
-
+func (l *BatchSubmitter) publishTxToL1(queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group) error {
 	// Collect next transaction data. This pulls data out of the channel, so we need to make sure
 	// to put it back if ever da or txmgr requests fail, by calling l.recordFailedDARequest/recordFailedTx.
-	txdata, err := l.state.TxData(l1tip.ID())
+	txdata, err := l.state.TxData(l.lastL1Tip.ID())
 
 	if err == io.EOF {
 		l.Log.Trace("No transaction data available")
@@ -686,6 +686,10 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 		TxData: submitSel,
 		To:     &l.RollupConfig.BatchInboxContractAddress,
 		Blobs:  blobs,
+		// POC ONLY: we cannot use eth_estimateGas or intrinsic gas calculation
+		// but hardcoding the gasLimit works fine on devnet. This should be updated
+		// once we finalise the BatchInbox contract.
+		GasLimit: 30000,
 	}, nil
 }
 
@@ -761,6 +765,29 @@ func (l *BatchSubmitter) checkTxpool(queue *txmgr.Queue[txRef], receiptsCh chan 
 	r := l.txpoolState == TxpoolGood
 	l.txpoolMutex.Unlock()
 	return r
+}
+
+func (l *BatchSubmitter) updateL1Tip() error {
+	l1tip, err := l.l1Tip(l.killCtx)
+	if err != nil {
+		fmt.Println("Error getting l1 tip")
+		return err
+	}
+	l.recordL1Tip(l1tip)
+
+	return nil
+}
+
+func (l *BatchSubmitter) shouldPublish() bool {
+	// POC ONLY
+	// the POC logic is that we have two batchers:
+	// - one of them submits the batch on even blocks, other on odd blocks
+	// - the first one has `Config.EvenBlocks` flag set to `true`, other to `false`7
+	if (l.lastL1Tip.Number+1)%2 == 0 {
+		return l.Config.EvenBlocks
+	} else {
+		return !l.Config.EvenBlocks
+	}
 }
 
 func logFields(xs ...any) (fs []any) {

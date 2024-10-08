@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -85,24 +86,30 @@ func fetchBatchesPerBlock(ctx context.Context, client *ethclient.Client, beacon 
 	invalidBatchCount := uint64(0)
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+	blockNumber := rpc.BlockNumber(number)
+	receipts, err := client.BlockReceipts(ctx, rpc.BlockNumberOrHash{BlockNumber: &blockNumber})
+	if err != nil {
+		return 0, 0, err
+	}
 	block, err := client.BlockByNumber(ctx, new(big.Int).SetUint64(number))
 	if err != nil {
 		return 0, 0, err
 	}
-	fmt.Println("Fetched block: ", number)
 	blobIndex := 0 // index of each blob in the block's blob sidecar
 	for i, tx := range block.Transactions() {
 		if tx.To() != nil && *tx.To() == config.BatchInbox {
+			receipt := receipts[i]
 			sender, err := signer.Sender(tx)
 			if err != nil {
 				return 0, 0, err
 			}
 			validSender := true
-			if _, ok := config.BatchSenders[sender]; !ok {
-				fmt.Printf("Found a transaction (%s) from an invalid sender (%s)\n", tx.Hash().String(), sender.String())
-				invalidBatchCount += 1
+
+			// The only event on BatchInbox is emitted on successful submit
+			if len(receipt.Logs) == 0 {
 				validSender = false
 			}
+
 			var datas []hexutil.Bytes
 			if tx.Type() != types.BlobTxType {
 				datas = append(datas, tx.Data())
@@ -191,6 +198,11 @@ func fetchBatchesPerBlock(ctx context.Context, client *ethclient.Client, beacon 
 		} else {
 			blobIndex += len(tx.BlobHashes())
 		}
+	}
+	fmt.Println("Fetched block: ", number)
+	if validBatchCount+invalidBatchCount > 0 {
+		fmt.Println("Valid batches:		", validBatchCount)
+		fmt.Println("Invalid batches:	", invalidBatchCount)
 	}
 	return validBatchCount, invalidBatchCount, nil
 }

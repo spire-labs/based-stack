@@ -11,7 +11,12 @@ contract Election is BlockDutchAuction {
     // Currently set to the batcher address that runs in devnet
     // Set as an array for now as we are going to add more
     /// @notice The list of sequencers that are allowed to submit batches
-    address[1] public sequencers = [0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC];
+    address[2] public sequencers = [
+        // anvil address index: 2
+        0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC,
+        // anvil address index: 6
+        0x976EA74026E726554dB657fA54763abd0C3a0aa9
+    ];
 
     /// @notice Constructs the Election contract
     ///

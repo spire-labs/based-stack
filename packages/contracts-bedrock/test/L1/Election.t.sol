@@ -23,7 +23,9 @@ contract ElectionTest is Test {
 
         vm.roll(_blockNumber);
 
-        address _expectedWinner = election.sequencers(0);
+        // assuming 2 sequencers
+        uint256 _winnerIndex = _blockNumber % 2;
+        address _expectedWinner = election.sequencers(_winnerIndex);
         address _winner = election.electionWinner();
 
         vm.assertTrue(_winner == _expectedWinner);
