@@ -409,7 +409,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
         require(systemConfig.optimismPortal() == address(0), "SYSCON-210");
         require(systemConfig.optimismMintableERC20Factory() == address(0), "SYSCON-220");
         require(systemConfig.minimumPreconfirmationCollateral() == 0, "SYSCON-230");
-        require(systemConfig.electionFallbackList() == bytes32(0), "SYSCON-240")
+        require(systemConfig.electionFallbackList() == bytes32(0), "SYSCON-240");
     }
 
     function assertValidL1CrossDomainMessengerImpl(DeployImplementationsInput) internal view {
