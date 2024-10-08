@@ -119,7 +119,7 @@ contract OPStackManager is ISemver, Initializable {
     // -------- Constants and Variables --------
 
     /// @custom:semver 1.0.0-beta.3
-    string public constant version = "1.0.0-beta.3";
+    string public constant version = "1.0.1-beta.3";
 
     /// @notice Address of the SuperchainConfig contract shared by all chains.
     SuperchainConfig public immutable superchainConfig;
