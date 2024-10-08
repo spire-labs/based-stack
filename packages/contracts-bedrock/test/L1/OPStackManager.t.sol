@@ -10,6 +10,8 @@ import { OPStackManager } from "src/L1/OPStackManager.sol";
 import { SuperchainConfig } from "src/L1/SuperchainConfig.sol";
 import { ProtocolVersions } from "src/L1/ProtocolVersions.sol";
 
+import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
+
 // Exposes internal functions for testing.
 contract OPStackManager_Harness is OPStackManager {
     constructor(
@@ -45,6 +47,8 @@ contract OPStackManager_Deploy_Test is DeployOPChain_TestBase {
         doi.set(doi.basefeeScalar.selector, basefeeScalar);
         doi.set(doi.blobBaseFeeScalar.selector, blobBaseFeeScalar);
         doi.set(doi.l2ChainId.selector, l2ChainId);
+        doi.set(doi.minimumPreconfirmationCollateral.selector, minimumPreconfirmationCollateral);
+        doi.set(doi.electionFallbackList.selector, electionFallbackList);
         doi.set(doi.opsmProxy.selector, address(opsm));
     }
 
@@ -59,6 +63,12 @@ contract OPStackManager_Deploy_Test is DeployOPChain_TestBase {
                 unsafeBlockSigner: _doi.unsafeBlockSigner(),
                 proposer: _doi.proposer(),
                 challenger: _doi.challenger()
+            }),
+            electionConfig: ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({
+                    minimumPreconfirmationCollateral: _doi.minimumPreconfirmationCollateral()
+                }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
             }),
             basefeeScalar: _doi.basefeeScalar(),
             blobBasefeeScalar: _doi.blobBaseFeeScalar(),

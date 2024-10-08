@@ -11,6 +11,7 @@ import { BaseDeployIO } from "scripts/utils/BaseDeployIO.sol";
 
 import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
 import { ISuperchainConfig } from "src/L1/interfaces/ISuperchainConfig.sol";
+import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
 import { Constants } from "src/libraries/Constants.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
 
@@ -45,6 +46,10 @@ contract DeployOPChainInput is BaseDeployIO {
     uint256 internal _l2ChainId;
     OPStackManager internal _opsmProxy;
 
+    // Election System Config
+    uint256 internal _minimumPreconfirmationCollateral;
+    bytes32 internal _electionFallbackList;
+
     function set(bytes4 _sel, address _addr) public {
         require(_addr != address(0), "DeployOPChainInput: cannot set zero address");
         if (_sel == this.opChainProxyAdminOwner.selector) _opChainProxyAdminOwner = _addr;
@@ -65,14 +70,29 @@ contract DeployOPChainInput is BaseDeployIO {
         } else if (_sel == this.l2ChainId.selector) {
             require(_value != 0 && _value != block.chainid, "DeployOPChainInput: invalid l2ChainId");
             _l2ChainId = _value;
+        } else if (_sel == this.minimumPreconfirmationCollateral.selector) {
+            _minimumPreconfirmationCollateral = _value;
         } else {
             revert("DeployOPChainInput: unknown selector");
         }
     }
 
+    function set(bytes4 _sel, bytes32 _value) public {
+        if (_sel == this.electionFallbackList.selector) _electionFallbackList = _value;
+        else revert("DeployOPChainInput: unknown selector");
+    }
+
     function loadInputFile(string memory _infile) public pure {
         _infile;
         require(false, "DeployOPChainInput: not implemented");
+    }
+
+    function minimumPreconfirmationCollateral() public view returns (uint256) {
+        return _minimumPreconfirmationCollateral;
+    }
+
+    function electionFallbackList() public view returns (bytes32) {
+        return _electionFallbackList;
     }
 
     function opChainProxyAdminOwner() public view returns (address) {
@@ -426,8 +446,17 @@ contract DeployOPChain is Script {
             proposer: _doi.proposer(),
             challenger: _doi.challenger()
         });
+
+        ISystemConfig.ElectionConfig memory electionConfig = ISystemConfig.ElectionConfig({
+            rules: ISystemConfig.ElectionConfigRules({
+                minimumPreconfirmationCollateral: _doi.minimumPreconfirmationCollateral()
+            }),
+            precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
+        });
+
         OPStackManager.DeployInput memory deployInput = OPStackManager.DeployInput({
             roles: roles,
+            electionConfig: electionConfig,
             basefeeScalar: _doi.basefeeScalar(),
             blobBasefeeScalar: _doi.blobBaseFeeScalar(),
             l2ChainId: _doi.l2ChainId()
