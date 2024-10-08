@@ -5,6 +5,7 @@ pragma solidity 0.8.15;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IOptimismPortalInterop as IOptimismPortal } from "src/L1/interfaces/IOptimismPortalInterop.sol";
 import { SystemConfig } from "src/L1/SystemConfig.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 import { ConfigType } from "src/L2/L1BlockIsthmus.sol";
 
 // Libraries
@@ -38,6 +39,7 @@ contract SystemConfigInterop is SystemConfig {
     /// @param _batchInbox        Batch inbox address. An identifier for the op-node to find
     ///                           canonical data.
     /// @param _addresses         Set of L1 contract addresses. These should be the proxies.
+    /// @param _electionConfig    The defined system configuration for the election
     /// @param _dependencyManager The addressed allowed to add/remove from the dependency set
     function initialize(
         address _owner,
@@ -49,6 +51,7 @@ contract SystemConfigInterop is SystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         SystemConfig.Addresses memory _addresses,
+        ElectionSystemConfig.ElectionConfig memory _electionConfig,
         address _dependencyManager
     )
         external
@@ -63,7 +66,8 @@ contract SystemConfigInterop is SystemConfig {
             _unsafeBlockSigner: _unsafeBlockSigner,
             _config: _config,
             _batchInbox: _batchInbox,
-            _addresses: _addresses
+            _addresses: _addresses,
+            _electionConfig: _electionConfig
         });
         Storage.setAddress(DEPENDENCY_MANAGER_SLOT, _dependencyManager);
     }

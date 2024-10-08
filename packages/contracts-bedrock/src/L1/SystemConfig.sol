@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+// Config inheritance
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
+
 // Contracts
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -20,7 +23,7 @@ import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
 /// @notice The SystemConfig contract is used to manage configuration of an Optimism network.
 ///         All configuration is stored on L1 and picked up by L2 as part of the derviation of
 ///         the L2 chain.
-contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
+contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGasToken {
     /// @notice Enum representing different types of updates.
     /// @custom:value BATCHER              Represents an update to the batcher hash.
     /// @custom:value GAS_CONFIG           Represents an update to txn fee config on L2.
@@ -166,6 +169,14 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
                 optimismPortal: address(0),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
+            }),
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({
+                    minimumPreconfirmationCollateral: 0
+                }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({
+                    electionFallbackList: bytes32(0)
+                })
             })
         });
     }
@@ -182,6 +193,7 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
     /// @param _batchInbox        Batch inbox address. An identifier for the op-node to find
     ///                           canonical data.
     /// @param _addresses         Set of L1 contract addresses. These should be the proxies.
+    /// @param _electionConfig    The defined system configuration for the election
     function initialize(
         address _owner,
         uint32 _basefeeScalar,
@@ -191,7 +203,8 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
-        SystemConfig.Addresses memory _addresses
+        SystemConfig.Addresses memory _addresses,
+        ElectionSystemConfig.ElectionConfig memory _electionConfig
     )
         public
         initializer
@@ -215,6 +228,7 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
 
         _setStartBlock();
         _setGasPayingToken(_addresses.gasPayingToken);
+        _setElectionConfig(_electionConfig);
 
         _setResourceConfig(_config);
         require(_gasLimit >= minimumGasLimit(), "SystemConfig: gas limit too low");
@@ -330,6 +344,12 @@ contract SystemConfig is OwnableUpgradeable, ISemver, IGasToken {
                 _symbol: symbol
             });
         }
+    }
+
+    /// @notice Updates the election queried by the offchain node for computing the election
+    /// @param _config The config to update to
+    function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external onlyOwner {
+        _setElectionConfig(_config);
     }
 
     /// @notice Updates the unsafe block signer address. Can only be called by the owner.

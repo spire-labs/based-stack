@@ -173,13 +173,18 @@ abstract contract BlockDutchAuction is Ownable {
         if (_price > msg.value) {
             revert InsufficientFunds();
         } else if (msg.value > _price) {
-            (bool _success,) = payable(msg.sender).call{ value: msg.value - _price }("");
-            if (!_success) revert FailedLowLevelCall();
+            unchecked {
+                (bool _success,) = payable(msg.sender).call{ value: msg.value - _price }("");
+                if (!_success) revert FailedLowLevelCall();
+            }
         }
 
         ELECTION_TICKET.mint(msg.sender);
 
-        _ticketsLeft = __ticketsLeft - 1;
+        unchecked {
+            _ticketsLeft = __ticketsLeft - 1;
+        }
+
         emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);
     }
 
