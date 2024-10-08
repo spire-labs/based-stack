@@ -1083,10 +1083,5 @@
     ],
     "name": "OwnershipTransferred",
     "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "NotParallelArrays",
-    "type": "error"
   }
 ]
