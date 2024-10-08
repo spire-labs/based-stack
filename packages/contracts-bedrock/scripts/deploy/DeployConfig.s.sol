@@ -85,6 +85,8 @@ contract DeployConfig is Script {
     uint256 public daResolveWindow;
     uint256 public daBondSize;
     uint256 public daResolverRefundPercentage;
+    uint256 public minimumPreconfirmationCollateral;
+    bytes32 public electionFallbackList;
 
     bool public useCustomGasToken;
     address public customGasTokenAddress;
@@ -162,6 +164,10 @@ contract DeployConfig is Script {
 
         preimageOracleMinProposalSize = stdJson.readUint(_json, "$.preimageOracleMinProposalSize");
         preimageOracleChallengePeriod = stdJson.readUint(_json, "$.preimageOracleChallengePeriod");
+
+        // Election system config
+        minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
+        electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
 
         useAltDA = _readOr(_json, "$.useAltDA", false);
         daCommitmentType = _readOr(_json, "$.daCommitmentType", "KeccakCommitment");

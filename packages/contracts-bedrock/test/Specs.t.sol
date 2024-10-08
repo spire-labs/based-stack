@@ -507,6 +507,9 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setBatcherHash.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasLimit.selector, _auth: Role.SYSTEMCONFIGOWNER });
+        _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setElectionConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("minimumPreconfirmationCollateral()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("electionFallbackList()") });
         _addSpec({
             _name: "SystemConfig",
             _sel: ISystemConfig.setUnsafeBlockSigner.selector,
@@ -581,6 +584,13 @@ contract Specification_Test is CommonTest {
             _sel: _getSel("transferOwnership(address)"),
             _auth: Role.SYSTEMCONFIGOWNER
         });
+        _addSpec({
+            _name: "SystemConfigInterop",
+            _sel: ISystemConfig.setElectionConfig.selector,
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("minimumPreconfirmationCollateral()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionFallbackList()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.unsafeBlockSigner.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("version()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("l1CrossDomainMessenger()") });

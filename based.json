@@ -56,7 +56,9 @@
       "proofMaturityDelaySeconds": 604800,
       "disputeGameFinalityDelaySeconds": 302400,
       "respectedGameType": 0,
-      "useFaultProofs": true
+      "useFaultProofs": true,
+      "minimumPreconfirmationCollateral": 0,
+      "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
     },
     "sepolia": {
         "finalSystemOwner": "0xfd1D2e729aE8eEe2E146c033bf4400fE75284301",
@@ -113,7 +115,9 @@
         "proofMaturityDelaySeconds": 604800,
         "disputeGameFinalityDelaySeconds": 302400,
         "respectedGameType": 0,
-        "useFaultProofs": true
+        "useFaultProofs": true,
+              "minimumPreconfirmationCollateral": 0,
+      "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
     },
     "devnetL1-template": {
       "l1ChainID": 900,
@@ -187,7 +191,9 @@
       "daChallengeWindow": 16,
       "daResolveWindow": 16,
       "daBondSize": 1000000,
-      "daResolverRefundPercentage": 0
+      "daResolverRefundPercentage": 0,
+            "minimumPreconfirmationCollateral": 0,
+      "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
     }
   },
   "bedrock-devnet": {

@@ -144,6 +144,10 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismPortal: address(0),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
+            }),
+            _electionConfig: ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -174,6 +178,10 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismPortal: address(0),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
+            }),
+            _electionConfig: ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
         assertEq(systemConfig.startBlock(), block.number);
@@ -205,6 +213,10 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismPortal: address(0),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
+            }),
+            _electionConfig: ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
         assertEq(systemConfig.startBlock(), 1);
@@ -300,6 +312,10 @@ contract SystemConfig_Init_ResourceConfig is SystemConfig_Init {
                 optimismPortal: address(0),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
+            }),
+            _electionConfig: ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -338,6 +354,10 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
                 optimismPortal: address(optimismPortal),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _gasPayingToken
+            }),
+            _electionConfig: ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -504,6 +524,17 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
         systemConfig.setGasLimit(0);
     }
 
+    /// @dev Tests that `setElectionConfig` reverts if the caller is not the owner.
+    function test_setElectionConfig_notOwner_reverts() external {
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setElectionConfig(
+            ISystemConfig.ElectionConfig({
+                rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
+            })
+        );
+    }
+
     /// @dev Tests that `setUnsafeBlockSigner` reverts if the caller is not the owner.
     function test_setUnsafeBlockSigner_notOwner_reverts() external {
         vm.expectRevert("Ownable: caller is not the owner");
@@ -536,6 +567,30 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
         vm.prank(systemConfig.owner());
         systemConfig.setBatcherHash(newBatcherHash);
         assertEq(systemConfig.batcherHash(), newBatcherHash);
+    }
+
+    /// @dev Tests that the `setElectionConfig` updates the config successfully.
+    function testFuzz_setElectionConfig_succeeds(
+        uint256 _minPreconfCollateral,
+        bytes32 _electionFallbackList
+    )
+        external
+    {
+        ISystemConfig.ElectionConfig memory _electionConfig = ISystemConfig.ElectionConfig({
+            rules: ISystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
+            precedence: ISystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
+        });
+
+        bytes memory _data = abi.encode(_electionConfig);
+
+        vm.expectEmit(address(systemConfig));
+        emit ConfigUpdate(0, ISystemConfig.UpdateType.ELECTION_CONFIG, _data);
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setElectionConfig(_electionConfig);
+
+        assertEq(systemConfig.minimumPreconfirmationCollateral(), _minPreconfCollateral);
+        assertEq(systemConfig.electionFallbackList(), _electionFallbackList);
     }
 
     /// @dev Tests that `setGasConfig` updates the overhead and scalar successfully.

@@ -8,7 +8,31 @@ interface ISystemConfig {
         BATCHER,
         GAS_CONFIG,
         GAS_LIMIT,
-        UNSAFE_BLOCK_SIGNER
+        UNSAFE_BLOCK_SIGNER,
+        ELECTION_CONFIG
+    }
+
+    enum ElectionFallback {
+        NO_FALLBACK,
+        CURRENT_PROPOSER,
+        CURRENT_PROPOSER_WITH_CONFIG,
+        NEXT_PROPOSER,
+        NEXT_PROPOSER_WITH_CONFIG,
+        RANDOM_TICKET_HOLDER,
+        PERMISSIONLESS
+    }
+
+    struct ElectionPrecedence {
+        bytes32 electionFallbackList;
+    }
+
+    struct ElectionConfigRules {
+        uint256 minimumPreconfirmationCollateral;
+    }
+
+    struct ElectionConfig {
+        ElectionConfigRules rules;
+        ElectionPrecedence precedence;
     }
 
     struct Addresses {
@@ -53,7 +77,8 @@ interface ISystemConfig {
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
-        Addresses memory _addresses
+        Addresses memory _addresses,
+        ElectionConfig memory _electionConfig
     )
         external;
     function isCustomGasToken() external view returns (bool);
@@ -78,4 +103,9 @@ interface ISystemConfig {
     function transferOwnership(address newOwner) external;
     function unsafeBlockSigner() external view returns (address addr_);
     function version() external pure returns (string memory);
+
+    // ElectionSystemConfig
+    function setElectionConfig(ElectionConfig memory _config) external;
+    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
+    function electionFallbackList() external view returns (bytes32 electionFallbackList_);
 }

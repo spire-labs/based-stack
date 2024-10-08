@@ -8,10 +8,14 @@ abstract contract ElectionSystemConfig {
     ///
     /// @custom:value NO_FALLBACK                       Indicates there is no fallback left
     /// @custom:value CURRENT_PROPOSER                  Indicates that the current fallback is the current L1 proposer
-    /// @custom:value CURRENT_PROPOSER_WITH_CONFIG      Indicates that the current fallback is the current L1 proposer, with enforced config
-    /// @custom:value NEXT_PROPOSER                     Indicates that the current fallback is the next l1 proposer in the lookahead
-    /// @custom:value NEXT_PROPOSER_WITH_CONFIG         Indicates that the current fallback is the next l1 proposer in the lookahead, with enforced config
-    /// @custom:value RANDOM_TICKET_HOLDER              Indicates that the fallback will be a pseudo random ticket holder
+    /// @custom:value CURRENT_PROPOSER_WITH_CONFIG      Indicates that the current fallback is the current L1 proposer,
+    /// with enforced config
+    /// @custom:value NEXT_PROPOSER                     Indicates that the current fallback is the next l1 proposer in
+    /// the lookahead
+    /// @custom:value NEXT_PROPOSER_WITH_CONFIG         Indicates that the current fallback is the next l1 proposer in
+    /// the lookahead, with enforced config
+    /// @custom:value RANDOM_TICKET_HOLDER              Indicates that the fallback will be a pseudo random ticket
+    /// holder
     /// @custom:value PERMISSIONLESS                    Indicates tat the fallback is completely permissionless
     enum ElectionFallback {
         NO_FALLBACK,
@@ -29,7 +33,8 @@ abstract contract ElectionSystemConfig {
     /// @notice Struct for storing the rules of election precedence
     /// @dev This is a lower level struct meant to be used in sync with ElectionConfigRules
     ///
-    /// @param electionFallbackList A list going through the configured order of precedence, each byte represents a fallback rule
+    /// @param electionFallbackList A list going through the configured order of precedence, each byte represents a
+    /// fallback rule
     struct ElectionPrecedence {
         bytes32 electionFallbackList;
     }
@@ -39,7 +44,7 @@ abstract contract ElectionSystemConfig {
     ///
     /// @param minimumPreconfirmationCollateral The minimum amount of collateral required
     struct ElectionConfigRules {
-      uint256 minimumPreconfirmationCollateral;
+        uint256 minimumPreconfirmationCollateral;
     }
 
     /// @notice The configuration for the election
@@ -52,14 +57,41 @@ abstract contract ElectionSystemConfig {
     }
 
     /// @notice The storage slot that the election config is stored at
-    bytes32 public constant ELECTION_CONFIG_SLOT = bytes32(uint256(keccak256("electionsystemconfig.electionconfig")) - 1);
+    bytes32 public constant ELECTION_CONFIG_SLOT =
+        bytes32(uint256(keccak256("electionsystemconfig.electionconfig")) - 1);
+
+    /// @notice Fetches the minimum preconfirmation collateral that is set
+    ///
+    /// @return minimumPreconfirmationCollateral_ The minimum preconfirmation collateral
+    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_) {
+        bytes32 _slot = ELECTION_CONFIG_SLOT;
+        ElectionConfig memory _config;
+        assembly {
+            _config := sload(_slot)
+        }
+
+        minimumPreconfirmationCollateral_ = _config.rules.minimumPreconfirmationCollateral;
+    }
+
+    /// @notice Fetches the election fallback list that is set
+    ///
+    /// @return electionFallbackList_ The election fallback list
+    function electionFallbackList() external view returns (bytes32 electionFallbackList_) {
+        bytes32 _slot = ELECTION_CONFIG_SLOT;
+        ElectionConfig memory _config;
+        assembly {
+            _config := sload(_slot)
+        }
+
+        electionFallbackList_ = _config.precedence.electionFallbackList;
+    }
 
     /// @notice Updates the election queried by the offchain node for computing the election
     /// @param _config The config to update to
     function _setElectionConfig(ElectionConfig memory _config) internal {
-      bytes32 _slot = ELECTION_CONFIG_SLOT;
-      assembly {
-        sstore(_slot, _config)
-      }
+        bytes32 _slot = ELECTION_CONFIG_SLOT;
+        assembly {
+            sstore(_slot, _config)
+        }
     }
 }

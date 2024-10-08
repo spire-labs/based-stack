@@ -30,11 +30,13 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @custom:value GAS_LIMIT            Represents an update to gas limit on L2.
     /// @custom:value UNSAFE_BLOCK_SIGNER  Represents an update to the signer key for unsafe
     ///                                    block distrubution.
+    /// @custom:value ELECTION_CONFIG      Represents an update to the election system config
     enum UpdateType {
         BATCHER,
         GAS_CONFIG,
         GAS_LIMIT,
-        UNSAFE_BLOCK_SIGNER
+        UNSAFE_BLOCK_SIGNER,
+        ELECTION_CONFIG
     }
 
     /// @notice Struct representing the addresses of L1 system contracts. These should be the
@@ -171,12 +173,8 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
                 gasPayingToken: address(0)
             }),
             _electionConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({
-                    minimumPreconfirmationCollateral: 0
-                }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({
-                    electionFallbackList: bytes32(0)
-                })
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
@@ -350,6 +348,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @param _config The config to update to
     function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external onlyOwner {
         _setElectionConfig(_config);
+
+        bytes memory data = abi.encode(_config);
+        emit ConfigUpdate(VERSION, UpdateType.ELECTION_CONFIG, data);
     }
 
     /// @notice Updates the unsafe block signer address. Can only be called by the owner.
