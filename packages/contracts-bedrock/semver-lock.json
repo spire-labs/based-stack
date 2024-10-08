@@ -33,7 +33,7 @@
   },
   "src/L1/OPStackManager.sol": {
     "initCodeHash": "0x2502e891c2e981e67d71d5ec6018c9813e6ae275889759f5bf0109af15bfa6bb",
-    "sourceCodeHash": "0x708f10a86cf56f39ffbaee373a58c6ee1c6c1b3a0c8a7cfd03b6e7c48eb77915"
+    "sourceCodeHash": "0x42929d83b21130c8f840f1766dfe20735ff01e437236b19dfdf1e3da72e86cf4"
   },
   "src/L1/OptimismPortal.sol": {
     "initCodeHash": "0xbe2c0c81b3459014f287d8c89cdc0d27dde5d1f44e5d024fa1e4773ddc47c190",
@@ -57,11 +57,11 @@
   },
   "src/L1/SystemConfig.sol": {
     "initCodeHash": "0xb8c5af1655088fa36e734e00dfd746019fd1ce213342d93d52f68c4b4a91a635",
-    "sourceCodeHash": "0x67a98e1cdf601d1c6cd8fdb3af8609af9f4c4e615b8dca78708204e267bc7104"
+    "sourceCodeHash": "0x831d529773320ea5a90fa380bec541ea5a79000f4ea609f28c0c181d69b28eae"
   },
   "src/L1/SystemConfigInterop.sol": {
     "initCodeHash": "0x3231a12c48265ebe837745a630ee58fe29f7f3a65ed47e1e32ded50c33443504",
-    "sourceCodeHash": "0x48051d1372ff2e3bfc8da37d006c01e3f6eed941c03b2582726cf12de4433afa"
+    "sourceCodeHash": "0xda2004fbb06579390a800760ee7e8ff2ae4aedf1a28ce0655a305be22eae1988"
   },
   "src/L2/BaseFeeVault.sol": {
     "initCodeHash": "0x3bfcd57e25ad54b66c374f63e24e33a6cf107044aa8f5f69ef21202c380b5c5b",
