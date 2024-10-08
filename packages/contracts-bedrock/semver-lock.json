@@ -32,8 +32,8 @@
     "sourceCodeHash": "0xde4df0f9633dc0cdb1c9f634003ea5b0f7c5c1aebc407bc1b2f44c0ecf938649"
   },
   "src/L1/OPStackManager.sol": {
-    "initCodeHash": "0x022b3f6a80eb637972dd0d9ce8666a037c4b916889f44f86771d8c3add9d615d",
-    "sourceCodeHash": "0xb085725e18c1a0cc1826b770e403ecad765fce686bb80555bf0f6c3c67b21cba"
+    "initCodeHash": "0xb9f1debc26a48d9fe47243ae693beffaad84d9a8cd686a436f53f2a1abd40352",
+    "sourceCodeHash": "0x6a5e689c15051ab3fd11649da078029cd5b4fe170689b73bacc795dfe00cd9f6"
   },
   "src/L1/OptimismPortal.sol": {
     "initCodeHash": "0xbe2c0c81b3459014f287d8c89cdc0d27dde5d1f44e5d024fa1e4773ddc47c190",
@@ -56,12 +56,12 @@
     "sourceCodeHash": "0x39489a85bc3a5c8560f82d41b31bf7fe22f5b648f4ed538f61695a73092ea9eb"
   },
   "src/L1/SystemConfig.sol": {
-    "initCodeHash": "0x2fc36af5b3c493a423a19e0b597f6ff230b756b861b68099f3192d69b6088dc0",
-    "sourceCodeHash": "0x06a50ac992175fdb434b13e8461893e83862c23ce399e697e6e8109728ad1a3d"
+    "initCodeHash": "0x9a7f919fa4d863e67ba9dcf6959e982d35121e0f04f26d6868375fe5bba31e57",
+    "sourceCodeHash": "0x33f13e1c86c7bcffdb500956d4797626fde85871d72e991d165bbd784576ed37"
   },
   "src/L1/SystemConfigInterop.sol": {
-    "initCodeHash": "0x1f500e310170769ffc747e08ad1d5b0de4b0f58534001bc4d4d563ec058bb331",
-    "sourceCodeHash": "0xcb6008cb49a06f87eb5b6cb4651e5e4aafe0b1f33000eccd165226c04f6b63c6"
+    "initCodeHash": "0x55af9e51e09f8f111cf856a4fee55fd477c1649c55483e9771f5f5fa09020ebd",
+    "sourceCodeHash": "0x6f5aeda2377680e0cb7fe82bae73b2711f3300073219619a61adc85e67c685bd"
   },
   "src/L2/BaseFeeVault.sol": {
     "initCodeHash": "0x3bfcd57e25ad54b66c374f63e24e33a6cf107044aa8f5f69ef21202c380b5c5b",
