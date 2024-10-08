@@ -631,12 +631,6 @@ contract Specification_Test is CommonTest {
             _auth: Role.DEPENDENCYMANAGER
         });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("dependencyManager()") });
-        _addSpec({
-            _name: "SystemConfigInterop",
-            _sel: _getSel(
-                "initialize(address,uint32,uint32,bytes32,uint64,address,(uint32,uint8,uint8,uint32,uint32,uint128),address,(address,address,address,address,address,address,address),address)"
-            )
-        });
 
         // ElectionSystemConfig
         _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("electionFallbackList()") });
