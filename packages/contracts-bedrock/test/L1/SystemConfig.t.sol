@@ -76,6 +76,9 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         (address token, uint8 decimals) = impl.gasPayingToken();
         assertEq(token, Constants.ETHER);
         assertEq(decimals, 18);
+        // Check election config
+        assertEq(impl.minimumPreconfirmationCollateral(), 0);
+        assertEq(impl.electionFallbackList(), bytes32(0));
     }
 
     /// @dev Tests that initialization sets the correct values.
@@ -112,6 +115,9 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         (address token, uint8 decimals) = systemConfig.gasPayingToken();
         assertEq(token, Constants.ETHER);
         assertEq(decimals, 18);
+        // Check election config
+        assertEq(systemConfig.minimumPreconfirmationCollateral(), 0);
+        assertEq(systemConfig.electionFallbackList(), bytes32(0));
     }
 }
 
