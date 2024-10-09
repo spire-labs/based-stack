@@ -84,7 +84,11 @@ abstract contract ElectionSystemConfig {
     function electionFallbackList() external view returns (ElectionFallback[] memory electionFallbackList_) {
         // The list is intended to be a right padded hexadecimal string
         // Each byte represents an ElectionFallback enum value
-        bytes memory _listAsBytes = abi.encode(_electionConfig.precedence.electionFallbackList);
+        bytes32 _fallbackList = _electionConfig.precedence.electionFallbackList;
+
+        if (_fallbackList == bytes32(0)) return electionFallbackList_;
+
+        bytes memory _listAsBytes = abi.encode(_fallbackList);
 
         uint256 _byte;
         uint256 _val;
@@ -92,9 +96,6 @@ abstract contract ElectionSystemConfig {
         assembly {
             // Allocate memory for the array
             electionFallbackList_ := mload(0x40)
-
-            // Store starting length at 0 incase of empty fallback list
-            mstore(electionFallbackList_, 0)
         }
 
         // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
