@@ -86,6 +86,9 @@ abstract contract ElectionSystemConfig {
         assembly {
             // Allocate memory for the array
             electionFallbackList_ := mload(0x40)
+
+            // Store starting length at 0 incase of empty fallback list
+            mstore(electionFallbackList_, 0)
         }
 
         // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
