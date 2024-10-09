@@ -162,7 +162,8 @@ abstract contract ElectionSystemConfig {
             }
         }
 
-        // If we looped and the list is not empty, the list is in an invalid format
-        if (_didLoop && uint256(_fallbackListAsBytes) != 0) revert InvalidFallbackList();
+        // If we did not loop and the list is not empty, this means the list is not right padded
+        // Meaning its an invalid format
+        if (!_didLoop && uint256(_fallbackListAsBytes) != 0) revert InvalidFallbackList();
     }
 }

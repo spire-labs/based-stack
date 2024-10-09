@@ -549,8 +549,8 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
         // Shift the bytes so its right padded
         _electionFallbackList = bytes32(uint256(_electionFallbackList) << (31 * 8));
 
-        vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
         vm.prank(systemConfig.owner());
+        vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
         systemConfig.setElectionConfig(
             ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
@@ -563,8 +563,8 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
     function test_setElectionConfig_NotRightPadded_reverts() external {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0xff))));
 
+        vm.prank(systemConfig.owner());
         vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
-                vm.prank(systemConfig.owner());
         systemConfig.setElectionConfig(
             ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
