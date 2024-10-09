@@ -705,6 +705,21 @@ func (d *FaultProofDeployConfig) Check(log log.Logger) error {
 	return nil
 }
 
+type ElectionSystemConfig struct {
+	MinimumPreconfirmationCollateral *big.Int    `json:"minimumPreconfirmationCollateral"`
+	ElectionFallbackList             common.Hash `json:"electionFallbackList"`
+}
+
+func (d *ElectionSystemConfig) Check(log log.Logger) error {
+	if d.MinimumPreconfirmationCollateral == nil {
+		log.Warn("MinimumPreconfirmationCollateral is nil")
+	}
+	if d.ElectionFallbackList == (common.Hash{}) {
+		log.Warn("ElectionFallbackList is nil")
+	}
+	return nil
+}
+
 // L1DependenciesConfig is the set of addresses that affect the L2 genesis construction,
 // and is dependent on prior deployment of contracts to L1. This is generally not configured in deploy-config JSON,
 // but rather merged in through a L1 deployments JSON file.
@@ -824,6 +839,7 @@ type DeployConfig struct {
 	SuperchainL1DeployConfig
 	OutputOracleDeployConfig
 	FaultProofDeployConfig
+	ElectionSystemConfig
 
 	// Post-L1-deployment L2 configs
 	L1DependenciesConfig

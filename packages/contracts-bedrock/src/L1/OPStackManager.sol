@@ -8,6 +8,8 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 
 import { ISemver } from "src/universal/interfaces/ISemver.sol";
 import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
+import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 import { Proxy } from "src/universal/Proxy.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
@@ -52,6 +54,7 @@ contract OPStackManager is ISemver, Initializable {
     /// @notice The full set of inputs to deploy a new OP Stack chain.
     struct DeployInput {
         Roles roles;
+        ElectionSystemConfig.ElectionConfig electionConfig;
         uint32 basefeeScalar;
         uint32 blobBasefeeScalar;
         uint256 l2ChainId;
@@ -115,8 +118,8 @@ contract OPStackManager is ISemver, Initializable {
 
     // -------- Constants and Variables --------
 
-    /// @custom:semver 1.0.0-beta.3
-    string public constant version = "1.0.0-beta.3";
+    /// @custom:semver 1.0.1-beta.3
+    string public constant version = "1.0.1-beta.3";
 
     /// @notice Address of the SuperchainConfig contract shared by all chains.
     SuperchainConfig public immutable superchainConfig;
@@ -406,7 +409,8 @@ contract OPStackManager is ISemver, Initializable {
             _input.roles.unsafeBlockSigner,
             referenceResourceConfig,
             chainIdToBatchInboxAddress(_input.l2ChainId),
-            opChainAddrs
+            opChainAddrs,
+            _input.electionConfig
         );
     }
 

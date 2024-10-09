@@ -2,13 +2,25 @@
 pragma solidity ^0.8.0;
 
 import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 interface ISystemConfig {
     enum UpdateType {
         BATCHER,
         GAS_CONFIG,
         GAS_LIMIT,
-        UNSAFE_BLOCK_SIGNER
+        UNSAFE_BLOCK_SIGNER,
+        ELECTION_CONFIG
+    }
+
+    enum ElectionFallback {
+        NO_FALLBACK,
+        CURRENT_PROPOSER,
+        CURRENT_PROPOSER_WITH_CONFIG,
+        NEXT_PROPOSER,
+        NEXT_PROPOSER_WITH_CONFIG,
+        RANDOM_TICKET_HOLDER,
+        PERMISSIONLESS
     }
 
     struct Addresses {
@@ -20,6 +32,8 @@ interface ISystemConfig {
         address optimismMintableERC20Factory;
         address gasPayingToken;
     }
+
+    error InvalidFallbackList();
 
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
@@ -53,7 +67,8 @@ interface ISystemConfig {
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
-        Addresses memory _addresses
+        Addresses memory _addresses,
+        ElectionSystemConfig.ElectionConfig memory _electionConfig
     )
         external;
     function isCustomGasToken() external view returns (bool);
@@ -78,4 +93,13 @@ interface ISystemConfig {
     function transferOwnership(address newOwner) external;
     function unsafeBlockSigner() external view returns (address addr_);
     function version() external pure returns (string memory);
+
+    // ElectionSystemConfig
+    function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external;
+    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
+    function electionFallbackList()
+        external
+        view
+        returns (ElectionSystemConfig.ElectionFallback[] memory electionFallbackList_);
+    function electionConfig() external view returns (ElectionSystemConfig.ElectionConfig memory electionConfig_);
 }

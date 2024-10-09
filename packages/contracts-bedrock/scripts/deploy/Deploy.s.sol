@@ -25,6 +25,7 @@ import { ForgeArtifacts } from "scripts/libraries/ForgeArtifacts.sol";
 import { ChainAssertions } from "scripts/deploy/ChainAssertions.sol";
 
 // Contracts
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
 import { AddressManager } from "src/legacy/AddressManager.sol";
 import { Proxy } from "src/universal/Proxy.sol";
@@ -1135,6 +1136,14 @@ contract Deploy is Deployer {
                         optimismPortal: mustGetAddress("OptimismPortalProxy"),
                         optimismMintableERC20Factory: mustGetAddress("OptimismMintableERC20FactoryProxy"),
                         gasPayingToken: customGasTokenAddress
+                    }),
+                    ElectionSystemConfig.ElectionConfig({
+                        rules: ElectionSystemConfig.ElectionConfigRules({
+                            minimumPreconfirmationCollateral: uint256(cfg.minimumPreconfirmationCollateral())
+                        }),
+                        precedence: ElectionSystemConfig.ElectionPrecedence({
+                            electionFallbackList: bytes32(cfg.electionFallbackList())
+                        })
                     })
                 )
             )

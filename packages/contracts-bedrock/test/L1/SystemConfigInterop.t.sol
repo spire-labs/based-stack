@@ -7,6 +7,7 @@ import { CommonTest } from "test/setup/CommonTest.sol";
 // Contracts
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ConfigType } from "src/L2/L1BlockIsthmus.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 // Libraries
 import { Constants } from "src/libraries/Constants.sol";
@@ -129,6 +130,10 @@ contract SystemConfigInterop_Test is CommonTest {
                 optimismPortal: address(optimismPortal),
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _token
+            }),
+            _electionConfig: ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
         });
     }
