@@ -79,7 +79,7 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(decimals, 18);
         // Check election config
         assertEq(impl.minimumPreconfirmationCollateral(), 0);
-        assertEq(impl.electionFallbackList(), bytes32(0));
+        assertEq(impl.electionFallbackList().length, 0);
     }
 
     /// @dev Tests that initialization sets the correct values.
@@ -118,7 +118,7 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(decimals, 18);
         // Check election config
         assertEq(systemConfig.minimumPreconfirmationCollateral(), 0);
-        assertEq(systemConfig.electionFallbackList(), bytes32(0));
+        assertEq(systemConfig.electionFallbackList().length, 0);
     }
 }
 
@@ -597,7 +597,36 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
         systemConfig.setElectionConfig(_electionConfig);
 
         assertEq(systemConfig.minimumPreconfirmationCollateral(), _minPreconfCollateral);
-        assertEq(systemConfig.electionFallbackList(), _electionFallbackList);
+    }
+
+    event b3333(bytes32);
+
+    function testFuzz_setElectionConfig_withElectionFallbackList_succeeds(uint256 _minPreconfCollateral) external {
+        bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0x02040506))));
+
+        // Shift the bytes so its right padded
+        _electionFallbackList = bytes32(uint256(_electionFallbackList) << (28 * 8));
+
+        emit b3333(_electionFallbackList);
+
+        ElectionSystemConfig.ElectionConfig memory _electionConfig = ElectionSystemConfig.ElectionConfig({
+            rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
+            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
+        });
+
+        vm.expectEmit(address(systemConfig));
+        emit ConfigUpdate(0, ISystemConfig.UpdateType.ELECTION_CONFIG, abi.encode(_electionConfig));
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setElectionConfig(_electionConfig);
+
+        ElectionSystemConfig.ElectionFallback[] memory _fallbackList = systemConfig.electionFallbackList();
+
+        assertEq(_fallbackList.length, 4);
+        assertEq(uint256(_fallbackList[0]), uint256(ElectionSystemConfig.ElectionFallback.CURRENT_PROPOSER_WITH_CONFIG));
+        assertEq(uint256(_fallbackList[1]), uint256(ElectionSystemConfig.ElectionFallback.NEXT_PROPOSER_WITH_CONFIG));
+        assertEq(uint256(_fallbackList[2]), uint256(ElectionSystemConfig.ElectionFallback.RANDOM_TICKET_HOLDER));
+        assertEq(uint256(_fallbackList[3]), uint256(ElectionSystemConfig.ElectionFallback.PERMISSIONLESS));
     }
 
     /// @dev Tests that `setGasConfig` updates the overhead and scalar successfully.

@@ -16,13 +16,14 @@ abstract contract ElectionSystemConfig {
     /// holder
     /// @custom:value PERMISSIONLESS                    Indicates tat the fallback is completely permissionless
     enum ElectionFallback {
-        NO_FALLBACK,
-        CURRENT_PROPOSER,
-        CURRENT_PROPOSER_WITH_CONFIG,
-        NEXT_PROPOSER,
-        NEXT_PROPOSER_WITH_CONFIG,
-        RANDOM_TICKET_HOLDER,
-        PERMISSIONLESS
+        NO_FALLBACK, // 0x00
+        CURRENT_PROPOSER, // 0x01
+        CURRENT_PROPOSER_WITH_CONFIG, // 0x02
+        NEXT_PROPOSER, // 0x03
+        NEXT_PROPOSER_WITH_CONFIG, // 0x04
+        RANDOM_TICKET_HOLDER, // 0x05
+        PERMISSIONLESS // 0x06
+
     }
 
     // NOTE: The following structs are single values
@@ -69,11 +70,45 @@ abstract contract ElectionSystemConfig {
         minimumPreconfirmationCollateral_ = _electionConfig.rules.minimumPreconfirmationCollateral;
     }
 
+    event log2(uint256 _index, bytes1 _byte);
     /// @notice Fetches the election fallback list that is set
     ///
     /// @return electionFallbackList_ The election fallback list
-    function electionFallbackList() external view returns (bytes32 electionFallbackList_) {
-        electionFallbackList_ = _electionConfig.precedence.electionFallbackList;
+
+    function electionFallbackList() external view returns (ElectionFallback[] memory electionFallbackList_) {
+        // The list is intended to be a right padded hexadecimal string
+        // Each byte represents an ElectionFallback enum value
+        bytes memory _listAsBytes = abi.encode(_electionConfig.precedence.electionFallbackList);
+
+        uint256 _byte;
+        uint256 _val;
+
+        assembly {
+            // Allocate memory for the array
+            electionFallbackList_ := mload(0x40)
+        }
+
+        // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
+        while (ElectionFallback(uint256(uint8(_listAsBytes[_byte]))) != ElectionFallback.NO_FALLBACK) {
+            _val = uint256(uint8(_listAsBytes[_byte]));
+
+            unchecked {
+                ++_byte;
+            }
+
+            // Dynamically resize the array
+            assembly {
+                // Store the length of the array
+                mstore(electionFallbackList_, _byte)
+
+                // Get the location to store the value in and store it
+                let _dataLocation := add(electionFallbackList_, mul(_byte, 0x20))
+                mstore(_dataLocation, _val)
+
+                // Update the free memory pointer
+                mstore(0x40, add(_dataLocation, 0x20))
+            }
+        }
     }
 
     /// @notice Fetches the election config that is set
