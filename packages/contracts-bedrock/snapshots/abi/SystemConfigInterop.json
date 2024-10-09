@@ -264,9 +264,9 @@
     "name": "electionFallbackList",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "enum ElectionSystemConfig.ElectionFallback[]",
         "name": "electionFallbackList_",
-        "type": "bytes32"
+        "type": "uint8[]"
       }
     ],
     "stateMutability": "view",
@@ -1083,5 +1083,10 @@
     ],
     "name": "OwnershipTransferred",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidFallbackList",
+    "type": "error"
   }
 ]

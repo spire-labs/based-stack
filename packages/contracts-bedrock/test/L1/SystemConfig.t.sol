@@ -550,7 +550,7 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
         _electionFallbackList = bytes32(uint256(_electionFallbackList) << (31 * 8));
 
         vm.prank(systemConfig.owner());
-        vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
+        vm.expectRevert(ISystemConfig.InvalidFallbackList.selector);
         systemConfig.setElectionConfig(
             ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
@@ -564,7 +564,7 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0xff))));
 
         vm.prank(systemConfig.owner());
-        vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
+        vm.expectRevert(ISystemConfig.InvalidFallbackList.selector);
         systemConfig.setElectionConfig(
             ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),

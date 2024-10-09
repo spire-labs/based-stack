@@ -24,6 +24,9 @@ import { IResourceMetering } from "src/L1/interfaces/IResourceMetering.sol";
 ///         All configuration is stored on L1 and picked up by L2 as part of the derviation of
 ///         the L2 chain.
 contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGasToken {
+    /// @notice Throws when a fallback list fails the sanity check
+    error InvalidFallbackList();
+
     /// @notice Enum representing different types of updates.
     /// @custom:value BATCHER              Represents an update to the batcher hash.
     /// @custom:value GAS_CONFIG           Represents an update to txn fee config on L2.
@@ -347,6 +350,10 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Updates the election queried by the offchain node for computing the election
     /// @param _config The config to update to
     function setElectionConfig(ElectionConfig memory _config) external onlyOwner {
+        bool _success = _sanitzeFallbackList(_config.precedence.electionFallbackList);
+
+        if (!_success) revert InvalidFallbackList();
+
         _setElectionConfig(_config);
 
         bytes memory data = abi.encode(_config);

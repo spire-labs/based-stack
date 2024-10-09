@@ -5,9 +5,6 @@ pragma solidity 0.8.15;
 /// @notice This config file is abstract and inherited by the SystemConfig contracts
 ///         It contains all the logic to manage election related system configuration
 abstract contract ElectionSystemConfig {
-    /// @notice Throws when a fallback list fails the sanity check
-    error InvalidFallbackList();
-
     /// @notice Enum representing different fallback rules
     ///
     /// @custom:value NO_FALLBACK                       Indicates there is no fallback left
@@ -76,11 +73,9 @@ abstract contract ElectionSystemConfig {
         minimumPreconfirmationCollateral_ = _electionConfig.rules.minimumPreconfirmationCollateral;
     }
 
-    event log2(uint256 _index, bytes1 _byte);
     /// @notice Fetches the election fallback list that is set
     ///
     /// @return electionFallbackList_ The election fallback list
-
     function electionFallbackList() external view returns (ElectionFallback[] memory electionFallbackList_) {
         // The list is intended to be a right padded hexadecimal string
         // Each byte represents an ElectionFallback enum value
@@ -132,14 +127,14 @@ abstract contract ElectionSystemConfig {
     ///
     /// @param _config The config to update to
     function _setElectionConfig(ElectionConfig memory _config) internal {
-        _sanitzeFallbackList(_config.precedence.electionFallbackList);
         _electionConfig = _config;
     }
 
     /// @notice Sanitzes a fallback list before it is set
     ///
     /// @param _fallbackListAsBytes The fallback list to sanitze
-    function _sanitzeFallbackList(bytes32 _fallbackListAsBytes) internal pure {
+    /// @return bool Whether the list is valid or not
+    function _sanitzeFallbackList(bytes32 _fallbackListAsBytes) internal pure returns (bool) {
         // The list is intended to be a right padded hexadecimal string
         // Each byte represents an ElectionFallback enum value
         bytes memory _listAsBytes = abi.encode(_fallbackListAsBytes);
@@ -155,7 +150,7 @@ abstract contract ElectionSystemConfig {
             _val = uint256(uint8(_listAsBytes[_byte]));
 
             // The list contains an invalid enum
-            if (_val > uint256(ElectionFallback.PERMISSIONLESS)) revert InvalidFallbackList();
+            if (_val > uint256(ElectionFallback.PERMISSIONLESS)) return false;
 
             unchecked {
                 ++_byte;
@@ -164,6 +159,8 @@ abstract contract ElectionSystemConfig {
 
         // If we did not loop and the list is not empty, this means the list is not right padded
         // Meaning its an invalid format
-        if (!_didLoop && uint256(_fallbackListAsBytes) != 0) revert InvalidFallbackList();
+        if (!_didLoop && uint256(_fallbackListAsBytes) != 0) return false;
+
+        return true;
     }
 }

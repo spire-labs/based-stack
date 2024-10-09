@@ -33,6 +33,8 @@ interface ISystemConfig {
         address gasPayingToken;
     }
 
+    error InvalidFallbackList();
+
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
