@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+/// @title ElectionSystemConfig
+/// @notice This config file is abstract and inherited by the SystemConfig contracts
+///         It contains all the logic to manage election related system configuration
 abstract contract ElectionSystemConfig {
     /// @notice Throws when a fallback list fails the sanity check
     error InvalidFallbackList();
