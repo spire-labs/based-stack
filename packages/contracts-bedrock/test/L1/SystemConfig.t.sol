@@ -542,6 +542,35 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
         );
     }
 
+    /// @dev Tests that the `setElectionConfig` reverts if the input contains an invalid enum
+    function test_setElectionConfig_InvalidEnumValue_reverts() external {
+        bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0xff))));
+
+        // Shift the bytes so its right padded
+        _electionFallbackList = bytes32(uint256(_electionFallbackList) << (31 * 8));
+
+        vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
+        systemConfig.setElectionConfig(
+            ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
+            })
+        );
+    }
+
+    /// @dev Tests that the `setElectionConfig` reverts if the input is not right
+    function test_setElectionConfig_NotRightPadded_reverts() external {
+        bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0xff))));
+
+        vm.expectRevert(ElectionSystemConfig.InvalidFallbackList.selector);
+        systemConfig.setElectionConfig(
+            ElectionSystemConfig.ElectionConfig({
+                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
+            })
+        );
+    }
+
     /// @dev Tests that `setUnsafeBlockSigner` reverts if the caller is not the owner.
     function test_setUnsafeBlockSigner_notOwner_reverts() external {
         vm.expectRevert("Ownable: caller is not the owner");
@@ -577,15 +606,11 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
     }
 
     /// @dev Tests that the `setElectionConfig` updates the config successfully.
-    function testFuzz_setElectionConfig_succeeds(
-        uint256 _minPreconfCollateral,
-        bytes32 _electionFallbackList
-    )
-        external
-    {
+    function testFuzz_setElectionConfig_succeeds(uint256 _minPreconfCollateral) external {
+        // TODO: Find a good way to fuzz the fallback list value
         ElectionSystemConfig.ElectionConfig memory _electionConfig = ElectionSystemConfig.ElectionConfig({
             rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
-            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
+            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
         });
 
         bytes memory _data = abi.encode(_electionConfig);
@@ -599,15 +624,11 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
         assertEq(systemConfig.minimumPreconfirmationCollateral(), _minPreconfCollateral);
     }
 
-    event b3333(bytes32);
-
     function testFuzz_setElectionConfig_withElectionFallbackList_succeeds(uint256 _minPreconfCollateral) external {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0x02040506))));
 
         // Shift the bytes so its right padded
         _electionFallbackList = bytes32(uint256(_electionFallbackList) << (28 * 8));
-
-        emit b3333(_electionFallbackList);
 
         ElectionSystemConfig.ElectionConfig memory _electionConfig = ElectionSystemConfig.ElectionConfig({
             rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),

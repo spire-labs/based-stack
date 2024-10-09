@@ -2,6 +2,9 @@
 pragma solidity 0.8.15;
 
 abstract contract ElectionSystemConfig {
+    /// @notice Throws when a fallback list fails the sanity check
+    error InvalidFallbackList();
+
     /// @notice Enum representing different fallback rules
     ///
     /// @custom:value NO_FALLBACK                       Indicates there is no fallback left
@@ -92,7 +95,7 @@ abstract contract ElectionSystemConfig {
         }
 
         // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
-        while (ElectionFallback(uint256(uint8(_listAsBytes[_byte]))) != ElectionFallback.NO_FALLBACK) {
+        while (uint256(uint8(_listAsBytes[_byte])) != uint256(ElectionFallback.NO_FALLBACK)) {
             _val = uint256(uint8(_listAsBytes[_byte]));
 
             unchecked {
@@ -122,8 +125,40 @@ abstract contract ElectionSystemConfig {
     }
 
     /// @notice Updates the election queried by the offchain node for computing the election
+    ///
     /// @param _config The config to update to
     function _setElectionConfig(ElectionConfig memory _config) internal {
+        _sanitzeFallbackList(_config.precedence.electionFallbackList);
         _electionConfig = _config;
+    }
+
+    /// @notice Sanitzes a fallback list before it is set
+    ///
+    /// @param _fallbackListAsBytes The fallback list to sanitze
+    function _sanitzeFallbackList(bytes32 _fallbackListAsBytes) internal pure {
+        // The list is intended to be a right padded hexadecimal string
+        // Each byte represents an ElectionFallback enum value
+        bytes memory _listAsBytes = abi.encode(_fallbackListAsBytes);
+
+        uint256 _val;
+        uint256 _byte;
+        bool _didLoop;
+
+        // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
+        while (uint256(uint8(_listAsBytes[_byte])) != uint256(ElectionFallback.NO_FALLBACK)) {
+            if (!_didLoop) _didLoop = true;
+
+            _val = uint256(uint8(_listAsBytes[_byte]));
+
+            // The list contains an invalid enum
+            if (_val > uint256(ElectionFallback.PERMISSIONLESS)) revert InvalidFallbackList();
+
+            unchecked {
+                ++_byte;
+            }
+        }
+
+        // If we looped and the list is not empty, the list is in an invalid format
+        if (_didLoop && uint256(_fallbackListAsBytes) != 0) revert InvalidFallbackList();
     }
 }
