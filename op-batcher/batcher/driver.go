@@ -481,6 +481,7 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 			l.Log.Debug("Not our turn to publish")
 			return
 		}
+
 		err := l.publishTxToL1(queue, receiptsCh, daGroup)
 		if err != nil {
 			if err != io.EOF {
@@ -657,7 +658,25 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef
 		candidate = l.calldataTxCandidate(txdata.CallData())
 	}
 
+	// send tx using txmgr's queue
 	l.sendTx(txdata, false, candidate, queue, receiptsCh)
+
+	// start a timer to test tx cancellation
+	// TODO(Nate): if this approach works, this needs to trigger on new l1 head, not on a timer
+	timer := time.NewTimer(500 * time.Millisecond)
+	defer timer.Stop()
+
+	select {
+	case receipt := <-receiptsCh:
+		l.Log.Info("Transaction completed successfully")
+		fmt.Println(receipt)
+		// l.Log.Info("Transaction completed successfully", "tx_id", receipt.ID.id, "status", receipt.Receipt.Status)
+
+	case <-timer.C:
+		l.Log.Warn("Transaction took too long, attempting to cancel", "tx_id", txdata.ID())
+		l.cancelBlockingTx(queue, receiptsCh, txdata.asBlob)
+	}
+
 	return nil
 }
 
@@ -680,10 +699,32 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 
 	// TODO(miszke): enable other DA sources
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitSel := batchInboxAbi.Methods["submit"].ID
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+
+	// get the current L1 block number
+	l1Tip, err := l.l1Tip(l.killCtx)
+	if err != nil {
+		return nil, fmt.Errorf("getting L1 tip: %w", err)
+	}
+	l1BlockNumber := l1Tip.Number
+	// The submit method is expecting a uint256, so use big int
+	l1BlockNumberBigInt := new(big.Int).SetUint64(l1BlockNumber)
+
+	// encode the target L1 block and attempt to submit the batch
+	txData, err := submitMethod.Inputs.Pack(l1BlockNumberBigInt)
+
+	if err != nil {
+		return nil, fmt.Errorf("packing submit method inputs: %w", err)
+	}
+
+	submitSel := submitMethod.ID
+	fullTxData := append(submitSel[:], txData...)
 
 	return &txmgr.TxCandidate{
-		TxData: submitSel,
+		TxData: fullTxData,
 		To:     &l.RollupConfig.BatchInboxContractAddress,
 		Blobs:  blobs,
 		// POC ONLY: we cannot use eth_estimateGas or intrinsic gas calculation

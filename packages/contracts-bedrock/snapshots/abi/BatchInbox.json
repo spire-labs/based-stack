@@ -1,55 +1,77 @@
 [
   {
-    "inputs": [
-      {
-        "internalType": "contract Election",
-        "name": "_election",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+      "type": "constructor",
+      "inputs": [
+          {
+              "name": "_election",
+              "type": "address",
+              "internalType": "contract Election"
+          }
+      ],
+      "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
-    "name": "election",
-    "outputs": [
-      {
-        "internalType": "contract Election",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
+      "type": "function",
+      "name": "election",
+      "inputs": [],
+      "outputs": [
+          {
+              "name": "",
+              "type": "address",
+              "internalType": "contract Election"
+          }
+      ],
+      "stateMutability": "view"
   },
   {
-    "inputs": [],
-    "name": "submit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+      "type": "function",
+      "name": "submit",
+      "inputs": [
+          {
+              "name": "_targetBlock",
+              "type": "uint256",
+              "internalType": "uint256"
+          }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
   },
   {
-    "anonymous": false,
-    "inputs": [],
-    "name": "BatchSubmitted",
-    "type": "event"
+      "type": "event",
+      "name": "BatchSubmitted",
+      "inputs": [],
+      "anonymous": false
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "caller",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "winner",
-        "type": "address"
-      }
-    ],
-    "name": "OnlyElectionWinner",
-    "type": "error"
+      "type": "error",
+      "name": "InvalidTargetBlock",
+      "inputs": [
+          {
+              "name": "targetBlock",
+              "type": "uint256",
+              "internalType": "uint256"
+          },
+          {
+              "name": "currentBlock",
+              "type": "uint256",
+              "internalType": "uint256"
+          }
+      ]
+  },
+  {
+      "type": "error",
+      "name": "OnlyElectionWinner",
+      "inputs": [
+          {
+              "name": "caller",
+              "type": "address",
+              "internalType": "address"
+          },
+          {
+              "name": "winner",
+              "type": "address",
+              "internalType": "address"
+          }
+      ]
   }
 ]
