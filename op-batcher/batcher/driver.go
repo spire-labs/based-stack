@@ -661,22 +661,6 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef
 	// send tx using txmgr's queue
 	l.sendTx(txdata, false, candidate, queue, receiptsCh)
 
-	// start a timer to test tx cancellation
-	// TODO(Nate): if this approach works, this needs to trigger on new l1 head, not on a timer
-	timer := time.NewTimer(500 * time.Millisecond)
-	defer timer.Stop()
-
-	select {
-	case receipt := <-receiptsCh:
-		l.Log.Info("Transaction completed successfully")
-		fmt.Println(receipt)
-		// l.Log.Info("Transaction completed successfully", "tx_id", receipt.ID.id, "status", receipt.Receipt.Status)
-
-	case <-timer.C:
-		l.Log.Warn("Transaction took too long, attempting to cancel", "tx_id", txdata.ID())
-		l.cancelBlockingTx(queue, receiptsCh, txdata.asBlob)
-	}
-
 	return nil
 }
 
