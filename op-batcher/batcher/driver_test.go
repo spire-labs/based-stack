@@ -117,3 +117,17 @@ func TestBatchSubmitter_SafeL1Origin_FailsToResolveRollupClient(t *testing.T) {
 	_, err := bs.safeL1Origin(context.Background())
 	require.Error(t, err)
 }
+
+func TestBatchSubmitter_EncodeSubmitTx(t *testing.T) {
+	bs, _ := setup(t)
+
+	t.Run("ValidBlockNumber", func(t *testing.T) {
+		l1BlockNumber := uint64(123456)
+
+		txData, err := bs.encodeSubmitTx(l1BlockNumber)
+
+		require.NoError(t, err)
+		require.NotNil(t, txData)
+		require.Greater(t, len(txData), 0, "Encoded tx data should not be empty")
+	})
+}
