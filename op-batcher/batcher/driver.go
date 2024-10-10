@@ -676,8 +676,11 @@ func (l *BatchSubmitter) encodeSubmitTx(l1BlockNumber uint64) ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
 	}
+
+	// The current L1 block is already built, so target the next block
+	nextBlockNumber := l1BlockNumber + 1
 	// The submit method is expecting a uint256, so use big int
-	l1BlockNumberBigInt := new(big.Int).SetUint64(l1BlockNumber)
+	l1BlockNumberBigInt := new(big.Int).SetUint64(nextBlockNumber)
 
 	// encode the target L1 block and attempt to submit the batch
 	txData, err := submitMethod.Inputs.Pack(l1BlockNumberBigInt)
