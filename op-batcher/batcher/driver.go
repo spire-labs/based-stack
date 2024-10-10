@@ -686,6 +686,26 @@ func (l *BatchSubmitter) sendTx(txdata txData, isCancel bool, candidate *txmgr.T
 	queue.Send(txRef{id: txdata.ID(), isCancel: isCancel, isBlob: txdata.asBlob}, *candidate, receiptsCh)
 }
 
+func (l *BatchSubmitter) encodeSubmitTx(l1BlockNumber uint64) ([]byte, error) {
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+	// The submit method is expecting a uint256, so use big int
+	l1BlockNumberBigInt := new(big.Int).SetUint64(l1BlockNumber)
+
+	// encode the target L1 block and attempt to submit the batch
+	txData, err := submitMethod.Inputs.Pack(l1BlockNumberBigInt)
+
+	if err != nil {
+		return nil, fmt.Errorf("packing submit method inputs: %w", err)
+	}
+
+	submitSel := submitMethod.ID
+	return append(submitSel[:], txData...), nil
+}
+
 func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error) {
 	blobs, err := data.Blobs()
 	if err != nil {
@@ -698,30 +718,17 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 	l.Metr.RecordBlobUsedBytes(lastSize)
 
 	// TODO(miszke): enable other DA sources
-	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitMethod, ok := batchInboxAbi.Methods["submit"]
-	if !ok {
-		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
-	}
-
-	// get the current L1 block number
+	// Get the current L1 block number
 	l1Tip, err := l.l1Tip(l.killCtx)
 	if err != nil {
 		return nil, fmt.Errorf("getting L1 tip: %w", err)
 	}
 	l1BlockNumber := l1Tip.Number
-	// The submit method is expecting a uint256, so use big int
-	l1BlockNumberBigInt := new(big.Int).SetUint64(l1BlockNumber)
 
-	// encode the target L1 block and attempt to submit the batch
-	txData, err := submitMethod.Inputs.Pack(l1BlockNumberBigInt)
-
+	fullTxData, err := l.encodeSubmitTx(l1BlockNumber)
 	if err != nil {
-		return nil, fmt.Errorf("packing submit method inputs: %w", err)
+		return nil, fmt.Errorf("encoding submit transaction: %w", err)
 	}
-
-	submitSel := submitMethod.ID
-	fullTxData := append(submitSel[:], txData...)
 
 	return &txmgr.TxCandidate{
 		TxData: fullTxData,
