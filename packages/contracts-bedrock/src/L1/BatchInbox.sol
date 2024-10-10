@@ -32,7 +32,7 @@ contract BatchInbox {
     }
 
     /// @notice Submits a new batch.
-    function submit(uint _targetBlock) public onlyElectionWinner {
+    function submit(uint256 _targetBlock) public onlyElectionWinner {
         if (_targetBlock != block.number) {
             revert InvalidTargetBlock(_targetBlock, block.number);
         }
