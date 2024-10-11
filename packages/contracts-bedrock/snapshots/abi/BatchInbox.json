@@ -24,7 +24,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_targetBlock",
+        "type": "uint256"
+      }
+    ],
     "name": "submit",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -35,6 +41,22 @@
     "inputs": [],
     "name": "BatchSubmitted",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "targetBlock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "InvalidTargetBlock",
+    "type": "error"
   },
   {
     "inputs": [

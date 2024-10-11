@@ -481,6 +481,7 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 			l.Log.Debug("Not our turn to publish")
 			return
 		}
+
 		err := l.publishTxToL1(queue, receiptsCh, daGroup)
 		if err != nil {
 			if err != io.EOF {
@@ -657,7 +658,9 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef
 		candidate = l.calldataTxCandidate(txdata.CallData())
 	}
 
+	// send tx using txmgr's queue
 	l.sendTx(txdata, false, candidate, queue, receiptsCh)
+
 	return nil
 }
 
@@ -665,6 +668,29 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef
 // It will block if the txmgr queue has reached its MaxPendingTransactions limit.
 func (l *BatchSubmitter) sendTx(txdata txData, isCancel bool, candidate *txmgr.TxCandidate, queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef]) {
 	queue.Send(txRef{id: txdata.ID(), isCancel: isCancel, isBlob: txdata.asBlob}, *candidate, receiptsCh)
+}
+
+func (l *BatchSubmitter) encodeSubmitTx(l1BlockNumber uint64) ([]byte, error) {
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+
+	// The current L1 block is already built, so target the next block
+	nextBlockNumber := l1BlockNumber + 1
+	// The submit method is expecting a uint256, so use big int
+	l1BlockNumberBigInt := new(big.Int).SetUint64(nextBlockNumber)
+
+	// encode the target L1 block and attempt to submit the batch
+	txData, err := submitMethod.Inputs.Pack(l1BlockNumberBigInt)
+
+	if err != nil {
+		return nil, fmt.Errorf("packing submit method inputs: %w", err)
+	}
+
+	submitSel := submitMethod.ID
+	return append(submitSel[:], txData...), nil
 }
 
 func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error) {
@@ -679,11 +705,20 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 	l.Metr.RecordBlobUsedBytes(lastSize)
 
 	// TODO(miszke): enable other DA sources
-	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitSel := batchInboxAbi.Methods["submit"].ID
+	// Get the current L1 block number
+	l1Tip, err := l.l1Tip(l.killCtx)
+	if err != nil {
+		return nil, fmt.Errorf("getting L1 tip: %w", err)
+	}
+	l1BlockNumber := l1Tip.Number
+
+	fullTxData, err := l.encodeSubmitTx(l1BlockNumber)
+	if err != nil {
+		return nil, fmt.Errorf("encoding submit transaction: %w", err)
+	}
 
 	return &txmgr.TxCandidate{
-		TxData: submitSel,
+		TxData: fullTxData,
 		To:     &l.RollupConfig.BatchInboxContractAddress,
 		Blobs:  blobs,
 		// POC ONLY: we cannot use eth_estimateGas or intrinsic gas calculation

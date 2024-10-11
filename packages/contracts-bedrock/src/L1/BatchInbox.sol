@@ -2,6 +2,7 @@
 pragma solidity 0.8.15;
 
 import { Election } from "src/L1/Election.sol";
+import "src/libraries/BatchInboxErrors.sol";
 
 /// @title BatchInbox
 /// @notice The BatchInbox is a contract responsible for authentication of the current
@@ -12,9 +13,6 @@ contract BatchInbox {
 
     /// @notice Event emitted when a batch was successfully submitted.
     event BatchSubmitted();
-
-    /// @notice Error for when the caller is not the current election winner.
-    error OnlyElectionWinner(address caller, address winner);
 
     /// @notice Constructs the BatchInboc contract.
     ///
@@ -34,7 +32,10 @@ contract BatchInbox {
     }
 
     /// @notice Submits a new batch.
-    function submit() public onlyElectionWinner {
+    function submit(uint256 _targetBlock) public onlyElectionWinner {
+        if (_targetBlock != block.number) {
+            revert InvalidTargetBlock(_targetBlock, block.number);
+        }
         emit BatchSubmitted();
     }
 }
