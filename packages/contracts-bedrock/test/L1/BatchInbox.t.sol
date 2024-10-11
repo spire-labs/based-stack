@@ -18,9 +18,11 @@ contract BatchInboxTest is Test {
         batchInbox = new BatchInbox(election);
     }
 
-    function testSubmitOnTargetBlockSuccess() public {
+    function test_submit_emitsEvent_succeeds() public {
         bytes memory data = abi.encodeWithSelector(Election.electionWinner.selector);
         vm.mockCall(address(election), data, abi.encode(mockWinner));
+
+        vm.expectCall(address(election), data);
 
         vm.prank(mockWinner);
         uint256 targetBlock = block.number;
@@ -31,7 +33,7 @@ contract BatchInboxTest is Test {
         batchInbox.submit(targetBlock);
     }
 
-    function testSubmitOnTargetBlockRevert_NotWinner() public {
+    function test_submit_notElectionWinner_reverts() public {
         bytes memory data = abi.encodeWithSelector(Election.electionWinner.selector);
         vm.mockCall(address(election), data, abi.encode(mockWinner));
 
@@ -45,7 +47,7 @@ contract BatchInboxTest is Test {
         batchInbox.submit(targetBlock);
     }
 
-    function testSubmitOnTargetBlockRevert_InvalidBlockNumber() public {
+    function test_submit_invalidTargetBlock_reverts() public {
         bytes memory data = abi.encodeWithSelector(Election.electionWinner.selector);
         vm.mockCall(address(election), data, abi.encode(mockWinner));
 
