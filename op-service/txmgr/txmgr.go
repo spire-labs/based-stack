@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ethereum-optimism/optimism/op-service/errutil"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/misc/eip4844"
@@ -555,7 +556,14 @@ func (m *SimpleTxManager) sendTx(ctx context.Context, tx *types.Transaction) (*t
 				return nil, ErrClosed
 			}
 			var published bool
-			if tx, published = m.publishTx(ctx, tx, sendState); published {
+			// Call publishTx and check if tx is nil
+			if tx, published = m.publishTx(ctx, tx, sendState); tx == nil {
+				fmt.Printf("tx is nil\n")
+				// Handle the case where tx is nil (i.e., no retry is needed)
+				return nil, fmt.Errorf("transaction not published, stopping retries")
+			}
+
+			if published {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
@@ -582,16 +590,89 @@ func (m *SimpleTxManager) sendTx(ctx context.Context, tx *types.Transaction) (*t
 	}
 }
 
+// extracts the target L1 block number from the transaction data, if it is a batch submission transaction
+func (m *SimpleTxManager) getTargetBlockForBatchSubmission(txData []byte) (*big.Int, error) {
+	// Load the ABI for BatchInbox contract
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+
+	// Decode the transaction data (strip the first 4 bytes which represent the method ID)
+	dataWithoutSelector := txData[4:]
+	unpacked, err := submitMethod.Inputs.Unpack(dataWithoutSelector)
+	if err != nil {
+		return nil, fmt.Errorf("error unpacking transaction data: %w", err)
+	}
+
+	// The unpacked data should be a uint256 representing the target L1 block number
+	if len(unpacked) == 0 {
+		return nil, fmt.Errorf("unpacked data is empty")
+	}
+
+	// The first argument should be the target L1 block number (as a *big.Int)
+	l1BlockNumber, ok := unpacked[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("expected first argument to be *big.Int, got %T", unpacked[0])
+	}
+
+	return l1BlockNumber, nil
+}
+
+// shouldRetryBatchSubmission determines if a batch submission transaction should be retried
+// based on the target L1 block number and the current L1 block number.
+// If the target block number is greater than or equal to the current block number, we should retry
+func (m *SimpleTxManager) shouldRetryBatchSubmission(txData []byte) (bool, error) {
+	// Get the target L1 block number from the transaction data
+	targetBlock, err := m.getTargetBlockForBatchSubmission(txData)
+	if err != nil {
+		// TODO(Nate) add more context to the error
+		// for now, just assume it wasn't actually a batch submission transaction
+		fmt.Println("Error getting target block number:", err)
+		return true, fmt.Errorf("error getting target block number - retrying tx: %w", err)
+	}
+
+	// Get the current L1 block number
+	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.NetworkTimeout)
+	defer cancel()
+	currentBlock, err := m.backend.BlockNumber(ctx)
+	if err != nil {
+		return false, fmt.Errorf("error getting current block number: %w", err)
+	}
+
+	fmt.Println("Current block number:", currentBlock)
+	fmt.Println("Target block number:", targetBlock)
+	// If the target block is greater than or equal to the current block, we should retry
+	return targetBlock.Cmp(new(big.Int).SetUint64(currentBlock)) >= 0, nil
+}
+
 // publishTx publishes the transaction to the transaction pool. If it receives any underpriced errors
 // it will bump the fees and retry.
 // Returns the latest fee bumped tx, and a boolean indicating whether the tx was sent or not
 func (m *SimpleTxManager) publishTx(ctx context.Context, tx *types.Transaction, sendState *SendState) (*types.Transaction, bool) {
 	l := m.txLogger(tx, true)
 
+	if tx == nil {
+		l.Info("Not publishing nil transaction")
+		return nil, false
+	}
 	l.Info("Publishing transaction", "tx", tx.Hash())
+
+	shouldRetry, err := m.shouldRetryBatchSubmission(tx.Data())
+
+	if err != nil {
+		l.Warn("Error determining if we should retry batch submission", "err", err)
+	}
+
+	if !shouldRetry {
+		fmt.Println("Should not retry batch submission")
+		return nil, false
+	}
 
 	for {
 		if sendState.bumpFees {
+
 			if newTx, err := m.increaseGasPrice(ctx, tx); err != nil {
 				l.Warn("unable to increase gas, will try to re-publish the tx", "err", err)
 				m.metr.TxPublished("bump_failed")
