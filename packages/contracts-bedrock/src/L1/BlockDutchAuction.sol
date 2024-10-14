@@ -5,7 +5,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
-abstract contract BlockDutchAuction is Ownable {
+contract BlockDutchAuction is Ownable {
     /// @notice The minimum number of validators in the look ahead
     uint256 public constant VALIDATORS_IN_LOOKAHEAD = 32;
 

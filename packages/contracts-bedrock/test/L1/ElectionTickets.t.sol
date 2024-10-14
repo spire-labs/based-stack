@@ -19,8 +19,8 @@ contract ElectionTickets_Test is Test {
 
 contract ElectionTickets_mint_Test is ElectionTickets_Test {
     /// @dev Tests that the `mint` function reverts when called by a non-Election address.
-    function test_mint_onlyElection_reverts() public {
-        vm.expectRevert(NotElection.selector);
+    function test_mint_onlyAuction_reverts() public {
+        vm.expectRevert(NotAuction.selector);
         electionTicket.mint(to);
     }
 

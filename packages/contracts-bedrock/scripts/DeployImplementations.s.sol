@@ -32,7 +32,7 @@ import { SystemConfig } from "src/L1/SystemConfig.sol";
 import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
-import { Election } from "src/L1/Election.sol";
+import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
@@ -175,7 +175,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
     L1StandardBridge internal _l1StandardBridgeImpl;
     OptimismMintableERC20Factory internal _optimismMintableERC20FactoryImpl;
     DisputeGameFactory internal _disputeGameFactoryImpl;
-    Election internal _electionImpl;
+    BlockDutchAuction internal _blockDutchAuctionImpl;
     BatchInbox internal _batchInboxImpl;
     ElectionTickets internal _electionTicketImpl;
 
@@ -194,7 +194,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
         else if (sel == this.l1StandardBridgeImpl.selector) _l1StandardBridgeImpl = L1StandardBridge(payable(_addr));
         else if (sel == this.optimismMintableERC20FactoryImpl.selector) _optimismMintableERC20FactoryImpl = OptimismMintableERC20Factory(_addr);
         else if (sel == this.disputeGameFactoryImpl.selector) _disputeGameFactoryImpl = DisputeGameFactory(_addr);
-        else if (sel == this.electionImpl.selector) _electionImpl = Election(_addr);
+        else if (sel == this.blockDutchAuctionImpl.selector) _blockDutchAuctionImpl = BlockDutchAuction(_addr);
         else if (sel == this.batchInboxImpl.selector) _batchInboxImpl = BatchInbox(_addr);
         else if (sel == this.electionTicketImpl.selector) _electionTicketImpl = ElectionTickets(_addr);
         else revert("DeployImplementationsOutput: unknown selector");
@@ -219,7 +219,7 @@ contract DeployImplementationsOutput is BaseDeployIO {
             address(this.l1StandardBridgeImpl()),
             address(this.optimismMintableERC20FactoryImpl()),
             address(this.disputeGameFactoryImpl()),
-            address(this.electionImpl()),
+            address(this.blockDutchAuctionImpl()),
             address(this.electionTicketImpl())
         );
         DeployUtils.assertValidContractAddresses(addrs);
@@ -243,9 +243,9 @@ contract DeployImplementationsOutput is BaseDeployIO {
         return _delayedWETHImpl;
     }
 
-    function electionImpl() public view returns (Election) {
-        DeployUtils.assertValidContractAddress(address(_electionImpl));
-        return _electionImpl;
+    function blockDutchAuctionImpl() public view returns (BlockDutchAuction) {
+        DeployUtils.assertValidContractAddress(address(_blockDutchAuctionImpl));
+        return _blockDutchAuctionImpl;
     }
 
     function batchInboxImpl() public view returns (BatchInbox) {
@@ -493,7 +493,8 @@ contract DeployImplementations is Script {
         deployPreimageOracleSingleton(_dii, _dio);
         deployMipsSingleton(_dii, _dio);
         deployDisputeGameFactoryImpl(_dii, _dio);
-        deployElectionAndElectionTicketsAndBatchInbox(_dii, _dio);
+        deployBatchInbox(_dii, _dio);
+        deployBlockDutchAuctionAndElectionTickets(_dii, _dio);
 
         // Deploy the OP Stack Manager with the new implementations set.
         deployOPStackManager(_dii, _dio);
@@ -763,31 +764,37 @@ contract DeployImplementations is Script {
         _dio.set(_dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
     }
 
-    function deployElectionAndElectionTicketsAndBatchInbox(
+    function deployBlockDutchAuctionAndElectionTickets(
         DeployImplementationsInput,
         DeployImplementationsOutput _dso
     )
         public
     {
+        address batchInbox = address(_dso.batchInboxImpl());
+
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
         ElectionTickets electionTicket =
-            ElectionTickets(_precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 2));
+            ElectionTickets(_precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1));
 
         vm.startBroadcast(msg.sender);
-        Election election = new Election(startBlock, durationBlocks, startPrice, discountRate, electionTicket);
-        BatchInbox batchInbox = new BatchInbox(election);
-        electionTicket = new ElectionTickets(address(election), address(batchInbox));
+        BlockDutchAuction blockDutchAuction =
+            new BlockDutchAuction(startBlock, durationBlocks, startPrice, discountRate, electionTicket);
+        electionTicket = new ElectionTickets(address(blockDutchAuction), batchInbox);
         vm.stopBroadcast();
 
-        vm.label(address(election), "Election");
-        _dso.set(_dso.electionImpl.selector, address(election));
+        vm.label(address(blockDutchAuction), "BlockDutchAuction");
+        _dso.set(_dso.blockDutchAuctionImpl.selector, address(blockDutchAuction));
 
         vm.label(address(electionTicket), "ElectionTickets");
         _dso.set(_dso.electionTicketImpl.selector, address(electionTicket));
+    }
+
+    function deployBatchInbox(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
+        BatchInbox batchInbox = new BatchInbox();
 
         vm.label(address(batchInbox), "BatchInbox");
         _dso.set(_dso.batchInboxImpl.selector, address(batchInbox));

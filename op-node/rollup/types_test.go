@@ -48,7 +48,7 @@ func randConfig() *Config {
 		BatchInboxContractAddress: randAddr(),
 		DepositContractAddress:    randAddr(),
 		L1SystemConfigAddress:     randAddr(),
-		ElectionContractAddress:   randAddr(),
+		AuctionContractAddress:    randAddr(),
 	}
 }
 
@@ -436,9 +436,9 @@ func TestConfig_Check(t *testing.T) {
 			expectedErr: ErrMissingDepositContractAddress,
 		},
 		{
-			name:        "NoElectionAddr",
-			modifier:    func(cfg *Config) { cfg.ElectionContractAddress = common.Address{} },
-			expectedErr: ErrMissingElectionContractAddress,
+			name:        "NoAuctionAddr",
+			modifier:    func(cfg *Config) { cfg.AuctionContractAddress = common.Address{} },
+			expectedErr: ErrMissingAuctionContractAddress,
 		},
 		{
 			name:        "NoL1ChainId",

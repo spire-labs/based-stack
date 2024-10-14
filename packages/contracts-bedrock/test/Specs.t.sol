@@ -218,28 +218,6 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "L1StandardBridge", _sel: _getSel("version()") });
         _addSpec({ _name: "L1StandardBridge", _sel: _getSel("systemConfig()") });
 
-        // Election
-        _addSpec({ _name: "Election", _sel: _getSel("electionWinner()") });
-        _addSpec({ _name: "Election", _sel: _getSel("sequencers(uint256)") });
-        _addSpec({ _name: "Election", _sel: _getSel("VALIDATORS_IN_LOOKAHEAD()") });
-        _addSpec({ _name: "Election", _sel: _getSel("ELECTION_TICKET()") });
-        _addSpec({ _name: "Election", _sel: _getSel("startBlock()") });
-        _addSpec({ _name: "Election", _sel: _getSel("durationBlocks()") });
-        _addSpec({ _name: "Election", _sel: _getSel("pendingDurationBlocks()") });
-        _addSpec({ _name: "Election", _sel: _getSel("startPrice()") });
-        _addSpec({ _name: "Election", _sel: _getSel("discountRate()") });
-        _addSpec({ _name: "Election", _sel: _getSel("pendingStartPrice()") });
-        _addSpec({ _name: "Election", _sel: _getSel("pendingDiscountRate()") });
-        _addSpec({ _name: "Election", _sel: _getSel("ticketsLeft()") });
-        _addSpec({ _name: "Election", _sel: _getSel("setStartPrice(uint256)") });
-        _addSpec({ _name: "Election", _sel: _getSel("setDiscountRate(uint8)") });
-        _addSpec({ _name: "Election", _sel: _getSel("setDurationBlocks(uint8)") });
-        _addSpec({ _name: "Election", _sel: _getSel("buy()") });
-        _addSpec({ _name: "Election", _sel: _getSel("getPrice()") });
-        _addSpec({ _name: "Election", _sel: _getSel("owner()") });
-        _addSpec({ _name: "Election", _sel: _getSel("renounceOwnership()") });
-        _addSpec({ _name: "Election", _sel: _getSel("transferOwnership(address)") });
-
         // ElectionTickets
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("supportsInterface(bytes4)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("balanceOf(address)") });
@@ -256,7 +234,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256,bytes)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("mint(address)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("burn(uint256)") });
-        _addSpec({ _name: "ElectionTickets", _sel: _getSel("election()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("auction()") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("batchInbox()") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("tokenId()") });
 
@@ -282,7 +260,6 @@ contract Specification_Test is CommonTest {
 
         // BatchInbox
         _addSpec({ _name: "BatchInbox", _sel: _getSel("submit(uint256)") });
-        _addSpec({ _name: "BatchInbox", _sel: _getSel("election()") });
 
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });
