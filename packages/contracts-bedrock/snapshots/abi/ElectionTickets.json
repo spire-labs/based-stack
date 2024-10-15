@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_election",
+        "name": "_auction",
         "type": "address"
       },
       {
@@ -31,6 +31,19 @@
     "name": "approve",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "auction",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "auction_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -76,19 +89,6 @@
     "name": "burn",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "election",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "election_",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -412,12 +412,12 @@
   },
   {
     "inputs": [],
-    "name": "NotBatchInbox",
+    "name": "NotAuction",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "NotElection",
+    "name": "NotBatchInbox",
     "type": "error"
   }
 ]

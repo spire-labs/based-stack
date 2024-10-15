@@ -73,7 +73,7 @@ func mockConfig(t *testing.T) Config {
 			DepositContractAddress:    [20]byte{2, 3},
 			L1SystemConfigAddress:     [20]byte{3, 4},
 			ProtocolVersionsAddress:   [20]byte{4, 5},
-			ElectionContractAddress:   [20]byte{5, 6},
+			AuctionContractAddress:    [20]byte{5, 6},
 		},
 		RPCEnableProxy: false,
 	}
