@@ -22,6 +22,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
+	"golang.org/x/exp/rand"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -110,14 +111,17 @@ type BatchSubmitter struct {
 	lastStoredBlock eth.BlockID
 	lastL1Tip       eth.L1BlockRef
 
+	targetL1BlockNumber uint64 // (POC ONLY)
+
 	state *channelManager
 }
 
 // NewBatchSubmitter initializes the BatchSubmitter driver from a preconfigured DriverSetup
 func NewBatchSubmitter(setup DriverSetup) *BatchSubmitter {
 	return &BatchSubmitter{
-		DriverSetup: setup,
-		state:       NewChannelManager(setup.Log, setup.Metr, setup.ChannelConfig, setup.RollupConfig),
+		DriverSetup:         setup,
+		state:               NewChannelManager(setup.Log, setup.Metr, setup.ChannelConfig, setup.RollupConfig),
+		targetL1BlockNumber: 0, //initialize to zero for POC testing (POC ONLY)
 	}
 }
 
@@ -813,16 +817,47 @@ func (l *BatchSubmitter) updateL1Tip() error {
 	return nil
 }
 
-func (l *BatchSubmitter) shouldPublish() bool {
-	// POC ONLY
-	// the POC logic is that we have two batchers:
-	// - one of them submits the batch on even blocks, other on odd blocks
-	// - the first one has `Config.EvenBlocks` flag set to `true`, other to `false`7
-	if (l.lastL1Tip.Number+1)%2 == 0 {
-		return l.Config.EvenBlocks
+// This method is POC only
+func (l *BatchSubmitter) generateTargetBlockPOC() uint64 {
+	// pick a random block in the future to target
+	randomOffset := uint64(rand.Intn(10) + 1)
+
+	currentL1TipNumber := l.lastL1Tip.Number
+
+	candidateTarget := currentL1TipNumber + randomOffset
+	// Adjust candidateTarget to be even or odd depending on l.Config.EvenBlocks
+	if l.Config.EvenBlocks {
+		if candidateTarget%2 != 0 {
+			candidateTarget += 1
+		}
 	} else {
-		return !l.Config.EvenBlocks
+		if candidateTarget%2 == 0 {
+			candidateTarget += 1
+		}
 	}
+	l.Log.Info("Picked new target L1 block", "target", candidateTarget)
+	return candidateTarget
+}
+
+// This method's logic is currently POC only
+func (l *BatchSubmitter) shouldPublish() bool {
+	// If targetL1BlockNumber is unitilized, pick a new target block
+	if l.targetL1BlockNumber == 0 {
+		candidateTarget := l.generateTargetBlockPOC()
+		l.targetL1BlockNumber = candidateTarget
+		l.Log.Info("Picked new target L1 block", "target", l.targetL1BlockNumber)
+	}
+
+	// Check if current L1 tip is targetL1BlockNumber -1
+	if l.lastL1Tip.Number == l.targetL1BlockNumber-1 {
+		l.Log.Debug("At target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
+		// Set a new target block (POC only)
+		l.targetL1BlockNumber = l.generateTargetBlockPOC()
+		return true
+	}
+
+	l.Log.Debug("Not yet at target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
+	return false
 }
 
 func logFields(xs ...any) (fs []any) {
