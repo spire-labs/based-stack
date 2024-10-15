@@ -2,16 +2,15 @@ package election
 
 import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
-	"github.com/ethereum-optimism/optimism/op-service/sources"
 )
 
 type ElectionDeriver struct {
-	client   sources.BeaconClient
+	client   ElectionClient
 	election *Election
 	emitter  event.Emitter
 }
 
-func NewElectionDeriver(client sources.BeaconClient, election *Election) *ElectionDeriver {
+func NewElectionDeriver(client ElectionClient, election *Election) *ElectionDeriver {
 	return &ElectionDeriver{
 		client:   client,
 		election: election,

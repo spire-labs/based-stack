@@ -23,7 +23,6 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/status"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/sync"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
-	"github.com/ethereum-optimism/optimism/op-service/sources"
 )
 
 // aliases to not disrupt op-conductor code
@@ -166,7 +165,7 @@ func NewDriver(
 	l1 L1Chain,
 	supervisor interop.InteropBackend, // may be nil pre-interop.
 	l1Blobs derive.L1BlobsFetcher,
-	beaconClient sources.BeaconClient,
+	beaconClient election.ElectionClient,
 	altSync AltSync,
 	network Network,
 	log log.Logger,
