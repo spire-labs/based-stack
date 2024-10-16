@@ -1,6 +1,7 @@
 package txmgr
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -590,8 +591,35 @@ func (m *SimpleTxManager) sendTx(ctx context.Context, tx *types.Transaction) (*t
 	}
 }
 
+// checks whether the given transaction data corresponds to a batch submission
+func (m *SimpleTxManager) isBatchSubmission(txData []byte) (bool, error) {
+	if len(txData) < 4 {
+		return false, fmt.Errorf("transaction data is too short to contain a method selector")
+	}
+
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return false, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+
+	txMethodSelector := txData[:4]
+
+	submitMethodSelector := submitMethod.ID
+
+	if bytes.Equal(txMethodSelector, submitMethodSelector) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // extracts the target L1 block number from the transaction data, if it is a batch submission transaction
 func (m *SimpleTxManager) getTargetBlockForBatchSubmission(txData []byte) (*big.Int, error) {
+	// Ensure the txData is long enough to strip the first 4 bytes
+	if len(txData) < 4 {
+		return nil, fmt.Errorf("transaction data is too short, expected at least 4 bytes, got %d", len(txData))
+	}
 	// Load the ABI for BatchInbox contract
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	submitMethod, ok := batchInboxAbi.Methods["submit"]
@@ -630,7 +658,7 @@ func (m *SimpleTxManager) shouldRetryBatchSubmission(txData []byte) (bool, error
 		// TODO(Nate) add more context to the error
 		// for now, just assume it wasn't actually a batch submission transaction
 		fmt.Println("Error getting target block number:", err)
-		return true, fmt.Errorf("error getting target block number - retrying tx: %w", err)
+		return true, nil
 	}
 
 	// Get the current L1 block number
@@ -659,16 +687,24 @@ func (m *SimpleTxManager) publishTx(ctx context.Context, tx *types.Transaction, 
 	}
 	l.Info("Publishing transaction", "tx", tx.Hash())
 
-	// POC Only: Check if we should retry batch submission
-	shouldRetry, err := m.shouldRetryBatchSubmission(tx.Data())
-
+	isBatch, err := m.isBatchSubmission(tx.Data())
 	if err != nil {
-		l.Warn("Error determining if we should retry batch submission", "err", err)
+		l.Warn("Error determining if transaction is a batch submission", "err", err)
 	}
 
-	if !shouldRetry {
-		fmt.Println("Should not retry batch submission")
-		return nil, false
+	if isBatch {
+		fmt.Println("Transaction is a batch submission")
+		// POC Only: Check if we should retry batch submission
+		shouldRetry, err := m.shouldRetryBatchSubmission(tx.Data())
+
+		if err != nil {
+			l.Warn("Error determining if we should retry batch submission", "err", err)
+		}
+
+		if !shouldRetry {
+			fmt.Println("Should not retry batch submission")
+			return nil, false
+		}
 	}
 
 	for {
