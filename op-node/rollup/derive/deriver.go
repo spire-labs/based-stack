@@ -32,6 +32,14 @@ func (d DeriverMoreEvent) String() string {
 	return "deriver-more"
 }
 
+type ElectionWinnerEvent struct {
+	Validator eth.Validator
+}
+
+func (ev ElectionWinnerEvent) String() string {
+	return "election-winner"
+}
+
 // ConfirmReceivedAttributesEvent signals that the derivation pipeline may generate new attributes.
 // After emitting DerivedAttributesEvent, no new attributes will be generated until a confirmation of reception.
 type ConfirmReceivedAttributesEvent struct{}
@@ -71,6 +79,7 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
+	nextElectionWinner         eth.Validator
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
@@ -131,6 +140,8 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.ConfirmEngineReset()
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
+	case rollup.ElectionWinnerEvent:
+		d.nextElectionWinner = x.Validator
 	default:
 		return false
 	}

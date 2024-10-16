@@ -1,6 +1,9 @@
 package rollup
 
-import "github.com/ethereum-optimism/optimism/op-node/rollup/event"
+import (
+	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
+	"github.com/ethereum-optimism/optimism/op-service/eth"
+)
 
 // L1TemporaryErrorEvent identifies a temporary issue with the L1 data.
 type L1TemporaryErrorEvent struct {
@@ -39,3 +42,22 @@ func (ev ResetEvent) String() string {
 
 // CriticalErrorEvent is an alias for event.CriticalErrorEvent
 type CriticalErrorEvent = event.CriticalErrorEvent
+
+// NOTE: We cant store this in election because derive needs to import it
+// there is a circular dependency
+// is there a better place to put this / better way to do this?
+type ElectionWinnerEvent struct {
+	Validator eth.Validator
+}
+
+func (ev ElectionWinnerEvent) String() string {
+	return "election-winner"
+}
+
+type ElectionErrorEvent struct {
+	Err error
+}
+
+func (ev ElectionErrorEvent) String() string {
+	return "election-error"
+}

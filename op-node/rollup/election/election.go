@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/ethereum-optimism/optimism/op-service/eth"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 type ElectionClient interface {
 	GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error)
-	GetCurrentEpoch(ctx context.Context) (uint64, error)
+	GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error)
+	GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error)
 }
 
 type Election struct {
@@ -17,14 +19,13 @@ type Election struct {
 
 func NewElection(client ElectionClient) *Election {
 	return &Election{
-		client: client,
-	}
+		client: client}
 }
 
-func (e *Election) GetWinner(ctx context.Context) (eth.Validator, error) {
+func (e *Election) GetWinner(ctx context.Context, timestamp uint64, log log.Logger) (eth.Validator, error) {
 	var err error
 
-	epoch, err := e.client.GetCurrentEpoch(ctx)
+	epoch, err := e.client.GetEpochNumber(ctx, timestamp)
 
 	if err != nil {
 		return eth.Validator{}, err
@@ -36,7 +37,15 @@ func (e *Election) GetWinner(ctx context.Context) (eth.Validator, error) {
 		return eth.Validator{}, err
 	}
 
-	// TODO: Adjust this to add the election rules
-	// Just return the current proposer for now
-	return *data.Data[0], nil
+	slot, err := e.client.GetSlotNumber(ctx, timestamp)
+
+	if err != nil {
+		return eth.Validator{}, err
+	}
+
+	length := uint64(len(data.Data))
+
+	log.Info("Choosing validator at slot", "slot", slot)
+	// For now winner will always return the current slots proposer
+	return *data.Data[slot%length], nil
 }

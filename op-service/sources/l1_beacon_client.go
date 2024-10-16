@@ -11,7 +11,6 @@ import (
 	"path"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/crypto/kzg4844"
@@ -243,7 +242,7 @@ func (cl *L1BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.A
 	return cl.cl.GetLookahead(ctx, epoch)
 }
 
-func (cl *L1BeaconClient) GetCurrentEpoch(ctx context.Context) (uint64, error) {
+func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error) {
 	var err error
 
 	cl.timeToSlotFn, err = cl.GetTimeToSlotFn(ctx)
@@ -251,14 +250,26 @@ func (cl *L1BeaconClient) GetCurrentEpoch(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 
-	slot, err := cl.timeToSlotFn(uint64(time.Now().Unix()))
+	slot, err := cl.timeToSlotFn(timestamp)
 
 	if err != nil {
 		return 0, err
 	}
 
-	// TODO: Dont hardcode 12 but store the seconds per slot in the beacon config
-	return slot / 12, nil
+	// TODO: Dont hardcode the "/ 8" here
+	// For some reason on the devnets the lookahead has 8 validators, which means an epoch is 8 slots
+	// Where as on mainnet it is 32, we need to look into this as well
+	return slot / 8, nil
+}
+
+func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error) {
+	slot, err := cl.timeToSlotFn(timestamp)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return slot, nil
 }
 
 func (cl *L1BeaconClient) fetchSidecars(ctx context.Context, slot uint64, hashes []eth.IndexedBlobHash) (eth.APIGetBlobSidecarsResponse, error) {
