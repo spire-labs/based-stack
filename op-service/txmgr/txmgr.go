@@ -643,8 +643,8 @@ func (m *SimpleTxManager) shouldRetryBatchSubmission(txData []byte) (bool, error
 
 	fmt.Println("Current block number:", currentBlock)
 	fmt.Println("Target block number:", targetBlock)
-	// If the target block is greater than or equal to the current block, we should retry
-	return targetBlock.Cmp(new(big.Int).SetUint64(currentBlock)) >= 0, nil
+	// If the target block is equal to the current block, we should retry
+	return targetBlock.Cmp(new(big.Int).SetUint64(currentBlock)) == 0, nil
 }
 
 // publishTx publishes the transaction to the transaction pool. If it receives any underpriced errors
@@ -659,6 +659,7 @@ func (m *SimpleTxManager) publishTx(ctx context.Context, tx *types.Transaction, 
 	}
 	l.Info("Publishing transaction", "tx", tx.Hash())
 
+	// POC Only: Check if we should retry batch submission
 	shouldRetry, err := m.shouldRetryBatchSubmission(tx.Data())
 
 	if err != nil {
@@ -688,6 +689,7 @@ func (m *SimpleTxManager) publishTx(ctx context.Context, tx *types.Transaction, 
 					return tx, false
 				}
 				sendState.bumpCount++
+
 				tx = newTx
 				l = m.txLogger(tx, true)
 				// Disable bumping fees again until the new transaction is successfully published,

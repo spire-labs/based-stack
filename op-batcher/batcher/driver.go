@@ -482,7 +482,7 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 			return
 		}
 		if !l.shouldPublish() {
-			l.Log.Debug("Not our turn to publish")
+			l.Log.Info("Not our turn to publish")
 			return
 		}
 
