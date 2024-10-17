@@ -835,7 +835,7 @@ func (l *BatchSubmitter) generateTargetBlockPOC() uint64 {
 			candidateTarget += 1
 		}
 	}
-	l.Log.Info("Picked new target L1 block", "target", candidateTarget)
+	l.Log.Debug("Picked new target L1 block", "target", candidateTarget)
 	return candidateTarget
 }
 
