@@ -79,7 +79,7 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
-	nextElectionWinner         eth.Validator
+	nextElectionWinners        []*eth.Validator
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
@@ -141,7 +141,7 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
 	case rollup.ElectionWinnerEvent:
-		d.nextElectionWinner = x.Validator
+		d.nextElectionWinners = x.Validators
 	default:
 		return false
 	}

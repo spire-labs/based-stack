@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/ethereum-optimism/optimism/op-service/eth"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 type ElectionClient interface {
@@ -22,30 +21,17 @@ func NewElection(client ElectionClient) *Election {
 		client: client}
 }
 
-func (e *Election) GetWinner(ctx context.Context, timestamp uint64, log log.Logger) (eth.Validator, error) {
-	var err error
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64) ([]*eth.Validator, error) {
+	validators := []*eth.Validator{}
 
-	epoch, err := e.client.GetEpochNumber(ctx, timestamp)
-
-	if err != nil {
-		return eth.Validator{}, err
-	}
-
-	data, err := e.client.GetLookahead(ctx, epoch)
+	resp, err := e.client.GetLookahead(ctx, epoch)
 
 	if err != nil {
-		return eth.Validator{}, err
+		return validators, err
 	}
 
-	slot, err := e.client.GetSlotNumber(ctx, timestamp)
+	validators = resp.Data
 
-	if err != nil {
-		return eth.Validator{}, err
-	}
-
-	length := uint64(len(data.Data))
-
-	log.Info("Choosing validator at slot", "slot", slot)
-	// For now winner will always return the current slots proposer
-	return *data.Data[slot%length], nil
+	// For now winner will always return the current slots proposer, so we can just return the validators as is as each slot is its winner
+	return validators, nil
 }

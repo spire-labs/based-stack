@@ -198,7 +198,7 @@ func NewDriver(
 	verifConfDepth := confdepth.NewConfDepth(driverCfg.VerifierConfDepth, statusTracker.L1Head, l1)
 
 	elec := election.NewElection(beaconClient)
-	sys.Register("election", election.NewElectionDeriver(beaconClient, elec, log), opts)
+	sys.Register("election", election.NewElectionDeriver(driverCtx, beaconClient, elec, log), opts)
 
 	ec := engine.NewEngineController(l2, log, metrics, cfg, syncCfg,
 		sys.Register("engine-controller", nil, opts))

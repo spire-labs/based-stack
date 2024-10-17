@@ -47,7 +47,7 @@ type CriticalErrorEvent = event.CriticalErrorEvent
 // there is a circular dependency
 // is there a better place to put this / better way to do this?
 type ElectionWinnerEvent struct {
-	Validator eth.Validator
+	Validators []*eth.Validator
 }
 
 func (ev ElectionWinnerEvent) String() string {
