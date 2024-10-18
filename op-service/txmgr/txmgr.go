@@ -1164,8 +1164,8 @@ func (m *SimpleTxManager) shouldRetryBatchSubmission(txData []byte) (bool, error
 		return false, fmt.Errorf("error getting current block number: %w", err)
 	}
 
-	log.Info("Current block number:", currentBlock)
-	log.Info("Target block number:", targetBlock)
+	log.Info("Current block number", "block", currentBlock)
+	log.Info("Target block number", "block", targetBlock)
 	// If the target block -1 is equal to the current block, we should retry
 	return new(big.Int).Sub(targetBlock, big.NewInt(1)).Cmp(new(big.Int).SetUint64(currentBlock)) == 0, nil
 }
