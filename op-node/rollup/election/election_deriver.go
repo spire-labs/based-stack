@@ -54,9 +54,6 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 }
 
 func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
-	ed.mu.Lock()
-	defer ed.mu.Unlock()
-
 	epoch, err := ed.client.GetEpochNumber(ed.ctx, l1Head.Time)
 
 	if err != nil {
@@ -79,6 +76,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		log.Warn("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
+		ed.mu.Lock()
+		defer ed.mu.Unlock()
+
 		log.Info("Election winners", "validators", validators)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{Validators: validators})
 
