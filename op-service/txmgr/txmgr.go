@@ -1096,7 +1096,7 @@ func (m *SimpleTxManager) isBatchSubmission(txData []byte) (bool, error) {
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	submitMethod, ok := batchInboxAbi.Methods["submit"]
 	if !ok {
-		return false, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+		return false, nil
 	}
 
 	txMethodSelector := txData[:4]
@@ -1121,6 +1121,11 @@ func (m *SimpleTxManager) getTargetBlockForBatchSubmission(txData []byte) (*big.
 	submitMethod, ok := batchInboxAbi.Methods["submit"]
 	if !ok {
 		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+
+	// Verify the first argument type in the ABI
+	if len(submitMethod.Inputs) == 0 || submitMethod.Inputs[0].Type.String() != "uint256" {
+		return nil, fmt.Errorf("unexpected type for first argument, expected uint256, got %s", submitMethod.Inputs[0].Type.String())
 	}
 
 	dataWithoutSelector := txData[4:]
