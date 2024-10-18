@@ -54,6 +54,9 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 }
 
 func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
+	ed.mu.Lock()
+	defer ed.mu.Unlock()
+
 	epoch, err := ed.client.GetEpochNumber(ed.ctx, l1Head.Time)
 
 	if err != nil {
@@ -65,7 +68,7 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 	// We dont need to recalculate the winners as we already did it for this epoch
 	// If they are equal and its zero, then its the genesis epoch
 	if epoch < ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
-		err := fmt.Errorf("epoch %d is not greater than %d", epoch, ed.lastEpoch)
+		err := fmt.Errorf("epoch %d is not greater than the last epoch saved which was %d", epoch, ed.lastEpoch)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
@@ -76,9 +79,6 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		log.Warn("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
-		ed.mu.Lock()
-		defer ed.mu.Unlock()
-
 		log.Info("Election winners", "validators", validators)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{Validators: validators})
 
