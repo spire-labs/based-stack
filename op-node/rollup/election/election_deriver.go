@@ -2,6 +2,7 @@ package election
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
@@ -40,9 +41,6 @@ func (ed *ElectionDeriver) AttachEmitter(emitter event.Emitter) {
 }
 
 func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
-	ed.mu.Lock()
-	defer ed.mu.Unlock()
-
 	switch x := ev.(type) {
 	// Do we want to do l1unsafe or l1safe here?
 	case status.L1UnsafeEvent:
@@ -66,7 +64,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 
 	// We dont need to recalculate the winners as we already did it for this epoch
 	// If they are equal and its zero, then its the genesis epoch
-	if epoch == ed.lastEpoch && ed.lastEpoch != 0 {
+	if epoch < ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
+		err := fmt.Errorf("epoch %d is not greater than %d", epoch, ed.lastEpoch)
+		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
 
@@ -76,6 +76,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		log.Warn("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
+		ed.mu.Lock()
+		defer ed.mu.Unlock()
+
 		log.Info("Election winners", "validators", validators)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{Validators: validators})
 

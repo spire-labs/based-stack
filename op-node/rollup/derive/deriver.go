@@ -32,14 +32,6 @@ func (d DeriverMoreEvent) String() string {
 	return "deriver-more"
 }
 
-type ElectionWinnerEvent struct {
-	Validator eth.Validator
-}
-
-func (ev ElectionWinnerEvent) String() string {
-	return "election-winner"
-}
-
 // ConfirmReceivedAttributesEvent signals that the derivation pipeline may generate new attributes.
 // After emitting DerivedAttributesEvent, no new attributes will be generated until a confirmation of reception.
 type ConfirmReceivedAttributesEvent struct{}
