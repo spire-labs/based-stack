@@ -7,6 +7,7 @@ volumes:
   l1_bn_data:
   l1_vc_data:
   l2_data:
+  l2_data2:
   safedb_data:
   safedb_data2:
   challenger_data:
@@ -89,6 +90,23 @@ services:
     environment:
       GETH_MINER_RECOMMIT: 100ms
 
+  l2-2:
+    build:
+      context: .
+      dockerfile: l2-op-geth.Dockerfile
+    ports:
+      - "9546:8545"
+      - "8061:6060"
+    volumes:
+      - "l2_data2:/db"
+      - "${PWD}/../.devnet/genesis-l2.json:/genesis.json"
+      - "${PWD}/test-jwt-secret.txt:/config/jwt-secret.txt"
+    entrypoint:
+      - "/bin/sh"
+      - "/entrypoint.sh"
+    environment:
+      GETH_MINER_RECOMMIT: 100ms
+
   op-node:
     depends_on:
       - l1
@@ -148,7 +166,7 @@ services:
       - l1
       - l1-bn
       - l1-vc
-      - l2
+      - l2-2
     build:
       context: ../
       dockerfile: ops/docker/op-stack-go/Dockerfile
@@ -160,7 +178,7 @@ services:
       --l1.beacon=http://l1-bn:5052
       --l1.epoch-poll-interval=12s
       --l1.http-poll-interval=6s
-      --l2=http://l2:8551
+      --l2=http://l2-2:8551
       --l2.jwt-secret=/config/jwt-secret.txt
       --sequencer.enabled
       --sequencer.l1-confs=0
@@ -278,7 +296,7 @@ services:
       - "5545:8545"
     environment:
       OP_BATCHER_L1_ETH_RPC: http://l1:8545
-      OP_BATCHER_L2_ETH_RPC: http://l2:8545
+      OP_BATCHER_L2_ETH_RPC: http://l2-2:8545
       OP_BATCHER_ROLLUP_RPC: http://op-node-2:8546
       OP_BATCHER_MAX_CHANNEL_DURATION: 2
       OP_BATCHER_SUB_SAFETY_MARGIN: 4 # SWS is 15, ChannelTimeout is 40
