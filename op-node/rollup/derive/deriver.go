@@ -71,6 +71,7 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
+	nextElectionWinners        []*eth.Validator
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
@@ -131,6 +132,8 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.ConfirmEngineReset()
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
+	case rollup.ElectionWinnerEvent:
+		d.nextElectionWinners = x.Validators
 	default:
 		return false
 	}
