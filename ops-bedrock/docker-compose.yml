@@ -142,6 +142,61 @@ services:
       - "${PWD}/../.devnet/rollup.json:/rollup.json"
       - op_log:/op_log
 
+  op-node-2:
+    depends_on:
+      - l1
+      - l1-bn
+      - l1-vc
+      - l2
+    build:
+      context: ../
+      dockerfile: ops/docker/op-stack-go/Dockerfile
+      target: op-node-target
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:devnet
+    command: >
+      op-node
+      --l1=ws://l1:8546
+      --l1.beacon=http://l1-bn:5052
+      --l1.epoch-poll-interval=12s
+      --l1.http-poll-interval=6s
+      --l2=http://l2:8551
+      --l2.jwt-secret=/config/jwt-secret.txt
+      --sequencer.enabled
+      --sequencer.l1-confs=0
+      --verifier.l1-confs=0
+      --p2p.sequencer.key=8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
+      --rollup.config=/rollup.json
+      --rpc.addr=0.0.0.0
+      --rpc.port=8546  # This is different from the original op-node
+      --p2p.listen.ip=0.0.0.0
+      --p2p.listen.tcp=9004  # Use different ports to avoid conflicts
+      --p2p.listen.udp=9004
+      --p2p.scoring.peers=light
+      --p2p.ban.peers=true
+      --p2p.priv.path=/config/p2p-node-key.txt
+      --metrics.enabled
+      --metrics.addr=0.0.0.0
+      --metrics.port=7301  # This is different from the original op-node
+      --pprof.enabled
+      --rpc.enable-admin
+      --safedb.path=/db
+      --altda.enabled=${ALTDA_ENABLED}
+      --altda.da-service=${ALTDA_SERVICE}
+      --altda.da-server=http://da-server:3100
+    ports:
+      - "7546:8546"  # Map a different external port
+      - "9004:9004"  # Map P2P ports
+      - "7304:7301"  # Map metrics port
+      - "6066:6060"  # PProf endpoint
+    volumes:
+      - "safedb_data:/db"
+      - "${PWD}/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt"
+      - "${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt"
+      - "${PWD}/test-jwt-secret.txt:/config/jwt-secret.txt"
+      - "${PWD}/../.devnet/rollup.json:/rollup.json"
+      - op_log:/op_log
+
+
   op-proposer:
     depends_on:
       - l1
@@ -210,7 +265,7 @@ services:
     depends_on:
       - l1
       - l2
-      - op-node
+      - op-node-2
     build:
       context: ../
       dockerfile: ops/docker/op-stack-go/Dockerfile
@@ -218,12 +273,12 @@ services:
     image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:devnet
     ports:
       - "6063:6060"
-      - "7303:7300"
+      - "7305:7300"
       - "5545:8545"
     environment:
       OP_BATCHER_L1_ETH_RPC: http://l1:8545
       OP_BATCHER_L2_ETH_RPC: http://l2:8545
-      OP_BATCHER_ROLLUP_RPC: http://op-node:8545
+      OP_BATCHER_ROLLUP_RPC: http://op-node-2:8546
       OP_BATCHER_MAX_CHANNEL_DURATION: 2
       OP_BATCHER_SUB_SAFETY_MARGIN: 4 # SWS is 15, ChannelTimeout is 40
       OP_BATCHER_POLL_INTERVAL: 1s
