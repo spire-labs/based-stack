@@ -739,9 +739,9 @@ type L1DependenciesConfig struct {
 	// OptimismPortalProxy represents the address of the OptimismPortalProxy on L1 and is used
 	// as part of the derivation pipeline.
 	OptimismPortalProxy common.Address `json:"optimismPortalProxy"`
-	// Election represents the address of the election contract on L1 and is used
+	// BlockDutchAuction represents the address of the BlockDutchAuction contract on L1 and is used
 	// as part of the derivation pipeline.
-	Election common.Address `json:"election"`
+	BlockDutchAuction common.Address `json:"BlockDutchAuction"`
 	// BatchInbox represents the address or the BatchInbox contract on L1 and is
 	// as an address where batches are sent to.
 	BatchInbox common.Address `json:"batchInbox"`
@@ -775,8 +775,8 @@ func (d *L1DependenciesConfig) CheckAddresses(dependencyContext DependencyContex
 	if d.OptimismPortalProxy == (common.Address{}) {
 		return fmt.Errorf("%w: OptimismPortalProxy cannot be address(0)", ErrInvalidDeployConfig)
 	}
-	if d.Election == (common.Address{}) {
-		return fmt.Errorf("%w: Election cannot be address(0)", ErrInvalidDeployConfig)
+	if d.BlockDutchAuction == (common.Address{}) {
+		return fmt.Errorf("%w: BlockDutchAuction cannot be address(0)", ErrInvalidDeployConfig)
 	}
 	if d.BatchInbox == (common.Address{}) {
 		return fmt.Errorf("%w: BatchInbox cannot be address(0)", ErrInvalidDeployConfig)
@@ -898,7 +898,7 @@ func (d *DeployConfig) SetDeployments(deployments *L1Deployments) {
 	d.SystemConfigProxy = deployments.SystemConfigProxy
 	d.OptimismPortalProxy = deployments.OptimismPortalProxy
 	d.DAChallengeProxy = deployments.DataAvailabilityChallengeProxy
-	d.Election = deployments.Election
+	d.BlockDutchAuction = deployments.BlockDutchAuction
 	d.BatchInbox = deployments.BatchInbox
 }
 
@@ -950,7 +950,7 @@ func (d *DeployConfig) RollupConfig(l1StartBlock *types.Header, l2GenesisBlockHa
 		BatchInboxContractAddress: d.BatchInbox,
 		DepositContractAddress:    d.OptimismPortalProxy,
 		L1SystemConfigAddress:     d.SystemConfigProxy,
-		ElectionContractAddress:   d.Election,
+		AuctionContractAddress:    d.BlockDutchAuction,
 		RegolithTime:              d.RegolithTime(l1StartTime),
 		CanyonTime:                d.CanyonTime(l1StartTime),
 		DeltaTime:                 d.DeltaTime(l1StartTime),
@@ -1014,7 +1014,7 @@ type L1Deployments struct {
 	ProtocolVersionsProxy             common.Address `json:"ProtocolVersionsProxy"`
 	DataAvailabilityChallenge         common.Address `json:"DataAvailabilityChallenge"`
 	DataAvailabilityChallengeProxy    common.Address `json:"DataAvailabilityChallengeProxy"`
-	Election                          common.Address `json:"Election"`
+	BlockDutchAuction                 common.Address `json:"BlockDutchAuction"`
 	BatchInbox                        common.Address `json:"BatchInbox"`
 }
 

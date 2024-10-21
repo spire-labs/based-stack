@@ -25,6 +25,7 @@ import { ForgeArtifacts } from "scripts/libraries/ForgeArtifacts.sol";
 import { ChainAssertions } from "scripts/deploy/ChainAssertions.sol";
 
 // Contracts
+import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
 import { AddressManager } from "src/legacy/AddressManager.sol";
@@ -35,7 +36,7 @@ import { ResolvedDelegateProxy } from "src/legacy/ResolvedDelegateProxy.sol";
 import { PreimageOracle } from "src/cannon/PreimageOracle.sol";
 import { MIPS } from "src/cannon/MIPS.sol";
 import { MIPS2 } from "src/cannon/MIPS2.sol";
-import { Election } from "src/L1/Election.sol";
+
 import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { StorageSetter } from "src/universal/StorageSetter.sol";
@@ -451,7 +452,8 @@ contract Deploy is Deployer {
         deployDelayedWETH();
         deployPreimageOracle();
         deployMips();
-        deployElectionAndElectionTicketsAndBatchInbox();
+        deployBatchInbox();
+        deployBlockDutchAuctionAndElectionTickets();
         deployAnchorStateRegistry();
     }
 
@@ -846,13 +848,13 @@ contract Deploy is Deployer {
         addr_ = address(mips);
     }
 
-    /// @notice Deploy Election, ElectionTickets and BatchInbox
+    /// @notice Deploy BlockDutchAuction and ElectionTickets
     ///
     /// @dev Done in one function due to triangular dependency
-    function deployElectionAndElectionTicketsAndBatchInbox()
+    function deployBlockDutchAuctionAndElectionTickets()
         public
         broadcast
-        returns (address election_, address electionTicket_, address batchInbox_)
+        returns (address blockDutchAuction_, address electionTicket_)
     {
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
@@ -860,28 +862,34 @@ contract Deploy is Deployer {
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
 
-        address _precalculatedTicketAddress = _precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 2);
+        address _precalculatedTicketAddress = _precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1);
 
-        console.log("Deploying Election implementation");
-        Election election = new Election{ salt: _implSalt() }(
+        console.log("Deploying BlockDutchAuction implementation");
+        BlockDutchAuction blockDutchAuction = new BlockDutchAuction{ salt: _implSalt() }(
             startBlock, durationBlocks, startPrice, discountRate, ElectionTickets(_precalculatedTicketAddress)
         );
 
-        console.log("Deploying Batch Inbox implementation");
-        BatchInbox batchInbox = new BatchInbox{ salt: _implSalt() }(election);
-
         console.log("Deploying ElectionTickets implementation");
-        ElectionTickets electionTicket = new ElectionTickets(address(election), address(batchInbox));
-        save("Election", address(election));
-        save("ElectionTickets", address(electionTicket));
-        save("BatchInbox", address(batchInbox));
-        console.log("Election deployed at %s", address(election));
-        console.log("ElectionTickets deployed at %s", address(electionTicket));
-        console.log("BatchInbox deployed at %s", address(batchInbox));
+        ElectionTickets electionTicket = new ElectionTickets(address(blockDutchAuction), mustGetAddress("BatchInbox"));
 
-        election_ = address(election);
+        save("BlockDutchAuction", address(blockDutchAuction));
+        save("ElectionTickets", address(electionTicket));
+
+        console.log("Election deployed at %s", address(blockDutchAuction));
+        console.log("ElectionTickets deployed at %s", address(electionTicket));
+
+        blockDutchAuction_ = address(blockDutchAuction);
         electionTicket_ = address(electionTicket);
-        batchInbox_ = address(batchInbox);
+    }
+
+    function deployBatchInbox() public broadcast returns (address addr_) {
+        console.log("Deploying BatchInbox implementation");
+        BatchInbox batchInbox = new BatchInbox{ salt: _implSalt() }();
+
+        save("BatchInbox", address(batchInbox));
+
+        console.log("BatchInbox deployed at %s", address(batchInbox));
+        addr_ = address(batchInbox);
     }
 
     /// @notice Deploy MIPS2

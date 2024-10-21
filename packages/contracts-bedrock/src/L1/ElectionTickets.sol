@@ -6,7 +6,7 @@ import "src/libraries/ElectionTicketErrors.sol";
 
 contract ElectionTickets is ERC721 {
     /// @notice The address of the Election contract
-    address internal immutable ELECTION;
+    address internal immutable AUCTION;
 
     /// @notice The address of the BatchInbox contract
     address internal immutable BATCH_INBOX;
@@ -16,10 +16,10 @@ contract ElectionTickets is ERC721 {
 
     /// @notice Constructs the ElectionTickets contract
     ///
-    /// @param _election The address of the Election contract
+    /// @param _auction The address of the Election contract
     /// @param _batchInbox The address of the BatchInbox contract
-    constructor(address _election, address _batchInbox) ERC721("ElectionTickets", "ET") {
-        ELECTION = _election;
+    constructor(address _auction, address _batchInbox) ERC721("ElectionTickets", "ET") {
+        AUCTION = _auction;
         BATCH_INBOX = _batchInbox;
     }
 
@@ -27,7 +27,7 @@ contract ElectionTickets is ERC721 {
     ///
     /// @param _to The address to mint the ticket to
     function mint(address _to) external {
-        if (msg.sender != ELECTION) revert NotElection();
+        if (msg.sender != AUCTION) revert NotAuction();
 
         // Not feasible for this to ever overflow
         unchecked {
@@ -47,11 +47,11 @@ contract ElectionTickets is ERC721 {
         _burn(_tokenId);
     }
 
-    /// @notice Returns the address of the Election contract
+    /// @notice Returns the address of the BlockDutchAuction contract
     ///
-    /// @return election_ The address of the Election contract
-    function election() external view returns (address election_) {
-        election_ = ELECTION;
+    /// @return auction_ The address of the BlockDutchAuction contract
+    function auction() external view returns (address auction_) {
+        auction_ = AUCTION;
     }
 
     /// @notice Returns the address of the BatchInbox contract
