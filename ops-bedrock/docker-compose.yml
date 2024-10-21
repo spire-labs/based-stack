@@ -8,6 +8,7 @@ volumes:
   l1_vc_data:
   l2_data:
   safedb_data:
+  safedb_data2:
   challenger_data:
   da_data:
   op_log:
@@ -167,16 +168,16 @@ services:
       --p2p.sequencer.key=8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
       --rollup.config=/rollup.json
       --rpc.addr=0.0.0.0
-      --rpc.port=8546  # This is different from the original op-node
+      --rpc.port=8546
       --p2p.listen.ip=0.0.0.0
-      --p2p.listen.tcp=9004  # Use different ports to avoid conflicts
+      --p2p.listen.tcp=9004
       --p2p.listen.udp=9004
       --p2p.scoring.peers=light
       --p2p.ban.peers=true
       --p2p.priv.path=/config/p2p-node-key.txt
       --metrics.enabled
       --metrics.addr=0.0.0.0
-      --metrics.port=7301  # This is different from the original op-node
+      --metrics.port=7304
       --pprof.enabled
       --rpc.enable-admin
       --safedb.path=/db
@@ -184,12 +185,12 @@ services:
       --altda.da-service=${ALTDA_SERVICE}
       --altda.da-server=http://da-server:3100
     ports:
-      - "7546:8546"  # Map a different external port
-      - "9004:9004"  # Map P2P ports
-      - "7304:7301"  # Map metrics port
-      - "6066:6060"  # PProf endpoint
+      - "7546:8546"
+      - "9004:9004"
+      - "7304:7300"
+      - "6064:6060"
     volumes:
-      - "safedb_data:/db"
+      - "safedb_data2:/db"
       - "${PWD}/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt"
       - "${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt"
       - "${PWD}/test-jwt-secret.txt:/config/jwt-secret.txt"
@@ -273,7 +274,7 @@ services:
     image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-batcher:devnet
     ports:
       - "6063:6060"
-      - "7305:7300"
+      - "7303:7300"
       - "5545:8545"
     environment:
       OP_BATCHER_L1_ETH_RPC: http://l1:8545
