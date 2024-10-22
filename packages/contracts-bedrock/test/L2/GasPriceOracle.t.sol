@@ -8,6 +8,9 @@ import { Fork } from "scripts/libraries/Config.sol";
 // Libraries
 import { Encoding } from "src/libraries/Encoding.sol";
 
+// Interfaces
+import { IL1Block } from "src/L2/interfaces/IL1Block.sol";
+
 contract GasPriceOracle_Test is CommonTest {
     event OverheadUpdated(uint256);
     event ScalarUpdated(uint256);
@@ -27,6 +30,7 @@ contract GasPriceOracle_Test is CommonTest {
     uint256 constant l1FeeScalar = 10;
     uint32 constant blobBaseFeeScalar = 15;
     uint32 constant baseFeeScalar = 20;
+    address l1ElectionWinner = address(0);
 
     /// @dev Sets up the test suite.
     function setUp() public virtual override {
@@ -52,7 +56,8 @@ contract GasPriceOracleBedrock_Test is GasPriceOracle_Test {
             _sequenceNumber: sequenceNumber,
             _batcherHash: batcherHash,
             _l1FeeOverhead: l1FeeOverhead,
-            _l1FeeScalar: l1FeeScalar
+            _l1FeeScalar: l1FeeScalar,
+            _electionWinner: l1ElectionWinner
         });
     }
 
@@ -125,7 +130,16 @@ contract GasPriceOracleEcotone_Test is GasPriceOracle_Test {
         assertEq(gasPriceOracle.isEcotone(), true);
 
         bytes memory calldataPacked = Encoding.encodeSetL1BlockValuesEcotone(
-            baseFeeScalar, blobBaseFeeScalar, sequenceNumber, timestamp, number, baseFee, blobBaseFee, hash, batcherHash
+            baseFeeScalar,
+            blobBaseFeeScalar,
+            sequenceNumber,
+            timestamp,
+            number,
+            baseFee,
+            blobBaseFee,
+            hash,
+            batcherHash,
+            l1ElectionWinner
         );
 
         // Execute the function call
@@ -217,7 +231,16 @@ contract GasPriceOracleFjordActive_Test is GasPriceOracle_Test {
         super.setUp();
 
         bytes memory calldataPacked = Encoding.encodeSetL1BlockValuesEcotone(
-            baseFeeScalar, blobBaseFeeScalar, sequenceNumber, timestamp, number, baseFee, blobBaseFee, hash, batcherHash
+            baseFeeScalar,
+            blobBaseFeeScalar,
+            sequenceNumber,
+            timestamp,
+            number,
+            baseFee,
+            blobBaseFee,
+            hash,
+            batcherHash,
+            l1ElectionWinner
         );
 
         vm.prank(depositor);

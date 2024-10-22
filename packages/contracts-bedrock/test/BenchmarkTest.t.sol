@@ -15,6 +15,7 @@ import { Encoding } from "src/libraries/Encoding.sol";
 
 // Interfaces
 import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
+import { IL1Block } from "src/L2/interfaces/IL1Block.sol";
 
 // Free function for setting the prevBaseFee param in the OptimismPortal.
 function setPrevBaseFee(Vm _vm, address _op, uint128 _prevBaseFee) {
@@ -232,7 +233,8 @@ contract GasBenchMark_L1Block is CommonTest {
             type(uint256).max,
             type(uint256).max,
             keccak256(abi.encode(1)),
-            bytes32(type(uint256).max)
+            bytes32(type(uint256).max),
+            address(0)
         );
         vm.startPrank(depositor);
     }

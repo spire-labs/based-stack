@@ -5,6 +5,8 @@ import { Types } from "src/libraries/Types.sol";
 import { Hashing } from "src/libraries/Hashing.sol";
 import { RLPWriter } from "src/libraries/rlp/RLPWriter.sol";
 
+import { IL1Block } from "src/L2/interfaces/IL1Block.sol";
+
 /// @title Encoding
 /// @notice Encoding handles Optimism's various different encoding schemes.
 library Encoding {
@@ -153,7 +155,8 @@ library Encoding {
         uint256 baseFee,
         uint256 blobBaseFee,
         bytes32 hash,
-        bytes32 batcherHash
+        bytes32 batcherHash,
+        address electionWinner
     )
         internal
         pure
@@ -170,7 +173,8 @@ library Encoding {
             baseFee,
             blobBaseFee,
             hash,
-            batcherHash
+            batcherHash,
+            electionWinner
         );
     }
 

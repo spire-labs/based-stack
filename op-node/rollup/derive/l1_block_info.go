@@ -18,14 +18,14 @@ import (
 )
 
 const (
-	L1InfoFuncBedrockSignature = "setL1BlockValues(uint64,uint64,uint256,bytes32,uint64,bytes32,uint256,uint256)"
+	L1InfoFuncBedrockSignature = "setL1BlockValues(uint64,uint64,uint256,bytes32,uint64,bytes32,uint256,uint256,address)"
 	L1InfoFuncEcotoneSignature = "setL1BlockValuesEcotone()"
 	L1InfoFuncIsthmusSignature = "setL1BlockValuesIsthmus()"
 	DepositsCompleteSignature  = "depositsComplete()"
-	L1InfoArguments            = 8
+	L1InfoArguments            = 9
 	L1InfoBedrockLen           = 4 + 32*L1InfoArguments
-	L1InfoEcotoneLen           = 4 + 32*5 // after Ecotone upgrade, args are packed into 5 32-byte slots
-	DepositsCompleteLen        = 4        // only the selector
+	L1InfoEcotoneLen           = 4 + 32*5 + 20 // after Ecotone upgrade, args are packed into 5 32-byte slots and 20 bytes for the election winner
+	DepositsCompleteLen        = 4             // only the selector
 	// DepositsCompleteGas allocates 21k gas for intrinsic tx costs, and
 	// an additional 15k to ensure that the DepositsComplete call does not run out of gas.
 	// GasBenchMark_L1BlockIsthmus_DepositsComplete:test_depositsComplete_benchmark() (gas: 7768)
@@ -66,6 +66,7 @@ type L1BlockInfo struct {
 	BlobBaseFee       *big.Int // added by Ecotone upgrade
 	BaseFeeScalar     uint32   // added by Ecotone upgrade
 	BlobBaseFeeScalar uint32   // added by Ecotone upgrade
+	L1ElectionWinner  common.Address
 }
 
 // Bedrock Binary Format
@@ -112,6 +113,9 @@ func (info *L1BlockInfo) marshalBinaryBedrock() ([]byte, error) {
 	if err := solabi.WriteEthBytes32(w, info.L1FeeScalar); err != nil {
 		return nil, err
 	}
+	if err := solabi.WriteAddressNoPadding(w, info.L1ElectionWinner); err != nil {
+		return nil, err
+	}
 	return w.Bytes(), nil
 }
 
@@ -147,6 +151,9 @@ func (info *L1BlockInfo) unmarshalBinaryBedrock(data []byte) error {
 		return err
 	}
 	if info.L1FeeScalar, err = solabi.ReadEthBytes32(reader); err != nil {
+		return err
+	}
+	if info.L1ElectionWinner, err = solabi.ReadAddressNoPadding(reader); err != nil {
 		return err
 	}
 	if !solabi.EmptyReader(reader) {
@@ -224,6 +231,10 @@ func marshalBinaryWithSignature(info *L1BlockInfo, signature []byte) ([]byte, er
 	if err := solabi.WriteAddress(w, info.BatcherAddr); err != nil {
 		return nil, err
 	}
+	if err := solabi.WriteAddressNoPadding(w, info.L1ElectionWinner); err != nil {
+		return nil, err
+	}
+
 	return w.Bytes(), nil
 }
 
@@ -273,9 +284,14 @@ func unmarshalBinaryWithSignatureAndData(info *L1BlockInfo, signature []byte, da
 	if info.BatcherAddr, err = solabi.ReadAddress(r); err != nil {
 		return err
 	}
+	if info.L1ElectionWinner, err = solabi.ReadAddressNoPadding(r); err != nil {
+		return err
+	}
+
 	if !solabi.EmptyReader(r) {
 		return errors.New("too many bytes")
 	}
+
 	return nil
 }
 
@@ -311,6 +327,10 @@ func L1BlockInfoFromBytes(rollupCfg *rollup.Config, l2BlockTime uint64, data []b
 // L1InfoDeposit creates a L1 Info deposit transaction based on the L1 block,
 // and the L2 block-height difference with the start of the epoch.
 func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber uint64, block eth.BlockInfo, l2Timestamp uint64) (*types.DepositTx, error) {
+
+	// Fake value for testing, intentionally not set to address(0) to confirm its getting updated
+	mockAddr := common.HexToAddress("0x4200000000000000000000000000000000000015")
+
 	l1BlockInfo := L1BlockInfo{
 		Number:         block.NumberU64(),
 		Time:           block.Time(),
@@ -318,6 +338,8 @@ func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber 
 		BlockHash:      block.Hash(),
 		SequenceNumber: seqNumber,
 		BatcherAddr:    sysCfg.BatcherAddr,
+		// TODO: Connect this to results of l1 election in future PR
+		L1ElectionWinner: mockAddr,
 	}
 	var data []byte
 	if isEcotoneButNotFirstBlock(rollupCfg, l2Timestamp) {
