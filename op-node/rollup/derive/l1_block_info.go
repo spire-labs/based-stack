@@ -113,7 +113,7 @@ func (info *L1BlockInfo) marshalBinaryBedrock() ([]byte, error) {
 	if err := solabi.WriteEthBytes32(w, info.L1FeeScalar); err != nil {
 		return nil, err
 	}
-	if err := solabi.WriteAddressNoPadding(w, info.L1ElectionWinner); err != nil {
+	if err := solabi.WriteAddress(w, info.L1ElectionWinner); err != nil {
 		return nil, err
 	}
 	return w.Bytes(), nil
@@ -153,7 +153,7 @@ func (info *L1BlockInfo) unmarshalBinaryBedrock(data []byte) error {
 	if info.L1FeeScalar, err = solabi.ReadEthBytes32(reader); err != nil {
 		return err
 	}
-	if info.L1ElectionWinner, err = solabi.ReadAddressNoPadding(reader); err != nil {
+	if info.L1ElectionWinner, err = solabi.ReadAddress(reader); err != nil {
 		return err
 	}
 	if !solabi.EmptyReader(reader) {
