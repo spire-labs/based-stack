@@ -149,6 +149,19 @@
   },
   {
     "inputs": [],
+    "name": "l1ElectionWinner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "l1FeeOverhead",
     "outputs": [
       {
@@ -268,6 +281,11 @@
         "internalType": "uint256",
         "name": "_l1FeeScalar",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_electionWinner",
+        "type": "address"
       }
     ],
     "name": "setL1BlockValues",
