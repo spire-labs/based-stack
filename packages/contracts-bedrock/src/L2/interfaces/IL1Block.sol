@@ -21,8 +21,8 @@ interface IL1Block {
     function l1FeeScalar() external view returns (uint256);
     function number() external view returns (uint64);
     function sequenceNumber() external view returns (uint64);
+    function l1ElectionWinner() external view returns (address);
     function setGasPayingToken(address _token, uint8 _decimals, bytes32 _name, bytes32 _symbol) external;
-    function l1ElectionWinner() external view returns (address winner_);
     function setL1BlockValues(
         uint64 _number,
         uint64 _timestamp,

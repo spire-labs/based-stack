@@ -84,8 +84,8 @@
     "sourceCodeHash": "0xbb8bd98373086ff910243a764a96911909e72f7188538aa0c8ee8823a24af2dd"
   },
   "src/L2/L1BlockIsthmus.sol": {
-    "initCodeHash": "0x9eda09eb3956a839963c0226bd7e9b7fec5766cb3a4e77bee87c3b200155ee39",
-    "sourceCodeHash": "0x6be7e7402c4dfc10e1407e070712a3f9f352db45f8a8ab296e8f6bc56a341f47"
+    "initCodeHash": "0xcc8d4b7a7fe86a263ea141bd35bd67f1130eb1477ed5f393908ebfd145496418",
+    "sourceCodeHash": "0xf78c830521fa97652cb90c220e9fa5630efbebc2fd87fe731f484797010cf6bd"
   },
   "src/L2/L1FeeVault.sol": {
     "initCodeHash": "0x3bfcd57e25ad54b66c374f63e24e33a6cf107044aa8f5f69ef21202c380b5c5b",

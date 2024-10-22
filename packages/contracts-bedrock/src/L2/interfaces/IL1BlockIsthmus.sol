@@ -38,6 +38,7 @@ interface IL1BlockIsthmus {
     function l1FeeScalar() external view returns (uint256);
     function number() external view returns (uint64);
     function sequenceNumber() external view returns (uint64);
+    function l1ElectionWinner() external view returns (address);
     function setConfig(ConfigType _type, bytes memory _value) external;
     function setGasPayingToken(address _token, uint8 _decimals, bytes32 _name, bytes32 _symbol) external;
     function setL1BlockValues(
@@ -48,7 +49,8 @@ interface IL1BlockIsthmus {
         uint64 _sequenceNumber,
         bytes32 _batcherHash,
         uint256 _l1FeeOverhead,
-        uint256 _l1FeeScalar
+        uint256 _l1FeeScalar,
+        address _electionWinner
     )
         external;
     function setL1BlockValuesEcotone() external;
