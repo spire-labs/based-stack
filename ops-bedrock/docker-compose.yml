@@ -8,6 +8,7 @@ volumes:
   l1_vc_data:
   l2_data:
   safedb_data:
+  safedb_data_2:
   challenger_data:
   da_data:
   op_log:
@@ -167,10 +168,10 @@ services:
       --p2p.sequencer.key=8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
       --rollup.config=/rollup.json
       --rpc.addr=0.0.0.0
-      --rpc.port=8546
+      --rpc.port=8545
       --p2p.listen.ip=0.0.0.0
-      --p2p.listen.tcp=9004
-      --p2p.listen.udp=9004
+      --p2p.listen.tcp=9003
+      --p2p.listen.udp=9003
       --p2p.scoring.peers=light
       --p2p.ban.peers=true
       --p2p.priv.path=/config/p2p-node-key.txt
@@ -189,7 +190,7 @@ services:
       - "7304:7300"
       - "6064:6060"
     volumes:
-      - "safedb_data:/db"
+      - "safedb_data_2:/db"
       - "${PWD}/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt"
       - "${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt"
       - "${PWD}/test-jwt-secret.txt:/config/jwt-secret.txt"
