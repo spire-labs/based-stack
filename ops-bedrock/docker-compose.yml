@@ -191,8 +191,8 @@ services:
       - "6064:6060"
     volumes:
       - "safedb_data_2:/db"
-      - "${PWD}/p2p-sequencer-key-2.txt:/config/p2p-sequencer-key.txt"
-      - "${PWD}/p2p-node-key-2.txt:/config/p2p-node-key.txt"
+      - "${PWD}/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt"
+      - "${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt"
       - "${PWD}/test-jwt-secret.txt:/config/jwt-secret.txt"
       - "${PWD}/../.devnet/rollup.json:/rollup.json"
       - op_log:/op_log
