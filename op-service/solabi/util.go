@@ -120,7 +120,7 @@ func WriteAddress(w io.Writer, a common.Address) error {
 }
 
 func WriteAddressNoPadding(w io.Writer, a common.Address) error {
-	// Write the padded address to the writer
+	// Write the un-padded address to the writer
 	if _, err := w.Write(a[:]); err != nil {
 		return err
 	}
