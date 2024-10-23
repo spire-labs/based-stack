@@ -46,11 +46,6 @@ func main() {
 					Usage:    "Batch Inbox Address",
 				},
 				&cli.StringFlag{
-					Name:     "sender",
-					Required: true,
-					Usage:    "Batch Sender Address",
-				},
-				&cli.StringFlag{
 					Name:  "out",
 					Value: "/tmp/batch_decoder/transactions_cache",
 					Usage: "Cache directory for the found transactions",
@@ -98,12 +93,9 @@ func main() {
 					fmt.Println("L1 Beacon endpoint not set. Unable to fetch post-ecotone channel frames")
 				}
 				config := fetch.Config{
-					Start:   uint64(cliCtx.Int("start")),
-					End:     uint64(cliCtx.Int("end")),
-					ChainID: chainID,
-					BatchSenders: map[common.Address]struct{}{
-						common.HexToAddress(cliCtx.String("sender")): {},
-					},
+					Start:              uint64(cliCtx.Int("start")),
+					End:                uint64(cliCtx.Int("end")),
+					ChainID:            chainID,
 					BatchInbox:         common.HexToAddress(cliCtx.String("inbox")),
 					OutDirectory:       cliCtx.String("out"),
 					ConcurrentRequests: uint64(cliCtx.Int("concurrent-requests")),

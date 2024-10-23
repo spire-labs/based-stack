@@ -85,6 +85,8 @@ contract DeployConfig is Script {
     uint256 public daResolveWindow;
     uint256 public daBondSize;
     uint256 public daResolverRefundPercentage;
+    uint256 public minimumPreconfirmationCollateral;
+    bytes32 public electionFallbackList;
 
     bool public useCustomGasToken;
     address public customGasTokenAddress;
@@ -174,6 +176,10 @@ contract DeployConfig is Script {
         customGasTokenAddress = _readOr(_json, "$.customGasTokenAddress", address(0));
 
         useInterop = _readOr(_json, "$.useInterop", false);
+
+        // Election system config
+        minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
+        electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
     }
 
     function fork() public view returns (Fork fork_) {

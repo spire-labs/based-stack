@@ -201,6 +201,58 @@
   },
   {
     "inputs": [],
+    "name": "electionConfig",
+    "outputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "minimumPreconfirmationCollateral",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
+            "name": "rules",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "electionFallbackList",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
+            "name": "precedence",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.ElectionConfig",
+        "name": "electionConfig_",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "electionFallbackList",
+    "outputs": [
+      {
+        "internalType": "enum ElectionSystemConfig.ElectionFallback[]",
+        "name": "electionFallbackList_",
+        "type": "uint8[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "gasLimit",
     "outputs": [
       {
@@ -371,6 +423,37 @@
         "internalType": "struct SystemConfig.Addresses",
         "name": "_addresses",
         "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "minimumPreconfirmationCollateral",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
+            "name": "rules",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "electionFallbackList",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
+            "name": "precedence",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.ElectionConfig",
+        "name": "_electionConfig",
+        "type": "tuple"
       }
     ],
     "name": "initialize",
@@ -451,6 +534,19 @@
         "internalType": "uint64",
         "name": "",
         "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minimumPreconfirmationCollateral",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "minimumPreconfirmationCollateral_",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -582,6 +678,45 @@
       }
     ],
     "name": "setBatcherHash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "minimumPreconfirmationCollateral",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
+            "name": "rules",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "electionFallbackList",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
+            "name": "precedence",
+            "type": "tuple"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.ElectionConfig",
+        "name": "_config",
+        "type": "tuple"
+      }
+    ],
+    "name": "setElectionConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -756,5 +891,10 @@
     ],
     "name": "OwnershipTransferred",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidFallbackList",
+    "type": "error"
   }
 ]

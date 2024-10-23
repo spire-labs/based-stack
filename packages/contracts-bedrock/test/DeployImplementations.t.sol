@@ -16,7 +16,7 @@ import { SystemConfig } from "src/L1/SystemConfig.sol";
 import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
-import { Election } from "src/L1/Election.sol";
+import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
@@ -125,7 +125,7 @@ contract DeployImplementationsOutput_Test is Test {
     OptimismMintableERC20Factory optimismMintableERC20FactoryImpl =
         OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl"));
     DisputeGameFactory disputeGameFactoryImpl = DisputeGameFactory(makeAddr("disputeGameFactoryImpl"));
-    Election electionImpl = Election(makeAddr("electionImpl"));
+    BlockDutchAuction blockDutchAuctionImpl = BlockDutchAuction(makeAddr("blockDutchAuctionImpl"));
     ElectionTickets electionTicketImpl = ElectionTickets(makeAddr("electionTicketImpl"));
     BatchInbox batchInboxImpl = BatchInbox(makeAddr("batchInbox"));
 
@@ -153,7 +153,7 @@ contract DeployImplementationsOutput_Test is Test {
         vm.etch(address(l1StandardBridgeImpl), hex"01");
         vm.etch(address(optimismMintableERC20FactoryImpl), hex"01");
         vm.etch(address(disputeGameFactoryImpl), hex"01");
-        vm.etch(address(electionImpl), hex"01");
+        vm.etch(address(blockDutchAuctionImpl), hex"01");
         vm.etch(address(batchInboxImpl), hex"01");
         vm.etch(address(electionTicketImpl), hex"01");
 
@@ -168,7 +168,7 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.l1StandardBridgeImpl.selector, address(l1StandardBridgeImpl));
         dio.set(dio.optimismMintableERC20FactoryImpl.selector, address(optimismMintableERC20FactoryImpl));
         dio.set(dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
-        dio.set(dio.electionImpl.selector, address(electionImpl));
+        dio.set(dio.blockDutchAuctionImpl.selector, address(blockDutchAuctionImpl));
         dio.set(dio.batchInboxImpl.selector, address(batchInboxImpl));
         dio.set(dio.electionTicketImpl.selector, address(electionTicketImpl));
 
@@ -183,7 +183,7 @@ contract DeployImplementationsOutput_Test is Test {
         assertEq(address(l1StandardBridgeImpl), address(dio.l1StandardBridgeImpl()), "800");
         assertEq(address(optimismMintableERC20FactoryImpl), address(dio.optimismMintableERC20FactoryImpl()), "900");
         assertEq(address(disputeGameFactoryImpl), address(dio.disputeGameFactoryImpl()), "950");
-        assertEq(address(electionImpl), address(dio.electionImpl()), "1000");
+        assertEq(address(blockDutchAuctionImpl), address(dio.blockDutchAuctionImpl()), "1000");
         assertEq(address(batchInboxImpl), address(dio.batchInboxImpl()), "1100");
         assertEq(address(electionTicketImpl), address(dio.electionTicketImpl()), "1200");
     }
@@ -222,7 +222,7 @@ contract DeployImplementationsOutput_Test is Test {
         dio.disputeGameFactoryImpl();
 
         vm.expectRevert(expectedErr);
-        dio.electionImpl();
+        dio.blockDutchAuctionImpl();
 
         vm.expectRevert(expectedErr);
         dio.batchInboxImpl();
@@ -271,9 +271,9 @@ contract DeployImplementationsOutput_Test is Test {
         vm.expectRevert(expectedErr);
         dio.optimismMintableERC20FactoryImpl();
 
-        dio.set(dio.electionImpl.selector, emptyAddr);
+        dio.set(dio.blockDutchAuctionImpl.selector, emptyAddr);
         vm.expectRevert(expectedErr);
-        dio.electionImpl();
+        dio.blockDutchAuctionImpl();
 
         dio.set(dio.batchInboxImpl.selector, emptyAddr);
         vm.expectRevert(expectedErr);

@@ -29,11 +29,12 @@ type ChannelWithMetadata struct {
 }
 
 type FrameWithMetadata struct {
-	TxHash         common.Hash  `json:"transaction_hash"`
-	InclusionBlock uint64       `json:"inclusion_block"`
-	Timestamp      uint64       `json:"timestamp"`
-	BlockHash      common.Hash  `json:"block_hash"`
-	Frame          derive.Frame `json:"frame"`
+	TxHash         common.Hash    `json:"transaction_hash"`
+	Sender         common.Address `json:"sender"`
+	InclusionBlock uint64         `json:"inclusion_block"`
+	Timestamp      uint64         `json:"timestamp"`
+	BlockHash      common.Hash    `json:"block_hash"`
+	Frame          derive.Frame   `json:"frame"`
 }
 
 type Config struct {
@@ -174,6 +175,7 @@ func transactionsToFrames(txns []fetch.TransactionWithMetadata) []FrameWithMetad
 		for _, frame := range tx.Frames {
 			fm := FrameWithMetadata{
 				TxHash:         tx.Tx.Hash(),
+				Sender:         tx.Sender,
 				InclusionBlock: tx.BlockNumber,
 				BlockHash:      tx.BlockHash,
 				Timestamp:      tx.BlockTime,

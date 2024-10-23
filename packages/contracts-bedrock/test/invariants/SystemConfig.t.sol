@@ -6,6 +6,7 @@ import { SystemConfig } from "src/L1/SystemConfig.sol";
 import { ISystemConfig } from "src/L1/interfaces/ISystemConfig.sol";
 import { Proxy } from "src/universal/Proxy.sol";
 import { Constants } from "src/libraries/Constants.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 contract SystemConfig_GasLimitBoundaries_Invariant is Test {
     ISystemConfig public config;
@@ -36,6 +37,10 @@ contract SystemConfig_GasLimitBoundaries_Invariant is Test {
                         optimismPortal: address(0),
                         optimismMintableERC20Factory: address(0),
                         gasPayingToken: Constants.ETHER
+                    }),
+                    ElectionSystemConfig.ElectionConfig({
+                        rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
+                        precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
                     })
                 )
             )

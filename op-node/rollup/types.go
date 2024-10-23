@@ -30,7 +30,7 @@ var (
 	ErrMissingGasLimit                  = errors.New("missing genesis system config gas limit")
 	ErrMissingBatchInboxContractAddress = errors.New("missing batch inbox contract address")
 	ErrMissingDepositContractAddress    = errors.New("missing deposit contract address")
-	ErrMissingElectionContractAddress   = errors.New("missing election contract address")
+	ErrMissingAuctionContractAddress    = errors.New("missing election contract address")
 	ErrMissingL1ChainID                 = errors.New("L1 chain ID must not be nil")
 	ErrMissingL2ChainID                 = errors.New("L2 chain ID must not be nil")
 	ErrChainIDsSame                     = errors.New("L1 and L2 chain IDs must be different")
@@ -131,7 +131,7 @@ type Config struct {
 	// L1 Deposit Contract Address
 	DepositContractAddress common.Address `json:"deposit_contract_address"`
 	// L1 Election Contract Address
-	ElectionContractAddress common.Address `json:"election_contract_address"`
+	AuctionContractAddress common.Address `json:"auction_contract_address"`
 	// L1 System Config Address
 	L1SystemConfigAddress common.Address `json:"l1_system_config_address"`
 
@@ -292,8 +292,8 @@ func (cfg *Config) Check() error {
 	if cfg.DepositContractAddress == (common.Address{}) {
 		return ErrMissingDepositContractAddress
 	}
-	if cfg.ElectionContractAddress == (common.Address{}) {
-		return ErrMissingElectionContractAddress
+	if cfg.AuctionContractAddress == (common.Address{}) {
+		return ErrMissingAuctionContractAddress
 	}
 	if cfg.L1ChainID == nil {
 		return ErrMissingL1ChainID

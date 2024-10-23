@@ -1,6 +1,7 @@
 package txmgr
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ethereum-optimism/optimism/op-service/errutil"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/misc/eip4844"
@@ -555,7 +557,13 @@ func (m *SimpleTxManager) sendTx(ctx context.Context, tx *types.Transaction) (*t
 				return nil, ErrClosed
 			}
 			var published bool
-			if tx, published = m.publishTx(ctx, tx, sendState); published {
+			// Call publishTx and check if tx is nil
+			if tx, published = m.publishTx(ctx, tx, sendState); tx == nil {
+				// Handle the case where tx is nil (i.e., no retry is needed)
+				return nil, fmt.Errorf("transaction not published, stopping retries")
+			}
+
+			if published {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
@@ -588,10 +596,35 @@ func (m *SimpleTxManager) sendTx(ctx context.Context, tx *types.Transaction) (*t
 func (m *SimpleTxManager) publishTx(ctx context.Context, tx *types.Transaction, sendState *SendState) (*types.Transaction, bool) {
 	l := m.txLogger(tx, true)
 
+	if tx == nil {
+		l.Info("Not publishing/retrying nil transaction")
+		return nil, false
+	}
 	l.Info("Publishing transaction", "tx", tx.Hash())
+
+	isBatch, err := m.isBatchSubmission(tx.Data())
+	if err != nil {
+		l.Warn("Error determining if transaction is a batch submission", "err", err)
+	}
+
+	if isBatch {
+		l.Info("Transaction is a batch submission")
+		// POC Only: Check if we should retry batch submission
+		shouldRetry, err := m.shouldRetryBatchSubmission(tx.Data())
+
+		if err != nil {
+			l.Warn("Error determining if we should retry batch submission", "err", err)
+		}
+
+		if !shouldRetry {
+			l.Info("Should not retry batch submission")
+			return nil, false
+		}
+	}
 
 	for {
 		if sendState.bumpFees {
+
 			if newTx, err := m.increaseGasPrice(ctx, tx); err != nil {
 				l.Warn("unable to increase gas, will try to re-publish the tx", "err", err)
 				m.metr.TxPublished("bump_failed")
@@ -607,6 +640,7 @@ func (m *SimpleTxManager) publishTx(ctx context.Context, tx *types.Transaction, 
 					return tx, false
 				}
 				sendState.bumpCount++
+
 				tx = newTx
 				l = m.txLogger(tx, true)
 				// Disable bumping fees again until the new transaction is successfully published,
@@ -1051,4 +1085,87 @@ func finishBlobTx(message *types.BlobTx, chainID, tip, fee, blobFee, value *big.
 		return errors.New("Value overflow")
 	}
 	return nil
+}
+
+// checks whether the given transaction data corresponds to a batch submission
+func (m *SimpleTxManager) isBatchSubmission(txData []byte) (bool, error) {
+	if len(txData) < 4 {
+		return false, fmt.Errorf("transaction data is too short to contain a method selector")
+	}
+
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return false, nil
+	}
+
+	txMethodSelector := txData[:4]
+
+	submitMethodSelector := submitMethod.ID
+
+	if bytes.Equal(txMethodSelector, submitMethodSelector) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// extracts the target L1 block number from the transaction data, if it is a batch submission transaction
+func (m *SimpleTxManager) getTargetBlockForBatchSubmission(txData []byte) (*big.Int, error) {
+	// Ensure the txData is long enough to strip the first 4 bytes
+	if len(txData) < 4 {
+		return nil, fmt.Errorf("transaction data is too short, expected at least 4 bytes, got %d", len(txData))
+	}
+
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	if !ok {
+		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+	}
+
+	// Verify the first argument type in the ABI
+	if len(submitMethod.Inputs) == 0 || submitMethod.Inputs[0].Type.String() != "uint256" {
+		return nil, fmt.Errorf("unexpected type for first argument, expected uint256, got %s", submitMethod.Inputs[0].Type.String())
+	}
+
+	dataWithoutSelector := txData[4:]
+	unpacked, err := submitMethod.Inputs.Unpack(dataWithoutSelector)
+	if err != nil {
+		return nil, fmt.Errorf("error unpacking transaction data: %w", err)
+	}
+
+	// The unpacked data should be a uint256 representing the target L1 block number
+	if len(unpacked) == 0 {
+		return nil, fmt.Errorf("unpacked data is empty")
+	}
+
+	// The first argument should be the target L1 block number (as a *big.Int)
+	l1BlockNumber, ok := unpacked[0].(*big.Int)
+	if !ok {
+		return nil, fmt.Errorf("expected first argument to be *big.Int, got %T", unpacked[0])
+	}
+
+	return l1BlockNumber, nil
+}
+
+// shouldRetryBatchSubmission determines if a batch submission transaction should be retried
+// based on the target L1 block number and the current L1 block number.
+// If the target block number is greater than or equal to the current block number, we should retry
+func (m *SimpleTxManager) shouldRetryBatchSubmission(txData []byte) (bool, error) {
+	targetBlock, err := m.getTargetBlockForBatchSubmission(txData)
+	if err != nil {
+		return false, fmt.Errorf("error getting target block number: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.NetworkTimeout)
+	defer cancel()
+	currentBlock, err := m.backend.BlockNumber(ctx)
+	if err != nil {
+		return false, fmt.Errorf("error getting current block number: %w", err)
+	}
+
+	log.Info("Current block number", "block", currentBlock)
+	log.Info("Target block number", "block", targetBlock)
+	// If the target block -1 is equal to the current block, we should retry
+	return new(big.Int).Sub(targetBlock, big.NewInt(1)).Cmp(new(big.Int).SetUint64(currentBlock)) == 0, nil
 }

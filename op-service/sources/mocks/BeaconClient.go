@@ -77,6 +77,34 @@ func (_c *BeaconClient_BeaconBlobSideCars_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
+func (_m *BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
+	ret := _m.Called(ctx, epoch)
+
+	var r0 eth.APIGetLookaheadResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (eth.APIGetLookaheadResponse, error)); ok {
+		return rf(ctx, epoch)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) eth.APIGetLookaheadResponse); ok {
+		r0 = rf(ctx, epoch)
+	} else {
+		r0 = ret.Get(0).(eth.APIGetLookaheadResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, epoch)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// BeaconClient_GetLookahead_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLookahead'
+type BeaconClient_GetLookahead_Call struct {
+	*mock.Call
+}
+
 // BeaconGenesis provides a mock function with given fields: ctx
 func (_m *BeaconClient) BeaconGenesis(ctx context.Context) (eth.APIGenesisResponse, error) {
 	ret := _m.Called(ctx)

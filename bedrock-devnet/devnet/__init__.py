@@ -217,6 +217,10 @@ def devnet_deploy(paths):
     wait_up(8545)
     wait_for_rpc_server('127.0.0.1:8545')
 
+    # waiting for beacon node
+    wait_up(5052)
+    wait_for_beacon_chain('127.0.0.1:5052')
+
     if os.path.exists(paths.genesis_l2_path):
         log.info('L2 genesis and rollup configs already generated.')
     else:
@@ -280,7 +284,7 @@ def devnet_deploy(paths):
 
     # Bring up the rest of the services.
     log.info('Bringing up `op-node`, `op-proposer` and `op-batcher`.')
-    run_command(['docker', 'compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher', 'artifact-server'], cwd=paths.ops_bedrock_dir, env=docker_env)
+    run_command(['docker', 'compose', 'up', '-d', 'op-node', 'op-proposer', 'op-batcher', 'op-batcher-2', 'artifact-server'], cwd=paths.ops_bedrock_dir, env=docker_env)
 
     # Optionally bring up op-challenger.
     if not config.get("useL2OOAddress", False):
@@ -315,6 +319,28 @@ def wait_for_rpc_server(url):
         finally:
             if conn:
                 conn.close()
+
+
+def wait_for_beacon_chain(url):
+    log.info(f'Waiting for beacon chain at {url}')
+    headers = {
+        'accept': 'application/json'
+    }
+    while True:
+        try:
+            conn = http.client.HTTPConnection(url)
+            conn.request('GET', '/eth/v1/beacon/genesis', body=None, headers=headers)
+            response = conn.getresponse()
+            if response.status < 300:
+                log.info(f'Beacon chain at {url} ready')
+                return
+        except Exception as e:
+            log.info(f'Waiting for beacon chain at {url}')
+            time.sleep(1)
+        finally:
+            if conn:
+                conn.close()
+
 
 
 CommandPreset = namedtuple('Command', ['name', 'args', 'cwd', 'timeout'])

@@ -11,6 +11,7 @@ import { ForgeArtifacts, Abi, AbiEntry } from "scripts/libraries/ForgeArtifacts.
 
 // Contracts
 import { OPStackManager } from "src/L1/OPStackManager.sol";
+import { SystemConfigInterop } from "src/L1/SystemConfigInterop.sol";
 
 // Interfaces
 import { IOptimismPortal } from "src/L1/interfaces/IOptimismPortal.sol";
@@ -217,28 +218,6 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "L1StandardBridge", _sel: _getSel("version()") });
         _addSpec({ _name: "L1StandardBridge", _sel: _getSel("systemConfig()") });
 
-        // Election
-        _addSpec({ _name: "Election", _sel: _getSel("electionWinner()") });
-        _addSpec({ _name: "Election", _sel: _getSel("sequencers(uint256)") });
-        _addSpec({ _name: "Election", _sel: _getSel("VALIDATORS_IN_LOOKAHEAD()") });
-        _addSpec({ _name: "Election", _sel: _getSel("ELECTION_TICKET()") });
-        _addSpec({ _name: "Election", _sel: _getSel("startBlock()") });
-        _addSpec({ _name: "Election", _sel: _getSel("durationBlocks()") });
-        _addSpec({ _name: "Election", _sel: _getSel("pendingDurationBlocks()") });
-        _addSpec({ _name: "Election", _sel: _getSel("startPrice()") });
-        _addSpec({ _name: "Election", _sel: _getSel("discountRate()") });
-        _addSpec({ _name: "Election", _sel: _getSel("pendingStartPrice()") });
-        _addSpec({ _name: "Election", _sel: _getSel("pendingDiscountRate()") });
-        _addSpec({ _name: "Election", _sel: _getSel("ticketsLeft()") });
-        _addSpec({ _name: "Election", _sel: _getSel("setStartPrice(uint256)") });
-        _addSpec({ _name: "Election", _sel: _getSel("setDiscountRate(uint8)") });
-        _addSpec({ _name: "Election", _sel: _getSel("setDurationBlocks(uint8)") });
-        _addSpec({ _name: "Election", _sel: _getSel("buy()") });
-        _addSpec({ _name: "Election", _sel: _getSel("getPrice()") });
-        _addSpec({ _name: "Election", _sel: _getSel("owner()") });
-        _addSpec({ _name: "Election", _sel: _getSel("renounceOwnership()") });
-        _addSpec({ _name: "Election", _sel: _getSel("transferOwnership(address)") });
-
         // ElectionTickets
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("supportsInterface(bytes4)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("balanceOf(address)") });
@@ -255,7 +234,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("safeTransferFrom(address,address,uint256,bytes)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("mint(address)") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("burn(uint256)") });
-        _addSpec({ _name: "ElectionTickets", _sel: _getSel("election()") });
+        _addSpec({ _name: "ElectionTickets", _sel: _getSel("auction()") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("batchInbox()") });
         _addSpec({ _name: "ElectionTickets", _sel: _getSel("tokenId()") });
 
@@ -280,8 +259,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "BlockDutchAuction", _sel: _getSel("transferOwnership(address)") });
 
         // BatchInbox
-        _addSpec({ _name: "BatchInbox", _sel: _getSel("submit()") });
-        _addSpec({ _name: "BatchInbox", _sel: _getSel("election()") });
+        _addSpec({ _name: "BatchInbox", _sel: _getSel("submit(uint256)") });
 
         // L2OutputOracle
         _addSpec({ _name: "L2OutputOracle", _sel: _getSel("CHALLENGER()") });
@@ -507,6 +485,9 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setBatcherHash.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasLimit.selector, _auth: Role.SYSTEMCONFIGOWNER });
+        _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setElectionConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("minimumPreconfirmationCollateral()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("electionFallbackList()") });
         _addSpec({
             _name: "SystemConfig",
             _sel: ISystemConfig.setUnsafeBlockSigner.selector,
@@ -542,6 +523,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: _getSel("basefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("blobbasefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("maximumGasLimit()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("electionConfig()") });
 
         // SystemConfigInterop
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
@@ -549,6 +531,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("VERSION()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("batcherHash()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("gasLimit()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: SystemConfigInterop.initialize.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.initialize.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.minimumGasLimit.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("overhead()") });
@@ -581,6 +564,14 @@ contract Specification_Test is CommonTest {
             _sel: _getSel("transferOwnership(address)"),
             _auth: Role.SYSTEMCONFIGOWNER
         });
+        _addSpec({
+            _name: "SystemConfigInterop",
+            _sel: ISystemConfig.setElectionConfig.selector,
+            _auth: Role.SYSTEMCONFIGOWNER
+        });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionConfig()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("minimumPreconfirmationCollateral()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionFallbackList()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.unsafeBlockSigner.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("version()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("l1CrossDomainMessenger()") });
@@ -617,12 +608,11 @@ contract Specification_Test is CommonTest {
             _auth: Role.DEPENDENCYMANAGER
         });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("dependencyManager()") });
-        _addSpec({
-            _name: "SystemConfigInterop",
-            _sel: _getSel(
-                "initialize(address,uint32,uint32,bytes32,uint64,address,(uint32,uint8,uint8,uint32,uint32,uint128),address,(address,address,address,address,address,address,address),address)"
-            )
-        });
+
+        // ElectionSystemConfig
+        _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("electionFallbackList()") });
+        _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("minimumPreconfirmationCollateral()") });
+        _addSpec({ _name: "ElectionSystemConfig", _sel: _getSel("electionConfig()") });
 
         // ProxyAdmin
         _addSpec({ _name: "ProxyAdmin", _sel: _getSel("addressManager()") });

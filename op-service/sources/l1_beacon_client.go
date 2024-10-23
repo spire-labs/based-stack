@@ -20,10 +20,12 @@ import (
 )
 
 const (
-	versionMethod        = "eth/v1/node/version"
-	specMethod           = "eth/v1/config/spec"
-	genesisMethod        = "eth/v1/beacon/genesis"
-	sidecarsMethodPrefix = "eth/v1/beacon/blob_sidecars/"
+	versionMethod         = "eth/v1/node/version"
+	specMethod            = "eth/v1/config/spec"
+	genesisMethod         = "eth/v1/beacon/genesis"
+	sidecarsMethodPrefix  = "eth/v1/beacon/blob_sidecars/"
+	lookaheadMethodPrefix = "eth/v1/validator/duties/proposer/"
+	headerMethodPrefix    = "eth/v1/beacon/headers/"
 )
 
 type L1BeaconClientConfig struct {
@@ -48,6 +50,7 @@ type BeaconClient interface {
 	ConfigSpec(ctx context.Context) (eth.APIConfigResponse, error)
 	BeaconGenesis(ctx context.Context) (eth.APIGenesisResponse, error)
 	BeaconBlobSideCars(ctx context.Context, fetchAllSidecars bool, slot uint64, hashes []eth.IndexedBlobHash) (eth.APIGetBlobSidecarsResponse, error)
+	GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error)
 }
 
 // BlobSideCarsFetcher is a thin wrapper over the Beacon APIs.
@@ -90,6 +93,10 @@ func (cl *BeaconHTTPClient) apiReq(ctx context.Context, dest any, reqPath string
 		return fmt.Errorf("failed to close response body: %w", err)
 	}
 	return nil
+}
+
+func (b *L1BeaconClient) GetHTTPClient() BeaconClient {
+	return b.cl
 }
 
 func (cl *BeaconHTTPClient) NodeVersion(ctx context.Context) (string, error) {
@@ -142,6 +149,19 @@ func (cl *BeaconHTTPClient) BeaconBlobSideCars(ctx context.Context, fetchAllSide
 	if len(indices) > 0 {
 		return eth.APIGetBlobSidecarsResponse{}, fmt.Errorf("#returned blobs(%d) != #requested blobs(%d)", len(hashes)-len(indices), len(hashes))
 	}
+	return resp, nil
+}
+
+func (cl *BeaconHTTPClient) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
+	reqPath := path.Join(lookaheadMethodPrefix, strconv.FormatUint(epoch, 10))
+
+	var reqQuery url.Values
+	var resp eth.APIGetLookaheadResponse
+
+	if err := cl.apiReq(ctx, &resp, reqPath, reqQuery); err != nil {
+		return eth.APIGetLookaheadResponse{}, err
+	}
+
 	return resp, nil
 }
 
@@ -216,6 +236,40 @@ func (cl *L1BeaconClient) GetTimeToSlotFn(ctx context.Context) (TimeToSlotFn, er
 		return (timestamp - genesisTime) / secondsPerSlot, nil
 	}
 	return cl.timeToSlotFn, nil
+}
+
+func (cl *L1BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
+	return cl.cl.GetLookahead(ctx, epoch)
+}
+
+func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error) {
+	var err error
+
+	cl.timeToSlotFn, err = cl.GetTimeToSlotFn(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	slot, err := cl.timeToSlotFn(timestamp)
+
+	if err != nil {
+		return 0, err
+	}
+
+	// TODO: Dont hardcode the "/ 8" here
+	// For some reason on the devnets the lookahead has 8 validators, which means an epoch is 8 slots
+	// Where as on mainnet it is 32, we need to look into this as well
+	return slot / 8, nil
+}
+
+func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error) {
+	slot, err := cl.timeToSlotFn(timestamp)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return slot, nil
 }
 
 func (cl *L1BeaconClient) fetchSidecars(ctx context.Context, slot uint64, hashes []eth.IndexedBlobHash) (eth.APIGetBlobSidecarsResponse, error) {

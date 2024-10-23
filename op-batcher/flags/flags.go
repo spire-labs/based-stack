@@ -156,6 +156,12 @@ var (
 		Value:   false,
 		EnvVars: prefixEnvVars("WAIT_NODE_SYNC"),
 	}
+	// Based Flags
+	EvenBlocksFlag = &cli.BoolFlag{
+		Name:    "even-blocks",
+		Usage:   "Indicates if this batcher should send the batches on even blocks. POC ONLY.",
+		EnvVars: prefixEnvVars("EVEN_BLOCKS"),
+	}
 	// Legacy Flags
 	SequencerHDPathFlag = txmgr.SequencerHDPathFlag
 )
@@ -167,6 +173,7 @@ var requiredFlags = []cli.Flag{
 }
 
 var optionalFlags = []cli.Flag{
+	EvenBlocksFlag,
 	WaitNodeSyncFlag,
 	CheckRecentTxsDepthFlag,
 	SubSafetyMarginFlag,
