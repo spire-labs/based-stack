@@ -43,11 +43,19 @@ func (ev ResetEvent) String() string {
 // CriticalErrorEvent is an alias for event.CriticalErrorEvent
 type CriticalErrorEvent = event.CriticalErrorEvent
 
+type LivenessErrorEvent struct {
+	Err error
+}
+
+func (ev LivenessErrorEvent) String() string {
+	return "liveness-error"
+}
+
 // NOTE: We cant store this in election because derive needs to import it
 // there is a circular dependency
 // is there a better place to put this / better way to do this?
 type ElectionWinnerEvent struct {
-	Validators []*eth.Validator
+	ElectionWinners []*eth.ElectionWinner
 }
 
 func (ev ElectionWinnerEvent) String() string {
