@@ -9,6 +9,9 @@ import { Encoding } from "src/libraries/Encoding.sol";
 import { Constants } from "src/libraries/Constants.sol";
 import "src/libraries/L1BlockErrors.sol";
 
+// Interfaces
+import { IL1Block } from "src/L2/interfaces/IL1Block.sol";
+
 contract L1BlockTest is CommonTest {
     address depositor;
 
@@ -31,12 +34,13 @@ contract L1BlockBedrock_Test is L1BlockTest {
         uint64 s,
         bytes32 bt,
         uint256 fo,
-        uint256 fs
+        uint256 fs,
+        address winner
     )
         external
     {
         vm.prank(depositor);
-        l1Block.setL1BlockValues(n, t, b, h, s, bt, fo, fs);
+        l1Block.setL1BlockValues(n, t, b, h, s, bt, fo, fs, winner);
         assertEq(l1Block.number(), n);
         assertEq(l1Block.timestamp(), t);
         assertEq(l1Block.basefee(), b);
@@ -45,6 +49,7 @@ contract L1BlockBedrock_Test is L1BlockTest {
         assertEq(l1Block.batcherHash(), bt);
         assertEq(l1Block.l1FeeOverhead(), fo);
         assertEq(l1Block.l1FeeScalar(), fs);
+        assertEq(l1Block.l1ElectionWinner(), winner);
     }
 
     /// @dev Tests that `setL1BlockValues` can set max values.
@@ -58,7 +63,8 @@ contract L1BlockBedrock_Test is L1BlockTest {
             _sequenceNumber: type(uint64).max,
             _batcherHash: bytes32(type(uint256).max),
             _l1FeeOverhead: type(uint256).max,
-            _l1FeeScalar: type(uint256).max
+            _l1FeeScalar: type(uint256).max,
+            _electionWinner: address(0)
         });
     }
 
@@ -73,7 +79,8 @@ contract L1BlockBedrock_Test is L1BlockTest {
             _sequenceNumber: type(uint64).max,
             _batcherHash: bytes32(type(uint256).max),
             _l1FeeOverhead: type(uint256).max,
-            _l1FeeScalar: type(uint256).max
+            _l1FeeScalar: type(uint256).max,
+            _electionWinner: address(0)
         });
     }
 }
@@ -89,12 +96,22 @@ contract L1BlockEcotone_Test is L1BlockTest {
         uint256 baseFee,
         uint256 blobBaseFee,
         bytes32 hash,
-        bytes32 batcherHash
+        bytes32 batcherHash,
+        address electionWinner
     )
         external
     {
         bytes memory functionCallDataPacked = Encoding.encodeSetL1BlockValuesEcotone(
-            baseFeeScalar, blobBaseFeeScalar, sequenceNumber, timestamp, number, baseFee, blobBaseFee, hash, batcherHash
+            baseFeeScalar,
+            blobBaseFeeScalar,
+            sequenceNumber,
+            timestamp,
+            number,
+            baseFee,
+            blobBaseFee,
+            hash,
+            batcherHash,
+            electionWinner
         );
 
         vm.prank(depositor);
@@ -110,6 +127,7 @@ contract L1BlockEcotone_Test is L1BlockTest {
         assertEq(l1Block.blobBaseFee(), blobBaseFee);
         assertEq(l1Block.hash(), hash);
         assertEq(l1Block.batcherHash(), batcherHash);
+        assertEq(l1Block.l1ElectionWinner(), electionWinner);
 
         // ensure we didn't accidentally pollute the 128 bits of the sequencenum+scalars slot that
         // should be empty
@@ -135,7 +153,8 @@ contract L1BlockEcotone_Test is L1BlockTest {
             type(uint256).max,
             type(uint256).max,
             bytes32(type(uint256).max),
-            bytes32(type(uint256).max)
+            bytes32(type(uint256).max),
+            address(0)
         );
 
         vm.prank(depositor);
@@ -154,7 +173,8 @@ contract L1BlockEcotone_Test is L1BlockTest {
             type(uint256).max,
             type(uint256).max,
             bytes32(type(uint256).max),
-            bytes32(type(uint256).max)
+            bytes32(type(uint256).max),
+            address(0)
         );
 
         (bool success, bytes memory data) = address(l1Block).call(functionCallDataPacked);

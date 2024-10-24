@@ -57,9 +57,12 @@ contract L1Block is ISemver, IGasToken {
     /// @notice The latest L1 blob base fee.
     uint256 public blobBaseFee;
 
-    /// @custom:semver 1.5.1-beta.2
+    /// @notice The winner of the election for a given block
+    address public l1ElectionWinner;
+
+    /// @custom:semver 1.5.1-beta.3
     function version() public pure virtual returns (string memory) {
-        return "1.5.1-beta.2";
+        return "1.5.1-beta.3";
     }
 
     /// @notice Returns the gas paying token, its decimals, name and symbol.
@@ -97,6 +100,7 @@ contract L1Block is ISemver, IGasToken {
     /// @param _batcherHash    Versioned hash to authenticate batcher by.
     /// @param _l1FeeOverhead  L1 fee overhead.
     /// @param _l1FeeScalar    L1 fee scalar.
+    /// @param _electionWinner The winner of the L1 election
     function setL1BlockValues(
         uint64 _number,
         uint64 _timestamp,
@@ -105,7 +109,8 @@ contract L1Block is ISemver, IGasToken {
         uint64 _sequenceNumber,
         bytes32 _batcherHash,
         uint256 _l1FeeOverhead,
-        uint256 _l1FeeScalar
+        uint256 _l1FeeScalar,
+        address _electionWinner
     )
         external
     {
@@ -119,6 +124,7 @@ contract L1Block is ISemver, IGasToken {
         batcherHash = _batcherHash;
         l1FeeOverhead = _l1FeeOverhead;
         l1FeeScalar = _l1FeeScalar;
+        l1ElectionWinner = _electionWinner;
     }
 
     /// @notice Updates the L1 block values for an Ecotone upgraded chain.
@@ -133,6 +139,7 @@ contract L1Block is ISemver, IGasToken {
     ///   7. _blobBaseFee        L1 blob base fee.
     ///   8. _hash               L1 blockhash.
     ///   9. _batcherHash        Versioned hash to authenticate batcher by.
+    ///   10. _l1ElectionWinner  The l1 election winner
     function setL1BlockValuesEcotone() public {
         _setL1BlockValuesEcotone();
     }
@@ -149,14 +156,17 @@ contract L1Block is ISemver, IGasToken {
     ///   7. _blobBaseFee        L1 blob base fee.
     ///   8. _hash               L1 blockhash.
     ///   9. _batcherHash        Versioned hash to authenticate batcher by.
+    ///   10. _l1ElectionWinner  The l1 election winner
     function _setL1BlockValuesEcotone() internal {
         address depositor = DEPOSITOR_ACCOUNT();
+
         assembly {
             // Revert if the caller is not the depositor account.
             if xor(caller(), depositor) {
                 mstore(0x00, 0x3cc50b45) // 0x3cc50b45 is the 4-byte selector of "NotDepositor()"
                 revert(0x1C, 0x04) // returns the stored 4-byte selector from above
             }
+
             // sequencenum (uint64), blobBaseFeeScalar (uint32), baseFeeScalar (uint32)
             sstore(sequenceNumber.slot, shr(128, calldataload(4)))
             // number (uint64) and timestamp (uint64)
@@ -165,6 +175,7 @@ contract L1Block is ISemver, IGasToken {
             sstore(blobBaseFee.slot, calldataload(68)) // uint256
             sstore(hash.slot, calldataload(100)) // bytes32
             sstore(batcherHash.slot, calldataload(132)) // bytes32
+            sstore(l1ElectionWinner.slot, calldataload(152)) // address
         }
     }
 

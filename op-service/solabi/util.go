@@ -59,6 +59,12 @@ func ReadAddress(r io.Reader) (common.Address, error) {
 	return a, err
 }
 
+func ReadAddressNoPadding(r io.Reader) (common.Address, error) {
+	var a common.Address
+	_, err := io.ReadFull(r, a[:])
+	return a, err
+}
+
 // ReadUint64 reads a big endian uint64 from a 32 byte word
 func ReadUint64(r io.Reader) (uint64, error) {
 	var readPadding [24]byte
@@ -113,6 +119,14 @@ func WriteAddress(w io.Writer, a common.Address) error {
 	return nil
 }
 
+func WriteAddressNoPadding(w io.Writer, a common.Address) error {
+	// Write the un-padded address to the writer
+	if _, err := w.Write(a[:]); err != nil {
+		return err
+	}
+	return nil
+}
+
 func WriteUint256(w io.Writer, n *big.Int) error {
 	if n.BitLen() > 256 {
 		return fmt.Errorf("big int exceeds 256 bits: %d", n)
@@ -131,4 +145,20 @@ func WriteUint64(w io.Writer, n uint64) error {
 		return err
 	}
 	return nil
+}
+
+func WriteBool(w io.Writer, b bool) error {
+	var byteVal byte
+	if b {
+		byteVal = 1
+	} else {
+		byteVal = 0
+	}
+	_, err := w.Write([]byte{byteVal})
+	return err
+}
+
+func WriteBytes(w io.Writer, data []byte) error {
+	_, err := w.Write(data)
+	return err
 }
