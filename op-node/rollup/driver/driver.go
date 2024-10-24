@@ -73,7 +73,7 @@ type L2Chain interface {
 
 type DerivationPipeline interface {
 	Reset()
-	Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinner common.Address, preOriginTime uint64, winnerTime uint64) (*derive.AttributesWithParent, error)
+	Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinners []*eth.ElectionWinner) (*derive.AttributesWithParent, error)
 	Origin() eth.L1BlockRef
 	DerivationReady() bool
 	ConfirmEngineReset()

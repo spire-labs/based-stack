@@ -98,21 +98,9 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
 		preOrigin := d.pipeline.Origin()
-
-		var winner eth.ElectionWinner
-
-		for _, electionWinner := range d.electionWinners {
-			if electionWinner.Time == preOrigin.Time {
-				winner = eth.ElectionWinner{
-					Time:    electionWinner.Time,
-					Address: electionWinner.Address,
-				}
-				break
-			}
-		}
-
-		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, winner.Address, preOrigin.Time, winner.Time)
+		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, d.electionWinners)
 		postOrigin := d.pipeline.Origin()
+
 		if preOrigin != postOrigin {
 			d.emitter.Emit(DeriverL1StatusEvent{Origin: postOrigin})
 		}
