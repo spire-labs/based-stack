@@ -403,7 +403,7 @@ func TestPreregolith(t *testing.T) {
 			defer opGeth.Close()
 
 			rollupCfg := rollup.Config{}
-			systemTx, err := derive.L1InfoDeposit(&rollupCfg, opGeth.SystemConfig, 1, opGeth.L1Head, 0)
+			systemTx, err := derive.L1InfoDeposit(&rollupCfg, opGeth.SystemConfig, 1, opGeth.L1Head, 0, common.Address{})
 			systemTx.IsSystemTransaction = true
 			require.NoError(t, err)
 
@@ -595,7 +595,7 @@ func TestRegolith(t *testing.T) {
 			test.activateRegolith(ctx, t, opGeth)
 
 			rollupCfg := rollup.Config{}
-			systemTx, err := derive.L1InfoDeposit(&rollupCfg, opGeth.SystemConfig, 1, opGeth.L1Head, 0)
+			systemTx, err := derive.L1InfoDeposit(&rollupCfg, opGeth.SystemConfig, 1, opGeth.L1Head, 0, common.Address{})
 			systemTx.IsSystemTransaction = true
 			require.NoError(t, err)
 

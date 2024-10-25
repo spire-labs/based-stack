@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/testutils"
 	"github.com/ethereum-optimism/optimism/op-service/testutils/fuzzerutils"
+	"github.com/ethereum/go-ethereum/common"
 	fuzz "github.com/google/gofuzz"
 	"github.com/stretchr/testify/require"
 )
@@ -24,12 +25,14 @@ func FuzzParseL1InfoDepositTxDataValid(f *testing.F) {
 		typeProvider.Fuzz(&l1Info)
 		var seqNr uint64
 		typeProvider.Fuzz(&seqNr)
+		var winner common.Address
+		typeProvider.Fuzz(&winner)
 		var sysCfg eth.SystemConfig
 		typeProvider.Fuzz(&sysCfg)
 		var rollupCfg rollup.Config
 
 		// Create our deposit tx from our info
-		depTx, err := L1InfoDeposit(&rollupCfg, sysCfg, seqNr, &l1Info, 0)
+		depTx, err := L1InfoDeposit(&rollupCfg, sysCfg, seqNr, &l1Info, 0, winner)
 		require.NoError(t, err, "error creating deposit tx from L1 info")
 
 		// Get our info from out deposit tx
@@ -46,6 +49,7 @@ func FuzzParseL1InfoDepositTxDataValid(f *testing.F) {
 		require.Equal(t, res.BatcherAddr, sysCfg.BatcherAddr)
 		require.Equal(t, res.L1FeeOverhead, sysCfg.Overhead)
 		require.Equal(t, res.L1FeeScalar, sysCfg.Scalar)
+		require.Equal(t, res.L1ElectionWinner, winner)
 	})
 }
 
@@ -74,7 +78,7 @@ func FuzzDecodeDepositTxDataToL1Info(f *testing.F) {
 			GasLimit:    uint64(0),
 		}
 
-		depTx, err := L1InfoDeposit(&rollupCfg, sysCfg, res.SequenceNumber, &l1Info, 0)
+		depTx, err := L1InfoDeposit(&rollupCfg, sysCfg, res.SequenceNumber, &l1Info, 0, common.Address{})
 		require.NoError(t, err, "error creating deposit tx from L1 info")
 		require.Equal(t, depTx.Data, fuzzedData)
 	})
