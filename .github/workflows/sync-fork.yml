@@ -1,0 +1,49 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    - cron: '50 15 * * 5' # Runs every Friday at 15:50 GMT
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/ethereum-optimism/optimism.git
+
+      - name: Create branch and merge upstream/develop
+        id: create_pr_branch
+        run: |
+          PR_BRANCH="sync/upstream-merge-$(date +%s)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch upstream
+          git checkout -b "$PR_BRANCH" upstream/develop
+          git merge upstream/develop --no-edit
+          git push origin "$PR_BRANCH"
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create PR for merging upstream/develop into develop
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_BRANCH="${{ steps.create_pr_branch.outputs.pr_branch }}"
+          CURRENT_DATE=$(date '+%Y-%m-%d')
+
+          gh pr create --repo "$GITHUB_REPOSITORY" --base develop --head "$GITHUB_REPOSITORY_OWNER:$PR_BRANCH" \
+            --title "Syncing with upstream on $CURRENT_DATE" \
+            --body "Merging changes from upstream/develop." \
+            --reviewer "nyospe,excaliborr,wintercode-co,michalsidzej"
