@@ -162,7 +162,7 @@ jobs:
         description: Whether to notify on failure
         type: boolean
         default: false
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - check-changed:
@@ -222,7 +222,7 @@ jobs:
   contracts-bedrock-build:
     docker:
       - image: <<pipeline.parameters.ci_builder_image>>
-    resource_class: xlarge
+    resource_class: large
     parameters:
       skip_pattern:
         description: Glob pattern of tests to skip
@@ -542,7 +542,7 @@ jobs:
   contracts-bedrock-coverage:
     docker:
       - image: <<pipeline.parameters.ci_builder_image>>
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - install-contracts-dependencies
@@ -569,7 +569,7 @@ jobs:
   contracts-bedrock-tests:
     docker:
       - image: <<pipeline.parameters.ci_builder_image>>
-    resource_class: xlarge
+    resource_class: large
     parameters:
       test_parallelism:
         description: Number of test jobs to run in parallel
@@ -665,7 +665,7 @@ jobs:
   contracts-bedrock-checks:
     docker:
       - image: <<pipeline.parameters.ci_builder_image>>
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - attach_workspace: { at: "." }
@@ -816,7 +816,7 @@ jobs:
   #       default: "./..."
   #   machine:
   #     image: <<pipeline.parameters.base_image>> # only used to enable codecov.
-  #   resource_class: xlarge
+  #   resource_class: large
   #   steps:
   #     - run:
   #         name: Install components
@@ -930,7 +930,7 @@ jobs:
       OP_E2E_USE_L2OO: 'false'
     docker:
       - image: <<pipeline.parameters.ci_builder_image>>
-    resource_class: xlarge
+    resource_class: large
     parallelism: <<parameters.parallelism>>
     steps:
       - checkout
@@ -1328,7 +1328,7 @@ jobs:
       SEMGREP_COMMIT: << pipeline.git.revision >>
     docker:
       - image: returntocorp/semgrep
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - unless:
@@ -1458,7 +1458,7 @@ jobs:
   # kontrol-tests:
   #   docker:
   #     - image: << pipeline.parameters.ci_builder_image >>
-  #   resource_class: xlarge
+  #   resource_class: large
   #   steps:
   #     - checkout
   #     - install-contracts-dependencies
@@ -1490,7 +1490,7 @@ jobs:
   # publish-contract-artifacts:
   #   docker:
   #     - image: <<pipeline.parameters.ci_builder_image>>
-  #   resource_class: xlarge
+  #   resource_class: large
   #   steps:
   #     - gcp-cli/install
   #     - gcp-oidc-authenticate:
@@ -1781,7 +1781,7 @@ workflows:
   #           - da-server-docker-release
   #           - op-ufm-docker-release
   #           - op-supervisor-docker-release
-  #     # Standard (xlarge) AMD-only docker images go here
+  #     # Standard (large) AMD-only docker images go here
   #     - docker-build:
   #         matrix:
   #           parameters:
@@ -1790,7 +1790,7 @@ workflows:
   #               - ci-builder-rust
   #               - proofs-tools
   #         name: <<matrix.docker_name>>-docker-release
-  #         resource_class: xlarge
+  #         resource_class: large
   #         docker_tags: <<pipeline.git.revision>>
   #         publish: true
   #         release: true
@@ -1936,7 +1936,7 @@ workflows:
   #         name: contracts-bedrock-docker-publish
   #         docker_name: contracts-bedrock
   #         docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
-  #         resource_class: xlarge
+  #         resource_class: large
   #         publish: true
   #         context:
   #           - oplabs-gcr
