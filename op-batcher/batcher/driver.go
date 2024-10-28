@@ -856,6 +856,13 @@ func (l *BatchSubmitter) shouldPublish() bool {
 		return true
 	}
 
+	// if block was missed, reset target block
+	if l.lastL1Tip.Number > l.targetL1BlockNumber-1 {
+		fmt.Println("Missed target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
+		l.targetL1BlockNumber = 0
+		return false
+	}
+
 	l.Log.Debug("Not yet at target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
 	return false
 }
