@@ -40,6 +40,7 @@ type L1BeaconClient struct {
 
 	initLock     sync.Mutex
 	timeToSlotFn TimeToSlotFn
+	slotToTimeFn SlotToTimeFn
 }
 
 // BeaconClient is a thin wrapper over the Beacon APIs.
@@ -206,6 +207,8 @@ func NewL1BeaconClient(cl BeaconClient, cfg L1BeaconClientConfig, fallbacks ...B
 
 type TimeToSlotFn func(timestamp uint64) (uint64, error)
 
+type SlotToTimeFn func(slot uint64) (uint64, error)
+
 // GetTimeToSlotFn returns a function that converts a timestamp to a slot number.
 func (cl *L1BeaconClient) GetTimeToSlotFn(ctx context.Context) (TimeToSlotFn, error) {
 	cl.initLock.Lock()
@@ -236,6 +239,34 @@ func (cl *L1BeaconClient) GetTimeToSlotFn(ctx context.Context) (TimeToSlotFn, er
 		return (timestamp - genesisTime) / secondsPerSlot, nil
 	}
 	return cl.timeToSlotFn, nil
+}
+
+func (cl *L1BeaconClient) GetSlotToTimeFn(ctx context.Context) (SlotToTimeFn, error) {
+	cl.initLock.Lock()
+	defer cl.initLock.Unlock()
+	if cl.slotToTimeFn != nil {
+		return cl.slotToTimeFn, nil
+	}
+
+	genesis, err := cl.cl.BeaconGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := cl.cl.ConfigSpec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	genesisTime := uint64(genesis.Data.GenesisTime)
+	secondsPerSlot := uint64(config.Data.SecondsPerSlot)
+	if secondsPerSlot == 0 {
+		return nil, fmt.Errorf("got bad value for seconds per slot: %v", config.Data.SecondsPerSlot)
+	}
+	cl.slotToTimeFn = func(slot uint64) (uint64, error) {
+		return (slot * secondsPerSlot) + genesisTime, nil
+	}
+	return cl.slotToTimeFn, nil
 }
 
 func (cl *L1BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
@@ -270,6 +301,20 @@ func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (
 	}
 
 	return slot, nil
+}
+
+func (cl *L1BeaconClient) GetTimeFromSlot(ctx context.Context, slot uint64) (uint64, error) {
+	var err error
+	cl.slotToTimeFn, err = cl.GetSlotToTimeFn(ctx)
+	if err != nil {
+		return 0, err
+	}
+	time, err := cl.slotToTimeFn(slot)
+	if err != nil {
+		return 0, err
+	}
+
+	return time, nil
 }
 
 func (cl *L1BeaconClient) fetchSidecars(ctx context.Context, slot uint64, hashes []eth.IndexedBlobHash) (eth.APIGetBlobSidecarsResponse, error) {

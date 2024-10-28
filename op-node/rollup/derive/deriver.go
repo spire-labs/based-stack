@@ -71,7 +71,7 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
-	nextElectionWinners        []*eth.Validator
+	electionWinners            []*eth.ElectionWinner
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
@@ -96,9 +96,11 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 			return true
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
+
 		preOrigin := d.pipeline.Origin()
-		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe)
+		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, d.electionWinners)
 		postOrigin := d.pipeline.Origin()
+
 		if preOrigin != postOrigin {
 			d.emitter.Emit(DeriverL1StatusEvent{Origin: postOrigin})
 		}
@@ -133,7 +135,7 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
 	case rollup.ElectionWinnerEvent:
-		d.nextElectionWinners = x.Validators
+		d.electionWinners = x.ElectionWinners
 	default:
 		return false
 	}

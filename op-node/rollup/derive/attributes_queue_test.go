@@ -66,8 +66,15 @@ func TestAttributesQueue(t *testing.T) {
 	l2Fetcher := &testutils.MockL2Client{}
 	l2Fetcher.ExpectSystemConfigByL2Hash(safeHead.Hash, parentL1Cfg, nil)
 
+	electionWinners := []*eth.ElectionWinner{
+		{
+			Address: common.Address{0xaa},
+			Time:    l1Info.InfoTime,
+		},
+	}
+
 	rollupCfg := rollup.Config{}
-	l1InfoTx, err := L1InfoDepositBytes(&rollupCfg, expectedL1Cfg, safeHead.SequenceNumber+1, l1Info, 0)
+	l1InfoTx, err := L1InfoDepositBytes(&rollupCfg, expectedL1Cfg, safeHead.SequenceNumber+1, l1Info, 0, common.Address{0xaa})
 	require.NoError(t, err)
 	attrs := eth.PayloadAttributes{
 		Timestamp:             eth.Uint64Quantity(safeHead.Time + cfg.BlockTime),
@@ -81,7 +88,7 @@ func TestAttributesQueue(t *testing.T) {
 
 	aq := NewAttributesQueue(testlog.Logger(t, log.LevelError), cfg, attrBuilder, nil)
 
-	actual, err := aq.createNextAttributes(context.Background(), &batch, safeHead)
+	actual, err := aq.createNextAttributes(context.Background(), &batch, safeHead, electionWinners)
 
 	require.NoError(t, err)
 	require.Equal(t, attrs, *actual)

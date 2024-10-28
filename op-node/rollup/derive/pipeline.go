@@ -134,7 +134,7 @@ func (dp *DerivationPipeline) Origin() eth.L1BlockRef {
 // Any other error is critical and the derivation pipeline should be reset.
 // An error is expected when the underlying source closes.
 // When Step returns nil, it should be called again, to continue the derivation process.
-func (dp *DerivationPipeline) Step(ctx context.Context, pendingSafeHead eth.L2BlockRef) (outAttrib *AttributesWithParent, outErr error) {
+func (dp *DerivationPipeline) Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinners []*eth.ElectionWinner) (outAttrib *AttributesWithParent, outErr error) {
 	defer dp.metrics.RecordL1Ref("l1_derived", dp.Origin())
 
 	dp.metrics.SetDerivationIdle(false)
@@ -180,7 +180,7 @@ func (dp *DerivationPipeline) Step(ctx context.Context, pendingSafeHead eth.L2Bl
 		dp.origin = newOrigin
 	}
 
-	if attrib, err := dp.attrib.NextAttributes(ctx, pendingSafeHead); err == nil {
+	if attrib, err := dp.attrib.NextAttributes(ctx, pendingSafeHead, electionWinners); err == nil {
 		return attrib, nil
 	} else if err == io.EOF {
 		// If every stage has returned io.EOF, try to advance the L1 Origin

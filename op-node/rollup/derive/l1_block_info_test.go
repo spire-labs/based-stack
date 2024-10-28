@@ -70,7 +70,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 			info := testCase.mkInfo(rng)
 			l1Cfg := testCase.mkL1Cfg(rng, info)
 			seqNr := testCase.seqNr(rng)
-			depTx, err := L1InfoDeposit(&rollupCfg, l1Cfg, seqNr, info, 0)
+			depTx, err := L1InfoDeposit(&rollupCfg, l1Cfg, seqNr, info, 0, common.Address{0xaa})
 			require.NoError(t, err)
 			res, err := L1BlockInfoFromBytes(&rollupCfg, info.Time(), depTx.Data)
 			require.NoError(t, err, "expected valid deposit info")
@@ -83,6 +83,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 			assert.Equal(t, res.BatcherAddr, l1Cfg.BatcherAddr)
 			assert.Equal(t, res.L1FeeOverhead, l1Cfg.Overhead)
 			assert.Equal(t, res.L1FeeScalar, l1Cfg.Scalar)
+			assert.Equal(t, res.L1ElectionWinner, common.Address{0xaa})
 		})
 	}
 	t.Run("no data", func(t *testing.T) {
@@ -100,7 +101,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 	t.Run("invalid selector", func(t *testing.T) {
 		rng := rand.New(rand.NewSource(1234))
 		info := testutils.MakeBlockInfo(nil)(rng)
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, 0)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, 0, common.Address{})
 		require.NoError(t, err)
 		_, err = crand.Read(depTx.Data[0:4])
 		require.NoError(t, err)
@@ -112,7 +113,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		info := testutils.MakeBlockInfo(nil)(rng)
 		rollupCfg := rollup.Config{}
 		rollupCfg.ActivateAtGenesis(rollup.Regolith)
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, 0)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, 0, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))
@@ -124,7 +125,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		rollupCfg.ActivateAtGenesis(rollup.Ecotone)
 		// run 1 block after ecotone transition
 		timestamp := rollupCfg.Genesis.L2Time + rollupCfg.BlockTime
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, timestamp)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, timestamp, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))
@@ -137,7 +138,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		rollupCfg.ActivateAtGenesis(rollup.Delta)
 		ecotoneTime := rollupCfg.Genesis.L2Time + rollupCfg.BlockTime // activate ecotone just after genesis
 		rollupCfg.EcotoneTime = &ecotoneTime
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, ecotoneTime)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, ecotoneTime, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))
@@ -148,7 +149,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		info := testutils.MakeBlockInfo(nil)(rng)
 		rollupCfg := rollup.Config{BlockTime: 2, Genesis: rollup.Genesis{L2Time: 1000}}
 		rollupCfg.ActivateAtGenesis(rollup.Ecotone)
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, rollupCfg.Genesis.L2Time)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, rollupCfg.Genesis.L2Time, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))
@@ -161,7 +162,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		rollupCfg.ActivateAtGenesis(rollup.Interop)
 		// run 1 block after interop transition
 		timestamp := rollupCfg.Genesis.L2Time + rollupCfg.BlockTime
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, timestamp)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, timestamp, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))
@@ -175,7 +176,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		rollupCfg.ActivateAtGenesis(rollup.Fjord)
 		isthmusTime := rollupCfg.Genesis.L2Time + rollupCfg.BlockTime // activate isthmus just after genesis
 		rollupCfg.InteropTime = &isthmusTime
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, isthmusTime)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, isthmusTime, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))
@@ -188,7 +189,7 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 		info := testutils.MakeBlockInfo(nil)(rng)
 		rollupCfg := rollup.Config{BlockTime: 2, Genesis: rollup.Genesis{L2Time: 1000}}
 		rollupCfg.ActivateAtGenesis(rollup.Interop)
-		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, rollupCfg.Genesis.L2Time)
+		depTx, err := L1InfoDeposit(&rollupCfg, randomL1Cfg(rng, info), randomSeqNr(rng), info, rollupCfg.Genesis.L2Time, common.Address{})
 		require.NoError(t, err)
 		require.False(t, depTx.IsSystemTransaction)
 		require.Equal(t, depTx.Gas, uint64(RegolithSystemTxGas))

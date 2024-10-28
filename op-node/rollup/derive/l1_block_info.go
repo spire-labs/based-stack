@@ -326,11 +326,7 @@ func L1BlockInfoFromBytes(rollupCfg *rollup.Config, l2BlockTime uint64, data []b
 
 // L1InfoDeposit creates a L1 Info deposit transaction based on the L1 block,
 // and the L2 block-height difference with the start of the epoch.
-func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber uint64, block eth.BlockInfo, l2Timestamp uint64) (*types.DepositTx, error) {
-
-	// Fake value for testing, intentionally not set to address(0) to confirm its getting updated
-	mockAddr := common.HexToAddress("0x4200000000000000000000000000000000000015")
-
+func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber uint64, block eth.BlockInfo, l2Timestamp uint64, winner common.Address) (*types.DepositTx, error) {
 	l1BlockInfo := L1BlockInfo{
 		Number:         block.NumberU64(),
 		Time:           block.Time(),
@@ -339,7 +335,7 @@ func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber 
 		SequenceNumber: seqNumber,
 		BatcherAddr:    sysCfg.BatcherAddr,
 		// TODO: Connect this to results of l1 election in future PR
-		L1ElectionWinner: mockAddr,
+		L1ElectionWinner: winner,
 	}
 	var data []byte
 	if isEcotoneButNotFirstBlock(rollupCfg, l2Timestamp) {
@@ -402,8 +398,8 @@ func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber 
 }
 
 // L1InfoDepositBytes returns a serialized L1-info attributes transaction.
-func L1InfoDepositBytes(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber uint64, l1Info eth.BlockInfo, l2Timestamp uint64) ([]byte, error) {
-	dep, err := L1InfoDeposit(rollupCfg, sysCfg, seqNumber, l1Info, l2Timestamp)
+func L1InfoDepositBytes(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber uint64, l1Info eth.BlockInfo, l2Timestamp uint64, winner common.Address) ([]byte, error) {
+	dep, err := L1InfoDeposit(rollupCfg, sysCfg, seqNumber, l1Info, l2Timestamp, winner)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create L1 info tx: %w", err)
 	}

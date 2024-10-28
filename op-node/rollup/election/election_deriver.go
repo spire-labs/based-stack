@@ -70,7 +70,12 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		return
 	}
 
-	validators, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch)
+	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch)
+
+	for _, winner := range electionWinners {
+		address := &winner.Address
+		log.Info("This winners address is", "address", address)
+	}
 
 	if err != nil {
 		log.Warn("Failed to get election winner", "err", err)
@@ -79,8 +84,8 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		ed.mu.Lock()
 		defer ed.mu.Unlock()
 
-		log.Info("Election winners", "validators", validators)
-		ed.emitter.Emit(rollup.ElectionWinnerEvent{Validators: validators})
+		log.Info("Election winners", "electionWinners", electionWinners)
+		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
 
 		// Only update the last epoch if we got a valid winner
 		ed.lastEpoch = epoch

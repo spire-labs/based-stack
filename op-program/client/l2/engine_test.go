@@ -173,7 +173,7 @@ func createL2Block(t *testing.T, number int) *types.Block {
 	tx, err := derive.L1InfoDeposit(chaincfg.Sepolia, eth.SystemConfig{}, uint64(1), eth.HeaderBlockInfo(&types.Header{
 		Number:  big.NewInt(32),
 		BaseFee: big.NewInt(7),
-	}), 0)
+	}), 0, common.Address{})
 	require.NoError(t, err)
 	header := &types.Header{
 		Number:  big.NewInt(int64(number)),
