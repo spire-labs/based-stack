@@ -200,6 +200,50 @@ func TestSyncStatus(t *testing.T) {
 	assert.Equal(t, status, out)
 }
 
+func TestGetElectionWinners(t *testing.T) {
+	log := testlog.Logger(t, log.LevelError)
+	l2Client := &testutils.MockL2Client{}
+	drClient := &mockDriverClient{}
+	safeReader := &mockSafeDBReader{}
+	epoch := uint64(123)
+	expected := []eth.ElectionWinner{
+		{
+			Address: common.Address{0x1},
+			Time:    1234,
+		},
+		{
+			Address: common.Address{0x2},
+			Time:    1235,
+		},
+	}
+	drClient.On("GetElectionWinners", epoch).Return(expected, nil)
+
+	rpcCfg := &RPCConfig{
+		ListenAddr: "localhost",
+		ListenPort: 0,
+	}
+	rollupCfg := &rollup.Config{
+		// ignore other rollup config info in this test
+	}
+	server, err := newRPCServer(rpcCfg, rollupCfg, l2Client, drClient, safeReader, log, "0.0", metrics.NoopMetrics)
+	require.NoError(t, err)
+	require.NoError(t, server.Start())
+	defer func() {
+		require.NoError(t, server.Stop(context.Background()))
+	}()
+
+	client, err := rpcclient.NewRPC(context.Background(), log, "http://"+server.Addr().String(), rpcclient.WithDialBackoff(3))
+	require.NoError(t, err)
+
+	var out []eth.ElectionWinner
+	err = client.CallContext(context.Background(), &out, "optimism_getElectionWinners", epoch)
+	require.NoError(t, err)
+	require.Equal(t, expected, out)
+	l2Client.Mock.AssertExpectations(t)
+	drClient.Mock.AssertExpectations(t)
+	safeReader.Mock.AssertExpectations(t)
+}
+
 func TestSafeHeadAtL1Block(t *testing.T) {
 	log := testlog.Logger(t, log.LevelError)
 	l2Client := &testutils.MockL2Client{}
@@ -285,6 +329,10 @@ func (c *mockDriverClient) OnUnsafeL2Payload(ctx context.Context, payload *eth.E
 
 func (c *mockDriverClient) OverrideLeader(ctx context.Context) error {
 	return c.Mock.MethodCalled("OverrideLeader").Get(0).(error)
+}
+
+func (c *mockDriverClient) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	return c.Mock.MethodCalled("GetElectionWinners", epoch).Get(0).([]eth.ElectionWinner), nil
 }
 
 type mockSafeDBReader struct {
