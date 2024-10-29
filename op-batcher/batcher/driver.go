@@ -394,6 +394,16 @@ func (l *BatchSubmitter) loop() {
 			if !l.checkTxpool(queue, receiptsCh) {
 				continue
 			}
+			// TODO: This is a temporary solution for POC testing.
+			// By waiting until the L1 tip == target block number - 1, we can ensure that the batcher
+			// doesn't read blocks from the safe head too early, preventing overlapping txs from being sent.
+			l.updateL1Tip()
+			// check if target block is equal to the current block number - 1
+			if !l.shouldPublish() {
+				fmt.Println("Target block number is not reached yet, don't bother fetching blocks from L2. ", l.targetL1BlockNumber, l.lastL1Tip.Number)
+				continue
+			}
+
 			if err := l.loadBlocksIntoState(l.shutdownCtx); errors.Is(err, ErrReorg) {
 				err := l.state.Close()
 				if err != nil {
@@ -851,12 +861,10 @@ func (l *BatchSubmitter) shouldPublish() bool {
 	// Check if current L1 tip is targetL1BlockNumber -1
 	if l.lastL1Tip.Number == l.targetL1BlockNumber-1 {
 		l.Log.Debug("At target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
-		// Set a new target block (POC only)
-		l.targetL1BlockNumber = l.generateTargetBlockPOC()
 		return true
 	}
 
-	// if block was missed, reset target block
+	// if block was missed or already submitted, zero out target block
 	if l.lastL1Tip.Number > l.targetL1BlockNumber-1 {
 		fmt.Println("Missed target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
 		l.targetL1BlockNumber = 0
