@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/clsync"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/finality"
@@ -140,6 +141,20 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 	case s.unsafeL2Payloads <- envelope:
 		return nil
 	}
+}
+
+func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch)
+
+	if err != nil {
+		return []eth.ElectionWinner{}, err
+	}
+
+	winners := make([]eth.ElectionWinner, len(res))
+	for i, winner := range res {
+		winners[i] = *winner
+	}
+	return winners, nil
 }
 
 // the eventLoop responds to L1 changes and internal timers to produce L2 blocks.
@@ -283,6 +298,8 @@ type SyncDeriver struct {
 	// The derivation pipeline is reset whenever we reorg.
 	// The derivation pipeline determines the new l2Safe.
 	Derivation DerivationPipeline
+
+	Election *election.Election
 
 	SafeHeadNotifs rollup.SafeHeadListener // notified when safe head is updated
 

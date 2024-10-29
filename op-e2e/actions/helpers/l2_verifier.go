@@ -238,6 +238,10 @@ func (s *l2VerifierBackend) OnUnsafeL2Payload(ctx context.Context, envelope *eth
 	return nil
 }
 
+func (s *l2VerifierBackend) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	return []eth.ElectionWinner{}, nil
+}
+
 func (s *L2Verifier) L2Finalized() eth.L2BlockRef {
 	return s.engine.Finalized()
 }

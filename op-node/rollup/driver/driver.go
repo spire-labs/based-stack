@@ -227,6 +227,7 @@ func NewDriver(
 
 	syncDeriver := &SyncDeriver{
 		Derivation:     derivationPipeline,
+		Election:       elec,
 		SafeHeadNotifs: safeHeadListener,
 		CLSync:         clSync,
 		Engine:         ec,
