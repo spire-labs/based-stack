@@ -3,6 +3,8 @@ pragma solidity 0.8.15;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { Constants } from "src/libraries/Constants.sol";
+import { Predeploys } from "src/libraries/Predeploys.sol";
+import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
 import "src/libraries/ElectionTicketErrors.sol";
 
 /// @custom:proxied true
@@ -41,7 +43,12 @@ contract ElectionTickets is ERC721 {
     ///
     /// @param _to The address to mint the ticket to
     function mint(address _to) external {
-        if (msg.sender != AUCTION) revert NotAuction();
+        // Mint is supposed to be called through a cross chain message
+        // We need to also check that the l1 sender is the auction contract
+        if (
+            msg.sender != Predeploys.L2_CROSS_DOMAIN_MESSENGER
+                || ICrossDomainMessenger(msg.sender).xDomainMessageSender() != AUCTION
+        ) revert NotAuction();
 
         uint256 _tokenId;
         // Not feasible for this to ever overflow

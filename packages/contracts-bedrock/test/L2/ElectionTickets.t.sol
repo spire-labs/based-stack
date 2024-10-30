@@ -3,7 +3,9 @@ pragma solidity 0.8.15;
 
 import { Test } from "forge-std/Test.sol";
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
+import { Predeploys } from "src/libraries/Predeploys.sol";
 import { Constants } from "src/libraries/Constants.sol";
+import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
 import "src/libraries/ElectionTicketErrors.sol";
 
 contract ElectionTickets_Test is Test {
@@ -17,22 +19,50 @@ contract ElectionTickets_Test is Test {
 }
 
 contract ElectionTickets_mint_Test is ElectionTickets_Test {
-    /// @dev Tests that the `mint` function reverts when called by a non-Election address.
-    function test_mint_onlyAuction_reverts() public {
+    /// @dev Tests that the `mint` function reverts when called by a non-messenger address.
+    function test_mint_onlyAuction_wrongCaller_reverts() public {
         vm.expectRevert(NotAuction.selector);
+        electionTicket.mint(to);
+    }
+
+    /// @dev Tests that the `mint` function reverts when l1 sender is not the auction contract.
+    function test_mint_onlyAuction_wrongL1Sender_reverts() public {
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(address(0))
+        );
+
+        vm.expectRevert(NotAuction.selector);
+        vm.prank(Predeploys.L1_BLOCK_ATTRIBUTES);
         electionTicket.mint(to);
     }
 
     /// @dev Tests that the `mint` function succeeds when called by the Election contract.
     function test_mint_succeeds() public {
-        vm.prank(election);
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
+        vm.expectCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector)
+        );
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
         electionTicket.mint(to);
     }
 
     /// @dev Tests that the mint function correctly updates the stack
     function test_mint_updatesTicketStack() public {
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
+
         for (uint256 i = 0; i < 10; i++) {
-            vm.prank(election);
+            vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
             electionTicket.mint(to);
         }
 
@@ -53,7 +83,12 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
 contract ElectionTickets_burn_Test is ElectionTickets_Test {
     function setUp() public override {
         super.setUp();
-        vm.prank(election);
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
         electionTicket.mint(to);
     }
 
@@ -83,9 +118,15 @@ contract ElectionTickets_burn_Test is ElectionTickets_Test {
 
     /// @dev Test that the burn function correctly updates the stack
     function test_burn_traversesStack() public {
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
+
         // Including the mint in setup this mints 10 tickets to "to"
         for (uint256 i = 0; i < 9; i++) {
-            vm.prank(election);
+            vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
             electionTicket.mint(to);
         }
 
