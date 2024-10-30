@@ -49,20 +49,22 @@ contract ElectionTickets is ERC721 {
             _tokenId =  ++tokenId;
         }
 
-        uint256 _top = _top(_to);
+        uint256 _topTicket = _top(_to);
 
-        if (_top == 0) {
+        if (_topTicket == 0) {
             // This is the first ticket for this address
             // Set the top to the token id
             ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
         } else {
             // This is not the first ticket for this address
             // Move the previous top down the linked list
-            ticketStack[_to][_tokenId] = _top;
+            ticketStack[_to][_tokenId] = _topTicket;
             // Set the top to the token id that just got minted
             ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
         }
 
+        // Potentially can remove this variable for more optimization?
+        // Its very nice to have for traversal and accounting though, but not necessary
         ticketCount[_to]++;
 
         _mint(_to, tokenId);
@@ -75,22 +77,22 @@ contract ElectionTickets is ERC721 {
         // This check might change in the future
         if (msg.sender != Constants.DEPOSITOR_ACCOUNT) revert NotSystemBurn();
 
-        uint256 _top = _top(_target);
+        uint256 _topTicket = _top(_target);
 
         // Sanity check that there are tickets left
-        if (_top == SENTINEL_TICKET_ID) revert NoTicketsLeft();
+        if (_topTicket == SENTINEL_TICKET_ID) revert NoTicketsLeft();
 
         // Update the top pointer to the next ticket in the stack
-        uint256 _nextTicket = ticketStack[_target][_top];
+        uint256 _nextTicket = ticketStack[_target][_topTicket];
         ticketStack[_target][SENTINEL_TICKET_ID] = _nextTicket;
 
         // Clear the reference for the burned ticket
-        ticketStack[_target][_top] = 0;
+        ticketStack[_target][_topTicket] = 0;
 
         ticketCount[_target]--;
 
         // Remove the ticket from the stack
-        _burn(_top);
+        _burn(_topTicket);
     }
 
     /// @notice Returns the top of the ticket stack for a given address
