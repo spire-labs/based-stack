@@ -68,8 +68,19 @@ contract BlockDutchAuction_Test is Test {
 contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
     function setUp() public override {
         super.setUp();
-        vm.mockCall(address(systemConfig), abi.encodeCall(SystemConfig.l1CrossDomainMessenger, ()), abi.encode(messenger));
-        vm.mockCall(messenger, abi.encodeWithSelector(ICrossDomainMessenger.sendMessage.selector, address(electionTicket), abi.encodeCall(ElectionTickets.mint, (owner)), 100_000), abi.encode());
+        vm.mockCall(
+            address(systemConfig), abi.encodeCall(SystemConfig.l1CrossDomainMessenger, ()), abi.encode(messenger)
+        );
+        vm.mockCall(
+            messenger,
+            abi.encodeWithSelector(
+                ICrossDomainMessenger.sendMessage.selector,
+                address(electionTicket),
+                abi.encodeCall(ElectionTickets.mint, (owner)),
+                100_000
+            ),
+            abi.encode()
+        );
     }
 
     event TicketBought(address indexed _buyer, uint256 indexed _startBlock, uint256 _price, uint8 _ticketsLeft);
@@ -202,7 +213,15 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
 
-        vm.expectCall(address(messenger), abi.encodeWithSelector(ICrossDomainMessenger.sendMessage.selector, electionTicket, abi.encodeCall(ElectionTickets.mint, (owner)), 100_000));
+        vm.expectCall(
+            address(messenger),
+            abi.encodeWithSelector(
+                ICrossDomainMessenger.sendMessage.selector,
+                electionTicket,
+                abi.encodeCall(ElectionTickets.mint, (owner)),
+                100_000
+            )
+        );
         vm.prank(owner);
         auction.buy{ value: _price }();
 

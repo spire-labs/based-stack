@@ -20,6 +20,7 @@ import { AddressAliasHelper } from "src/vendor/AddressAliasHelper.sol";
 
 // Contracts
 import { BatchInbox } from "src/L1/BatchInbox.sol";
+import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
 
 // Interfaces
 import { IOptimismPortal } from "src/L1/interfaces/IOptimismPortal.sol";
@@ -91,6 +92,7 @@ contract Setup {
     ISuperchainConfig superchainConfig;
     IDataAvailabilityChallenge dataAvailabilityChallenge;
     BatchInbox batchInbox;
+    BlockDutchAuction blockDutchAuction;
 
     // L2 contracts
     IL2CrossDomainMessenger l2CrossDomainMessenger =
@@ -163,6 +165,7 @@ contract Setup {
         superchainConfig = ISuperchainConfig(deploy.mustGetAddress("SuperchainConfigProxy"));
         anchorStateRegistry = IAnchorStateRegistry(deploy.mustGetAddress("AnchorStateRegistryProxy"));
         batchInbox = BatchInbox(deploy.mustGetAddress("BatchInbox"));
+        blockDutchAuction = BlockDutchAuction(deploy.mustGetAddress("BlockDutchAuction"));
 
         vm.label(address(l2OutputOracle), "L2OutputOracle");
         vm.label(deploy.mustGetAddress("L2OutputOracleProxy"), "L2OutputOracleProxy");
@@ -188,6 +191,7 @@ contract Setup {
         vm.label(address(superchainConfig), "SuperchainConfig");
         vm.label(deploy.mustGetAddress("SuperchainConfigProxy"), "SuperchainConfigProxy");
         vm.label(address(batchInbox), "BatchInbox");
+        vm.label(address(blockDutchAuction), "BlockDutchAuction");
         vm.label(AddressAliasHelper.applyL1ToL2Alias(address(l1CrossDomainMessenger)), "L1CrossDomainMessenger_aliased");
 
         if (deploy.cfg().useAltDA()) {
@@ -208,7 +212,8 @@ contract Setup {
             L1Dependencies({
                 l1CrossDomainMessengerProxy: payable(address(l1CrossDomainMessenger)),
                 l1StandardBridgeProxy: payable(address(l1StandardBridge)),
-                l1ERC721BridgeProxy: payable(address(l1ERC721Bridge))
+                l1ERC721BridgeProxy: payable(address(l1ERC721Bridge)),
+                blockDutchAuction: payable(address(blockDutchAuction))
             })
         );
 

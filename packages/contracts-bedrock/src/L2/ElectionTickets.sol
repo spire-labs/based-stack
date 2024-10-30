@@ -5,7 +5,7 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { Constants } from "src/libraries/Constants.sol";
 import "src/libraries/ElectionTicketErrors.sol";
 
-/// @custom:proxied false
+/// @custom:proxied true
 /// @custom:predeploy 0x4200000000000000000000000000000000000028
 /// @title ElectionTickets
 /// @notice The ERC721 token representing a ticket for sequencing rights of the L2
@@ -16,7 +16,8 @@ contract ElectionTickets is ERC721 {
 
     /// @notice The sentinel ticket id is used to traverse the ticket stack, so that
     ///         ticketQueue[msg.sender][SENTINEL_TICKET_ID] is the top of the stack
-    ///         and ticketQueue[msg.sender][bottom_ticket_id] points to SENTINEL_TICKET_ID, meaning you are at the bottom of the stack
+    ///         and ticketQueue[msg.sender][bottom_ticket_id] points to SENTINEL_TICKET_ID, meaning you are at the
+    /// bottom of the stack
     uint256 internal constant SENTINEL_TICKET_ID = 0;
 
     /// @notice The token id of the most recently minted ticket
@@ -28,7 +29,6 @@ contract ElectionTickets is ERC721 {
 
     /// @notice The number of tickets for each address
     mapping(address => uint256) public ticketCount;
-
 
     /// @notice Constructs the ElectionTickets contract
     ///
@@ -46,7 +46,7 @@ contract ElectionTickets is ERC721 {
         uint256 _tokenId;
         // Not feasible for this to ever overflow
         unchecked {
-            _tokenId =  ++tokenId;
+            _tokenId = ++tokenId;
         }
 
         uint256 _topTicket = _top(_to);
@@ -103,6 +103,10 @@ contract ElectionTickets is ERC721 {
         top_ = _top(_to);
     }
 
+    /// @notice Returns the ticket stack for a given address
+    ///
+    /// @param _to The address to get the stack for
+    /// @return stack_ The ticket stack
     function traverseTicketStack(address _to) external view returns (uint256[] memory stack_) {
         uint256 _count = ticketCount[_to];
         stack_ = new uint256[](_count);

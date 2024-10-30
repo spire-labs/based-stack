@@ -851,11 +851,7 @@ contract Deploy is Deployer {
     /// @notice Deploy BlockDutchAuction
     ///
     /// @dev Done in one function due to triangular dependency
-    function deployBlockDutchAuction()
-        public
-        broadcast
-        returns (address blockDutchAuction_)
-    {
+    function deployBlockDutchAuction() public broadcast returns (address blockDutchAuction_) {
         address _systemConfig = mustGetAddress("SystemConfig");
 
         // TODO: Setup a way to easily configure these and read them in from somewhere

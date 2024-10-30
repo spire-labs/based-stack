@@ -174,7 +174,8 @@ contract L2GenesisTest is Test {
         return L1Dependencies({
             l1CrossDomainMessengerProxy: payable(address(0x100000)),
             l1StandardBridgeProxy: payable(address(0x100001)),
-            l1ERC721BridgeProxy: payable(address(0x100002))
+            l1ERC721BridgeProxy: payable(address(0x100002)),
+            blockDutchAuction: payable(address(0x100003))
         });
     }
 

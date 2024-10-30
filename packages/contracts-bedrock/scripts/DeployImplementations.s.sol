@@ -755,12 +755,7 @@ contract DeployImplementations is Script {
         _dio.set(_dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
     }
 
-    function deployBlockDutchAuction(
-        DeployImplementationsInput,
-        DeployImplementationsOutput _dso
-    )
-        public
-    {
+    function deployBlockDutchAuction(DeployImplementationsInput, DeployImplementationsOutput _dso) public {
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
@@ -768,14 +763,13 @@ contract DeployImplementations is Script {
         uint8 discountRate = 10;
 
         vm.startBroadcast(msg.sender);
-        BlockDutchAuction blockDutchAuction =
-            new BlockDutchAuction(startBlock, durationBlocks, startPrice, discountRate, SystemConfig(_dso.systemConfigImpl()));
+        BlockDutchAuction blockDutchAuction = new BlockDutchAuction(
+            startBlock, durationBlocks, startPrice, discountRate, SystemConfig(_dso.systemConfigImpl())
+        );
         vm.stopBroadcast();
 
         vm.label(address(blockDutchAuction), "BlockDutchAuction");
         _dso.set(_dso.blockDutchAuctionImpl.selector, address(blockDutchAuction));
-
-
     }
 
     function deployBatchInbox(DeployImplementationsInput, DeployImplementationsOutput _dso) public {

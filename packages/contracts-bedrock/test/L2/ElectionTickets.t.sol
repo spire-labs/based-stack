@@ -31,7 +31,7 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
 
     /// @dev Tests that the mint function correctly updates the stack
     function test_mint_updatesTicketStack() public {
-        for(uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 10; i++) {
             vm.prank(election);
             electionTicket.mint(to);
         }
@@ -81,15 +81,15 @@ contract ElectionTickets_burn_Test is ElectionTickets_Test {
         electionTicket.burn(to);
     }
 
+    /// @dev Test that the burn function correctly updates the stack
     function test_burn_traversesStack() public {
         // Including the mint in setup this mints 10 tickets to "to"
-        for(uint256 i = 0; i < 9; i++) {
+        for (uint256 i = 0; i < 9; i++) {
             vm.prank(election);
             electionTicket.mint(to);
         }
 
-
-       for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 10; i++) {
             uint256 top = electionTicket.top(to);
 
             // Assert that the top of the stack is the last minted ticket

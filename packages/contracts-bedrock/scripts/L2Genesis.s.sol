@@ -22,6 +22,7 @@ import { OptimismSuperchainERC20Beacon } from "src/L2/OptimismSuperchainERC20Bea
 import { OptimismMintableERC721Factory } from "src/universal/OptimismMintableERC721Factory.sol";
 import { FeeVault } from "src/universal/FeeVault.sol";
 import { GovernanceToken } from "src/governance/GovernanceToken.sol";
+import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 
 // Libraries
 import { Predeploys } from "src/libraries/Predeploys.sol";
@@ -45,6 +46,7 @@ struct L1Dependencies {
     address payable l1CrossDomainMessengerProxy;
     address payable l1StandardBridgeProxy;
     address payable l1ERC721BridgeProxy;
+    address payable blockDutchAuction;
 }
 
 /// @title L2Genesis
@@ -111,7 +113,8 @@ contract L2Genesis is Deployer {
         return L1Dependencies({
             l1CrossDomainMessengerProxy: mustGetAddress("L1CrossDomainMessengerProxy"),
             l1StandardBridgeProxy: mustGetAddress("L1StandardBridgeProxy"),
-            l1ERC721BridgeProxy: mustGetAddress("L1ERC721BridgeProxy")
+            l1ERC721BridgeProxy: mustGetAddress("L1ERC721BridgeProxy"),
+            blockDutchAuction: mustGetAddress("BlockDutchAuction")
         });
     }
 
@@ -142,7 +145,8 @@ contract L2Genesis is Deployer {
             L1Dependencies({
                 l1CrossDomainMessengerProxy: payable(vm.envAddress("L2GENESIS_L1CrossDomainMessengerProxy")),
                 l1StandardBridgeProxy: payable(vm.envAddress("L2GENESIS_L1StandardBridgeProxy")),
-                l1ERC721BridgeProxy: payable(vm.envAddress("L2GENESIS_L1ERC721BridgeProxy"))
+                l1ERC721BridgeProxy: payable(vm.envAddress("L2GENESIS_L1ERC721BridgeProxy")),
+                blockDutchAuction: payable(vm.envAddress("L2GENESIS_BlockDutchAuction"))
             })
         );
     }
@@ -282,6 +286,8 @@ contract L2Genesis is Deployer {
             setOptimismSuperchainERC20Factory(); // 26
             setOptimismSuperchainERC20Beacon(); // 27
         }
+
+        setElectionTickets(_l1Dependencies.blockDutchAuction); // 28
     }
 
     function setProxyAdmin() public {
@@ -530,6 +536,20 @@ contract L2Genesis is Deployer {
     ///         This contract has no initializer.
     function setSuperchainWETH() internal {
         _setImplementationCode(Predeploys.SUPERCHAIN_WETH);
+    }
+
+    /// @notice This predeploy is following the safety invariant #2.
+    ///         This contract has no initializer.
+    function setElectionTickets(address _auction) internal {
+        ElectionTickets electionTickets = new ElectionTickets(_auction);
+
+        address _electionTicketsImpl = Predeploys.predeployToCodeNamespace(Predeploys.ELECTION_TICKETS);
+        console.log("Setting %s implementation at: %s", "ElectionTickets", _electionTicketsImpl);
+        vm.etch(_electionTicketsImpl, address(electionTickets).code);
+
+        // Reset so its not included state dump
+        vm.etch(address(electionTickets), "");
+        vm.resetNonce(address(electionTickets));
     }
 
     /// @notice This predeploy is following the safety invariant #1.
