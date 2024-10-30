@@ -17,7 +17,6 @@ import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
 import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
-import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
@@ -126,7 +125,6 @@ contract DeployImplementationsOutput_Test is Test {
         OptimismMintableERC20Factory(makeAddr("optimismMintableERC20FactoryImpl"));
     DisputeGameFactory disputeGameFactoryImpl = DisputeGameFactory(makeAddr("disputeGameFactoryImpl"));
     BlockDutchAuction blockDutchAuctionImpl = BlockDutchAuction(makeAddr("blockDutchAuctionImpl"));
-    ElectionTickets electionTicketImpl = ElectionTickets(makeAddr("electionTicketImpl"));
     BatchInbox batchInboxImpl = BatchInbox(makeAddr("batchInbox"));
 
     function setUp() public {
@@ -155,7 +153,6 @@ contract DeployImplementationsOutput_Test is Test {
         vm.etch(address(disputeGameFactoryImpl), hex"01");
         vm.etch(address(blockDutchAuctionImpl), hex"01");
         vm.etch(address(batchInboxImpl), hex"01");
-        vm.etch(address(electionTicketImpl), hex"01");
 
         dio.set(dio.opsmProxy.selector, address(opsmProxy));
         dio.set(dio.optimismPortalImpl.selector, address(optimismPortalImpl));
@@ -170,7 +167,6 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.disputeGameFactoryImpl.selector, address(disputeGameFactoryImpl));
         dio.set(dio.blockDutchAuctionImpl.selector, address(blockDutchAuctionImpl));
         dio.set(dio.batchInboxImpl.selector, address(batchInboxImpl));
-        dio.set(dio.electionTicketImpl.selector, address(electionTicketImpl));
 
         assertEq(address(opsmProxy), address(dio.opsmProxy()), "50");
         assertEq(address(optimismPortalImpl), address(dio.optimismPortalImpl()), "100");
@@ -185,7 +181,6 @@ contract DeployImplementationsOutput_Test is Test {
         assertEq(address(disputeGameFactoryImpl), address(dio.disputeGameFactoryImpl()), "950");
         assertEq(address(blockDutchAuctionImpl), address(dio.blockDutchAuctionImpl()), "1000");
         assertEq(address(batchInboxImpl), address(dio.batchInboxImpl()), "1100");
-        assertEq(address(electionTicketImpl), address(dio.electionTicketImpl()), "1200");
     }
 
     function test_getters_whenNotSet_revert() public {
@@ -226,9 +221,6 @@ contract DeployImplementationsOutput_Test is Test {
 
         vm.expectRevert(expectedErr);
         dio.batchInboxImpl();
-
-        vm.expectRevert(expectedErr);
-        dio.electionTicketImpl();
     }
 
     function test_getters_whenAddrHasNoCode_reverts() public {
@@ -278,10 +270,6 @@ contract DeployImplementationsOutput_Test is Test {
         dio.set(dio.batchInboxImpl.selector, emptyAddr);
         vm.expectRevert(expectedErr);
         dio.batchInboxImpl();
-
-        dio.set(dio.electionTicketImpl.selector, emptyAddr);
-        vm.expectRevert(expectedErr);
-        dio.electionTicketImpl();
     }
 }
 

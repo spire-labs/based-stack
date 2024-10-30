@@ -36,8 +36,8 @@ import { ResolvedDelegateProxy } from "src/legacy/ResolvedDelegateProxy.sol";
 import { PreimageOracle } from "src/cannon/PreimageOracle.sol";
 import { MIPS } from "src/cannon/MIPS.sol";
 import { MIPS2 } from "src/cannon/MIPS2.sol";
+import { SystemConfig } from "src/L1/SystemConfig.sol";
 
-import { ElectionTickets } from "src/L1/ElectionTickets.sol";
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { StorageSetter } from "src/universal/StorageSetter.sol";
 
@@ -453,7 +453,7 @@ contract Deploy is Deployer {
         deployPreimageOracle();
         deployMips();
         deployBatchInbox();
-        deployBlockDutchAuctionAndElectionTickets();
+        deployBlockDutchAuction();
         deployAnchorStateRegistry();
     }
 
@@ -848,38 +848,32 @@ contract Deploy is Deployer {
         addr_ = address(mips);
     }
 
-    /// @notice Deploy BlockDutchAuction and ElectionTickets
+    /// @notice Deploy BlockDutchAuction
     ///
     /// @dev Done in one function due to triangular dependency
-    function deployBlockDutchAuctionAndElectionTickets()
+    function deployBlockDutchAuction()
         public
         broadcast
-        returns (address blockDutchAuction_, address electionTicket_)
+        returns (address blockDutchAuction_)
     {
+        address _systemConfig = mustGetAddress("SystemConfig");
+
         // TODO: Setup a way to easily configure these and read them in from somewhere
         uint216 startBlock = 1;
         uint8 durationBlocks = 32;
         uint256 startPrice = 1e18;
         uint8 discountRate = 10;
 
-        address _precalculatedTicketAddress = _precalculateCreateAddress(msg.sender, vm.getNonce(msg.sender) + 1);
-
         console.log("Deploying BlockDutchAuction implementation");
         BlockDutchAuction blockDutchAuction = new BlockDutchAuction{ salt: _implSalt() }(
-            startBlock, durationBlocks, startPrice, discountRate, ElectionTickets(_precalculatedTicketAddress)
+            startBlock, durationBlocks, startPrice, discountRate, SystemConfig(_systemConfig)
         );
 
-        console.log("Deploying ElectionTickets implementation");
-        ElectionTickets electionTicket = new ElectionTickets(address(blockDutchAuction), mustGetAddress("BatchInbox"));
-
         save("BlockDutchAuction", address(blockDutchAuction));
-        save("ElectionTickets", address(electionTicket));
 
-        console.log("Election deployed at %s", address(blockDutchAuction));
-        console.log("ElectionTickets deployed at %s", address(electionTicket));
+        console.log("BlockDutchAuction deployed at %s", address(blockDutchAuction));
 
         blockDutchAuction_ = address(blockDutchAuction);
-        electionTicket_ = address(electionTicket);
     }
 
     function deployBatchInbox() public broadcast returns (address addr_) {

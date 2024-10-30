@@ -101,6 +101,9 @@ library Predeploys {
     /// @notice Address of the OptimismSuperchainERC20Beacon predeploy.
     address internal constant OPTIMISM_SUPERCHAIN_ERC20_BEACON = 0x4200000000000000000000000000000000000027;
 
+    /// @notice Address of the ElectionTicket predeploy.
+    address internal constant ELECTION_TICKET = 0x4200000000000000000000000000000000000028;
+
     // TODO: Precalculate the address of the implementation contract
     /// @notice Arbitrary address of the OptimismSuperchainERC20 implementation contract.
     address internal constant OPTIMISM_SUPERCHAIN_ERC20 = 0xB9415c6cA93bdC545D4c5177512FCC22EFa38F28;

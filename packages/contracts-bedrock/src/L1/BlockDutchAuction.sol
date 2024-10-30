@@ -2,15 +2,20 @@
 pragma solidity 0.8.15;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ElectionTickets } from "src/L1/ElectionTickets.sol";
+import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
+import { SystemConfig } from "src/L1/SystemConfig.sol";
+import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 import "src/libraries/BlockAuctionErrors.sol";
 
 contract BlockDutchAuction is Ownable {
     /// @notice The minimum number of validators in the look ahead
     uint256 public constant VALIDATORS_IN_LOOKAHEAD = 32;
 
-    /// @notice The address of the ElectionTicket contract
-    ElectionTickets public immutable ELECTION_TICKET;
+    /// @notice The address of the ElectionTicket contract on L2
+    address public constant ELECTION_TICKET = 0x4200000000000000000000000000000000000028;
+
+    /// @notice The address of the SystemConfig contract on L1
+    SystemConfig public immutable SYSTEM_CONFIG;
 
     /// @notice The start block of the current running auction
     uint216 public startBlock;
@@ -63,13 +68,13 @@ contract BlockDutchAuction is Ownable {
     /// @param _durationBlocks The duration of the auction in blocks
     /// @param _startPrice The starting price of the auction
     /// @param _discountRate The discount rate of the auction
-    /// @param _electionTicket The address of the ElectionTicket contract
+    /// @param _systemConfig The address of the SystemConfig contract on L1
     constructor(
         uint216 _startBlock,
         uint8 _durationBlocks,
         uint256 _startPrice,
         uint8 _discountRate,
-        ElectionTickets _electionTicket
+        SystemConfig _systemConfig
     ) {
         if (_discountRate >= 100 || _discountRate == 0) revert InvalidDiscountRate();
         if (_durationBlocks > VALIDATORS_IN_LOOKAHEAD) revert InvalidBlockDuration();
@@ -79,7 +84,7 @@ contract BlockDutchAuction is Ownable {
         durationBlocks = _durationBlocks;
         startPrice = _startPrice;
         discountRate = _discountRate;
-        ELECTION_TICKET = _electionTicket;
+        SYSTEM_CONFIG = _systemConfig;
 
         // Set the starting amount of tickets
         _ticketsLeft = _durationBlocks;
@@ -179,7 +184,10 @@ contract BlockDutchAuction is Ownable {
             }
         }
 
-        ELECTION_TICKET.mint(msg.sender);
+        // Send the message to L2 to mint the ticket
+        ICrossDomainMessenger _messenger = ICrossDomainMessenger(SYSTEM_CONFIG.l1CrossDomainMessenger());
+
+        _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 100_000);
 
         unchecked {
             _ticketsLeft = __ticketsLeft - 1;
