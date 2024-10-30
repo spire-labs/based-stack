@@ -6,3 +6,6 @@ error NotAuction();
 
 /// @notice Thrown when the burn is not coming from the system level
 error NotSystemBurn();
+
+/// @notice Thrown when there are no tickets left
+error NoTicketsLeft();
