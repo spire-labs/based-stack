@@ -9,3 +9,6 @@ error NotSystemBurn();
 
 /// @notice Thrown when there are no tickets left
 error NoTicketsLeft();
+
+/// @notice Thrown when a ticket is attempted to be transferred
+error Untransferable();

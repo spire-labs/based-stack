@@ -145,3 +145,39 @@ contract ElectionTickets_burn_Test is ElectionTickets_Test {
         assertEq(electionTicket.ticketCount(to), 0);
     }
 }
+
+contract ElectionTickets_Untransferable_Test is ElectionTickets_Test {
+    address random = makeAddr("random");
+
+    function setUp() public override {
+        super.setUp();
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
+        electionTicket.mint(to);
+    }
+
+    /// @notice Test that the transferFrom function reverts
+    function test_transferFrom_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(Untransferable.selector));
+        vm.prank(to);
+        electionTicket.transferFrom(to, random, 1);
+    }
+
+    /// @notice Test that the safeTransferFrom function reverts
+    function test_safeTransferFrom_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(Untransferable.selector));
+        vm.prank(to);
+        electionTicket.safeTransferFrom(to, random, 1);
+    }
+
+    /// @notice Test that the safeTransferFrom function with data reverts
+    function test_safeTransferFromWithData_reverts() public {
+        vm.expectRevert(abi.encodeWithSelector(Untransferable.selector));
+        vm.prank(to);
+        electionTicket.safeTransferFrom(to, random, 1, "");
+    }
+}

@@ -102,6 +102,11 @@ contract ElectionTickets is ERC721 {
         _burn(_topTicket);
     }
 
+    /// @notice Overrides the transfer function to prevent tickets from being transferred
+    function _transfer(address, address, uint256) internal override {
+        revert Untransferable();
+    }
+
     /// @notice Returns the top of the ticket stack for a given address
     ///
     /// @param _to The address to get the top of the stack for
