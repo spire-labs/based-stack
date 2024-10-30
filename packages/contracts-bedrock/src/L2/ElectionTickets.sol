@@ -103,7 +103,7 @@ contract ElectionTickets is ERC721 {
     }
 
     /// @notice Overrides the transfer function to prevent tickets from being transferred
-    function _transfer(address, address, uint256) internal override {
+    function _transfer(address, address, uint256) internal pure override {
         revert Untransferable();
     }
 

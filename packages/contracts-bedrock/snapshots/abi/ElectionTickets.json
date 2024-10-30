@@ -487,5 +487,10 @@
     "inputs": [],
     "name": "NotSystemBurn",
     "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Untransferable",
+    "type": "error"
   }
 ]
