@@ -17,9 +17,9 @@ contract ElectionTickets is ERC721 {
     address internal immutable AUCTION;
 
     /// @notice The sentinel ticket id is used to traverse the ticket stack, so that
-    ///         ticketQueue[msg.sender][SENTINEL_TICKET_ID] is the top of the stack
-    ///         and ticketQueue[msg.sender][bottom_ticket_id] points to SENTINEL_TICKET_ID, meaning you are at the
-    /// bottom of the stack
+    ///         ticketStack[msg.sender][SENTINEL_TICKET_ID] is the top of the stack
+    ///         and ticketStack[msg.sender][bottom_ticket_id] points to SENTINEL_TICKET_ID, meaning you are at the
+    ///         bottom of the stack
     uint256 internal constant SENTINEL_TICKET_ID = 0;
 
     /// @notice The token id of the most recently minted ticket
@@ -102,11 +102,6 @@ contract ElectionTickets is ERC721 {
         _burn(_topTicket);
     }
 
-    /// @notice Overrides the transfer function to prevent tickets from being transferred
-    function _transfer(address, address, uint256) internal pure override {
-        revert Untransferable();
-    }
-
     /// @notice Returns the top of the ticket stack for a given address
     ///
     /// @param _to The address to get the top of the stack for
@@ -138,7 +133,16 @@ contract ElectionTickets is ERC721 {
         auction_ = AUCTION;
     }
 
+    /// @notice Returns the top of the ticket stack for a given address
+    ///
+    /// @param _to The address to get the top of the stack for
+    /// @return top_ The top of the stack
     function _top(address _to) internal view returns (uint256 top_) {
         top_ = ticketStack[_to][SENTINEL_TICKET_ID];
+    }
+
+    /// @notice Overrides the transfer function to prevent tickets from being transferred
+    function _transfer(address, address, uint256) internal pure override {
+        revert Untransferable();
     }
 }

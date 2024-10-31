@@ -187,7 +187,9 @@ contract BlockDutchAuction is Ownable {
         // Send the message to L2 to mint the ticket
         ICrossDomainMessenger _messenger = ICrossDomainMessenger(SYSTEM_CONFIG.l1CrossDomainMessenger());
 
-        _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 100_000);
+        // Mint theoretical max gas limit is ~130_000
+        // We send as 150_000 to allow for some buffer
+        _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 150_000);
 
         unchecked {
             _ticketsLeft = __ticketsLeft - 1;

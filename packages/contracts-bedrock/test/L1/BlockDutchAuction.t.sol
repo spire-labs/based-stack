@@ -77,7 +77,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
                 ICrossDomainMessenger.sendMessage.selector,
                 address(electionTicket),
                 abi.encodeCall(ElectionTickets.mint, (owner)),
-                100_000
+                150_000
             ),
             abi.encode()
         );
@@ -219,7 +219,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
                 ICrossDomainMessenger.sendMessage.selector,
                 electionTicket,
                 abi.encodeCall(ElectionTickets.mint, (owner)),
-                100_000
+                150_000
             )
         );
         vm.prank(owner);
