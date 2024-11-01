@@ -394,6 +394,13 @@ func (l *BatchSubmitter) loop() {
 			if !l.checkTxpool(queue, receiptsCh) {
 				continue
 			}
+			// By waiting until the L1 tip == target block number - 1, we can ensure that the batcher
+			// doesn't read blocks from the safe head too early, preventing overlapping txs from being sent.
+			if !l.shouldPublish() {
+				l.Log.Info("Target block number is not reached yet, don't fetch blocks from L2.")
+				continue
+			}
+
 			if err := l.loadBlocksIntoState(l.shutdownCtx); errors.Is(err, ErrReorg) {
 				err := l.state.Close()
 				if err != nil {
@@ -479,10 +486,6 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 		}
 		if err := l.updateL1Tip(); err != nil {
 			l.Log.Error("Failed to query L1 tip", "err", err)
-			return
-		}
-		if !l.shouldPublish() {
-			l.Log.Info("Not our turn to publish")
 			return
 		}
 
@@ -841,7 +844,31 @@ func (l *BatchSubmitter) generateTargetBlockPOC() uint64 {
 
 // This method's logic is currently POC only
 func (l *BatchSubmitter) shouldPublish() bool {
+	// Check if the Sequencer has processed the most recent L1 block. If so, we can
+	// begin reading unsafe L2 blocks starting at the safe L2 head.
+	ctx := l.shutdownCtx
+	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
+	if err != nil {
+		return false
+	}
+
+	cCtx, cancel := context.WithTimeout(ctx, l.Config.NetworkTimeout)
+	defer cancel()
+
+	syncStatus, err := rollupClient.SyncStatus(cCtx)
+	// Ensure that we have the sync status
+	if err != nil {
+		return false
+	}
+	if syncStatus.HeadL1 == (eth.L1BlockRef{}) {
+		return false
+	}
+	syncL1BlockNumber := syncStatus.CurrentL1.Number
+	l.Log.Info("Current L1 block number from sequencer", syncL1BlockNumber)
+	l.Log.Info("Target L1 block number", l.targetL1BlockNumber)
+
 	// If targetL1BlockNumber is unitilized, pick a new target block
+	// TODO: This is POC logic only - this will be removed once reading election winners
 	if l.targetL1BlockNumber == 0 {
 		candidateTarget := l.generateTargetBlockPOC()
 		l.targetL1BlockNumber = candidateTarget
@@ -849,14 +876,22 @@ func (l *BatchSubmitter) shouldPublish() bool {
 	}
 
 	// Check if current L1 tip is targetL1BlockNumber -1
-	if l.lastL1Tip.Number == l.targetL1BlockNumber-1 {
-		l.Log.Debug("At target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
-		// Set a new target block (POC only)
-		l.targetL1BlockNumber = l.generateTargetBlockPOC()
+	// This is set to be last L1 finanlized/processed by sequencer, so that we can be sure
+	// it has had a chance to update its safeL2head.
+	if syncL1BlockNumber == l.targetL1BlockNumber-1 {
+		l.Log.Debug("At target block", "current", syncL1BlockNumber, "target", l.targetL1BlockNumber)
 		return true
 	}
 
-	l.Log.Debug("Not yet at target block", "current", l.lastL1Tip.Number, "target", l.targetL1BlockNumber)
+	// if block was missed or already submitted, zero out target block
+	// TODO: This is POC logic only - this will be removed once reading election winners
+	if syncL1BlockNumber > l.targetL1BlockNumber-1 {
+		fmt.Println("Missed target block", "current", syncL1BlockNumber, "target", l.targetL1BlockNumber)
+		l.targetL1BlockNumber = 0
+		return false
+	}
+
+	l.Log.Debug("Not yet at target block", "current", syncL1BlockNumber, "target", l.targetL1BlockNumber)
 	return false
 }
 
