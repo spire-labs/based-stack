@@ -9,6 +9,7 @@ volumes:
   l2_data:
   safedb_data:
   safedb_data_2:
+  safedb_data_3:
   challenger_data:
   da_data:
   op_log:
@@ -197,6 +198,55 @@ services:
       - "${PWD}/../.devnet/rollup.json:/rollup.json"
       - op_log:/op_log
 
+
+  op-node-3-reth:
+    build:
+      context: ../
+      dockerfile: ops/docker/op-stack-go/Dockerfile
+      target: op-node-target
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:devnet
+    command: >
+      op-node
+      --l1=ws://l1:8546
+      --l1.beacon=http://l1-bn:5052
+      --l1.epoch-poll-interval=12s
+      --l1.http-poll-interval=6s
+      --l2=http://op-reth:8551
+      --l2.jwt-secret=/config/jwt-secret.txt
+      --sequencer.enabled
+      --sequencer.l1-confs=0
+      --verifier.l1-confs=0
+      --p2p.sequencer.key=8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
+      --rollup.config=/rollup.json
+      --rpc.addr=0.0.0.0
+      --rpc.port=8545
+      --p2p.listen.ip=0.0.0.0
+      --p2p.listen.tcp=9004
+      --p2p.listen.udp=9004
+      --p2p.scoring.peers=light
+      --p2p.ban.peers=true
+      --p2p.priv.path=/config/p2p-node-key-2.txt
+      --metrics.enabled
+      --metrics.addr=0.0.0.0
+      --metrics.port=7304
+      --pprof.enabled
+      --rpc.enable-admin
+      --safedb.path=/db
+      --altda.enabled=false
+      --altda.da-service=false
+      --altda.da-server=http://da-server:3100
+    ports:
+      - "7547:8545"
+      - "9005:9004"
+      - "7305:7300"
+      - "6065:6060"
+    volumes:
+      - "safedb_data_3:/db"
+      - "${PWD}/ops-bedrock/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt"
+      - "${PWD}/ops-bedrock/p2p-node-key.txt:/config/p2p-node-key.txt"
+      - "${PWD}/ops-bedrock/test-jwt-secret.txt:/config/jwt-secret.txt"
+      - "${PWD}/.devnet/rollup.json:/rollup.json"
+      - op_log:/op_log
 
   op-proposer:
     depends_on:
