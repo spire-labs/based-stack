@@ -5,11 +5,6 @@
         "internalType": "address",
         "name": "_auction",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_batchInbox",
-        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -66,24 +61,11 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "batchInbox",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "batchInbox_",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_tokenId",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_target",
+        "type": "address"
       }
     ],
     "name": "burn",
@@ -281,6 +263,49 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "ticketCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "ticketStack",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "tokenId",
     "outputs": [
@@ -316,6 +341,25 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      }
+    ],
+    "name": "top",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "top_",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "from",
         "type": "address"
       },
@@ -333,6 +377,25 @@
     "name": "transferFrom",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      }
+    ],
+    "name": "traverseTicketStack",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "stack_",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -412,12 +475,22 @@
   },
   {
     "inputs": [],
+    "name": "NoTicketsLeft",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "NotAuction",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "NotBatchInbox",
+    "name": "NotSystemBurn",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Untransferable",
     "type": "error"
   }
 ]

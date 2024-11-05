@@ -22,8 +22,8 @@
         "type": "uint8"
       },
       {
-        "internalType": "contract ElectionTickets",
-        "name": "_electionTicket",
+        "internalType": "contract SystemConfig",
+        "name": "_systemConfig",
         "type": "address"
       }
     ],
@@ -35,7 +35,20 @@
     "name": "ELECTION_TICKET",
     "outputs": [
       {
-        "internalType": "contract ElectionTickets",
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SYSTEM_CONFIG",
+    "outputs": [
+      {
+        "internalType": "contract SystemConfig",
         "name": "",
         "type": "address"
       }

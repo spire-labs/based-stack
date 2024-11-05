@@ -101,6 +101,9 @@ library Predeploys {
     /// @notice Address of the OptimismSuperchainERC20Beacon predeploy.
     address internal constant OPTIMISM_SUPERCHAIN_ERC20_BEACON = 0x4200000000000000000000000000000000000027;
 
+    /// @notice Address of the ElectionTickets predeploy.
+    address internal constant ELECTION_TICKETS = 0x4200000000000000000000000000000000000028;
+
     // TODO: Precalculate the address of the implementation contract
     /// @notice Arbitrary address of the OptimismSuperchainERC20 implementation contract.
     address internal constant OPTIMISM_SUPERCHAIN_ERC20 = 0xB9415c6cA93bdC545D4c5177512FCC22EFa38F28;
@@ -135,6 +138,7 @@ library Predeploys {
         if (_addr == ETH_LIQUIDITY) return "ETHLiquidity";
         if (_addr == OPTIMISM_SUPERCHAIN_ERC20_FACTORY) return "OptimismSuperchainERC20Factory";
         if (_addr == OPTIMISM_SUPERCHAIN_ERC20_BEACON) return "OptimismSuperchainERC20Beacon";
+        if (_addr == ELECTION_TICKETS) return "ElectionTickets";
         revert("Predeploys: unnamed predeploy");
     }
 
@@ -151,9 +155,9 @@ library Predeploys {
             || _addr == L2_ERC721_BRIDGE || _addr == L1_BLOCK_ATTRIBUTES || _addr == L2_TO_L1_MESSAGE_PASSER
             || _addr == OPTIMISM_MINTABLE_ERC721_FACTORY || _addr == PROXY_ADMIN || _addr == BASE_FEE_VAULT
             || _addr == L1_FEE_VAULT || _addr == SCHEMA_REGISTRY || _addr == EAS || _addr == GOVERNANCE_TOKEN
-            || (_useInterop && _addr == CROSS_L2_INBOX) || (_useInterop && _addr == L2_TO_L2_CROSS_DOMAIN_MESSENGER)
-            || (_useInterop && _addr == SUPERCHAIN_WETH) || (_useInterop && _addr == ETH_LIQUIDITY)
-            || (_useInterop && _addr == OPTIMISM_SUPERCHAIN_ERC20_FACTORY)
+            || _addr == ELECTION_TICKETS || (_useInterop && _addr == CROSS_L2_INBOX)
+            || (_useInterop && _addr == L2_TO_L2_CROSS_DOMAIN_MESSENGER) || (_useInterop && _addr == SUPERCHAIN_WETH)
+            || (_useInterop && _addr == ETH_LIQUIDITY) || (_useInterop && _addr == OPTIMISM_SUPERCHAIN_ERC20_FACTORY)
             || (_useInterop && _addr == OPTIMISM_SUPERCHAIN_ERC20_BEACON);
     }
 

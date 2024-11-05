@@ -150,8 +150,8 @@ contract L2GenesisTest is Test {
         // 2 predeploys do not have proxies
         assertEq(getCodeCount(_path, "Proxy.sol:Proxy"), Predeploys.PREDEPLOY_COUNT - 2);
 
-        // 23 proxies have the implementation set if useInterop is true and 17 if useInterop is false
-        assertEq(getPredeployCountWithSlotSet(_path, Constants.PROXY_IMPLEMENTATION_ADDRESS), _useInterop ? 23 : 17);
+        // 24 proxies have the implementation set if useInterop is true and 18 if useInterop is false
+        assertEq(getPredeployCountWithSlotSet(_path, Constants.PROXY_IMPLEMENTATION_ADDRESS), _useInterop ? 24 : 18);
 
         // All proxies except 2 have the proxy 1967 admin slot set to the proxy admin
         assertEq(
@@ -174,7 +174,8 @@ contract L2GenesisTest is Test {
         return L1Dependencies({
             l1CrossDomainMessengerProxy: payable(address(0x100000)),
             l1StandardBridgeProxy: payable(address(0x100001)),
-            l1ERC721BridgeProxy: payable(address(0x100002))
+            l1ERC721BridgeProxy: payable(address(0x100002)),
+            blockDutchAuction: payable(address(0x100003))
         });
     }
 
@@ -186,7 +187,7 @@ contract L2GenesisTest is Test {
 
         uint256 expected = 0;
         expected += 2048 - 2; // predeploy proxies
-        expected += 21; // predeploy implementations (excl. legacy erc20-style eth and legacy message sender)
+        expected += 22; // predeploy implementations (excl. legacy erc20-style eth and legacy message sender)
         expected += 256; // precompiles
         expected += 13; // preinstalls
         expected += 1; // 4788 deployer account
