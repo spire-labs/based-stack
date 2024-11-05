@@ -1,6 +1,10 @@
 package eth
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"fmt"
+
+	"github.com/ethereum/go-ethereum/common"
+)
 
 type Validator struct {
 	Pubkey         Bytes48      `json:"pubkey"`
@@ -11,6 +15,10 @@ type Validator struct {
 type ElectionWinner struct {
 	Address common.Address
 	Time    uint64
+}
+
+func (e ElectionWinner) String() string {
+	return fmt.Sprintf("%s:%d", e.Address.String(), e.Time)
 }
 
 type APIGetLookaheadResponse struct {
