@@ -27,11 +27,12 @@ type FileData struct {
 }
 
 type Frame struct {
-	TransactionHash string    `json:"transaction_hash"`
-	InclusionBlock  int       `json:"inclusion_block"`
-	Timestamp       int64     `json:"timestamp"`
-	BlockHash       string    `json:"block_hash"`
-	FrameData       FrameData `json:"frame"`
+	TransactionHash string         `json:"transaction_hash"`
+	InclusionBlock  int            `json:"inclusion_block"`
+	Timestamp       int64          `json:"timestamp"`
+	BlockHash       string         `json:"block_hash"`
+	FrameData       FrameData      `json:"frame"`
+	Sender          common.Address `json:"sender"`
 }
 
 type FrameData struct {
@@ -58,6 +59,11 @@ type BatchWithDelay struct {
 	DelaySec       int64
 	DelayBlock     int
 	InclusionBlock int
+}
+
+type L1Tx struct {
+	Sender      common.Address
+	BlockNumber int
 }
 
 const (
@@ -106,6 +112,7 @@ func decodeBatch(start, end int) {
 	}
 
 	var batches []BatchWithDelay
+	var l1Txs []L1Tx
 
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".json" {
@@ -124,6 +131,12 @@ func decodeBatch(start, end int) {
 			}
 			frameTimestamp := data.Frames[0].Timestamp
 			frameBlock := data.Frames[0].InclusionBlock
+			batcher := data.Frames[0].Sender
+
+			l1Txs = append(l1Txs, L1Tx{
+				BlockNumber: frameBlock,
+				Sender:      batcher,
+			})
 
 			fmt.Printf("Number of Batches: %d\n", len(data.Batches))
 			for i, batch := range data.Batches {
@@ -153,6 +166,15 @@ func decodeBatch(start, end int) {
 		curr := batches[i].inner
 		prev := batches[i-1].inner
 		fmt.Printf("%+v; deltaSec: %d, \n", batches[i], curr.Timestamp-prev.Timestamp)
+	}
+
+	// print l1 tx info
+	sort.Slice(l1Txs, func(i, j int) bool {
+		return l1Txs[i].BlockNumber < l1Txs[j].BlockNumber
+	})
+	fmt.Println("----------------------------")
+	for _, l1Tx := range l1Txs {
+		fmt.Printf("%+v \n", l1Tx)
 	}
 }
 
