@@ -74,7 +74,7 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 
 	for _, winner := range electionWinners {
 		address := &winner.Address
-		log.Info("This winners address is", "address", address)
+		log.Debug("This winners address is", "address", address)
 	}
 
 	if err != nil {
@@ -84,7 +84,7 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		ed.mu.Lock()
 		defer ed.mu.Unlock()
 
-		log.Info("Election winners", "electionWinners", electionWinners)
+		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
 
 		// Only update the last epoch if we got a valid winner
