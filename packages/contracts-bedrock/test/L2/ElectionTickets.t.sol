@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+// Testing
 import { Test } from "forge-std/Test.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
 import { Constants } from "src/libraries/Constants.sol";
+
 import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
 import "src/libraries/ElectionTicketErrors.sol";
 
@@ -14,26 +18,31 @@ contract ElectionTickets_Test is Test {
     address public to = makeAddr("to");
 
     function setUp() public virtual {
-        electionTicket = new ElectionTickets(election, new address[](0));
+        electionTicket = new ElectionTickets(election);
     }
 }
 
 contract ElectionTickets_constructor_Test is ElectionTickets_Test {
     /// @dev Tests that the constructor sets the auction address.
     function test_constructor_auction_succeeds() public {
-        ElectionTickets electionTicket = new ElectionTickets(election, new address[](0));
+        ElectionTickets electionTicket = new ElectionTickets(election);
         assertEq(address(electionTicket.auction()), election);
     }
+}
 
+contract ElectionTickets_initialize_Test is ElectionTickets_Test {
     /// @dev Tests that the constructor reverts if array is not same length as genesis tickets amount.
     /// @dev Tests that the constructor mints the genesis tickets amount.
-    function test_constructor_mintGenesisTickets_succeeds(address[] memory _genesisTicketTargets) public {
+    function test_initialize_mintGenesisTickets_succeeds(address[] memory _genesisTicketTargets) public {
         vm.assume(_genesisTicketTargets.length != 0);
 
-        for(uint256 i; i< _genesisTicketTargets.length; i++)
+        for (uint256 i; i < _genesisTicketTargets.length; i++) {
             vm.assume(_genesisTicketTargets[i] != address(0));
+        }
 
-        ElectionTickets electionTicket = new ElectionTickets(election, _genesisTicketTargets);
+        ElectionTickets electionTicket = new ElectionTickets(election);
+        electionTicket = ElectionTickets(address(new ERC1967Proxy(address(electionTicket), "")));
+        electionTicket.initialize(_genesisTicketTargets);
 
         assertEq(electionTicket.tokenId(), _genesisTicketTargets.length);
 

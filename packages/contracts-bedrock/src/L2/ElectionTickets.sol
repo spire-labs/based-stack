@@ -2,6 +2,7 @@
 pragma solidity 0.8.15;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { Constants } from "src/libraries/Constants.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
 import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
@@ -11,7 +12,7 @@ import "src/libraries/ElectionTicketErrors.sol";
 /// @custom:predeploy 0x4200000000000000000000000000000000000028
 /// @title ElectionTickets
 /// @notice The ERC721 token representing a ticket for sequencing rights of the L2
-contract ElectionTickets is ERC721 {
+contract ElectionTickets is ERC721, Initializable {
     /// @notice The address of the auction contract on L1
     /// @dev This is used to check that a message being received is sent from the correct contract
     address internal immutable AUCTION;
@@ -35,13 +36,19 @@ contract ElectionTickets is ERC721 {
     /// @notice Constructs the ElectionTickets contract
     ///
     /// @param _auction The address of the Election contract
-    /// @param _genesisTicketTargets The addresses to mint the tickets to
-    constructor(address _auction, address[] memory _genesisTicketTargets) ERC721("ElectionTickets", "ET") {
+    constructor(address _auction) ERC721("ElectionTickets", "ET") {
         AUCTION = _auction;
 
-        uint256 _genesisTicketsAmount = _genesisTicketTargets.length;
+        initialize(new address[](0));
+    }
+
+    /// @notice Initializes the ElectionTickets contract
+    ///
+    /// @param _genesisAllocation The array of addresses to mint the genesis tickets to
+    function initialize(address[] memory _genesisAllocation) public initializer {
+        uint256 _genesisTicketsAmount = _genesisAllocation.length;
         for (uint256 i; i < _genesisTicketsAmount; i++) {
-            _mintTo(_genesisTicketTargets[i], i + 1);
+            _mintTo(_genesisAllocation[i], i + 1);
         }
 
         unchecked {
