@@ -153,7 +153,7 @@ commands:
 jobs:
   cannon-go-lint-and-test:
     machine: true
-    resource_class: ethereum-optimism/latitude-1
+    resource_class: large
     parameters:
       skip_slow_tests:
         type: boolean
@@ -241,7 +241,7 @@ jobs:
 
   contracts-bedrock-build:
     machine: true
-    resource_class: ethereum-optimism/latitude-1
+    resource_class: large
     parameters:
       skip_pattern:
         description: Glob pattern of tests to skip
@@ -752,7 +752,7 @@ jobs:
         type: boolean
         default: false
     machine: true
-    resource_class: ethereum-optimism/latitude-1
+    resource_class: large
     steps:
       - checkout
       - check-changed:
@@ -767,7 +767,7 @@ jobs:
 
   go-lint:
     machine: true
-    resource_class: ethereum-optimism/latitude-1
+    resource_class: large
     steps:
       - checkout
       - run:
@@ -835,7 +835,7 @@ jobs:
 
   go-test:
     machine: true
-    resource_class: ethereum-optimism/latitude-1
+    resource_class: xlarge
     steps:
       - checkout
       - attach_workspace:
@@ -896,7 +896,7 @@ jobs:
       resource_class:
         description: Machine resource class
         type: string
-        default: ethereum-optimism/latitude-1
+        default: large
     machine: true
     resource_class: <<parameters.resource_class>>
     steps:
@@ -945,7 +945,7 @@ jobs:
 
   cannon-prestate:
     machine: true
-    resource_class: ethereum-optimism/latitude-1
+    resource_class: large
     steps:
       - checkout
       - run:
