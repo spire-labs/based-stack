@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/ethereum-optimism/optimism/op-node/bindings"
@@ -44,6 +46,29 @@ func main() {
 			},
 		},
 		{
+			Name:  "l1-block",
+			Usage: "Fetches data from L1Block contract",
+			Flags: []cli.Flag{
+				&cli.IntFlag{
+					Name:     "start",
+					Usage:    "Start block, inclusive",
+					Required: true,
+				},
+				&cli.IntFlag{
+					Name:     "end",
+					Usage:    "End block, exclusive",
+					Required: true,
+				},
+			},
+			Action: func(clx *cli.Context) error {
+				start := clx.Int64("start")
+				end := clx.Int64("end")
+				field := clx.String("field")
+				l1Block(field, start, end)
+				return nil
+			},
+		},
+		{
 			Name:  "deposit",
 			Usage: "Deposits a transaction to OptimismPortal",
 			Action: func(_ *cli.Context) error {
@@ -79,6 +104,66 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func l1Block(field string, start, end int64) {
+	l2Client, err := ethclient.Dial(l2Url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var wg sync.WaitGroup
+	maxConcurrent := 20
+	sem := make(chan struct{}, maxConcurrent)
+	txs := make([][]byte, end-start)
+
+	ctx := context.Background()
+
+	for i := int64(0); i < end-start; i++ {
+		wg.Add(1)
+		go func(index int64) {
+			defer wg.Done()
+			select {
+			case sem <- struct{}{}:
+				defer func() { <-sem }()
+			case <-ctx.Done():
+				// err?
+				return
+			}
+
+			txs[index] = downloadSystemTx(ctx, start+index, *l2Client)
+		}(i)
+	}
+
+	wg.Wait()
+
+	for i, tx := range txs {
+		blockNumber := start + int64(i)
+		electionWinner := common.Bytes2Hex(tx[164:])
+		timestamp := new(big.Int)
+		timestamp.SetBytes(tx[20:28])
+		l1Origin := new(big.Int)
+		l1Origin.SetBytes(tx[28:36])
+		fmt.Printf("L2 block: %3d, timestamp: %d, L1 origin: %d, Election Winner: %s\n", blockNumber, timestamp, l1Origin, electionWinner)
+	}
+}
+
+func downloadSystemTx(ctx context.Context, blockNumber int64, l2Client ethclient.Client) []byte {
+	log.Println("Downloading system tx from block", blockNumber)
+	block, err := l2Client.BlockByNumber(ctx, big.NewInt(blockNumber))
+	if err != nil {
+		log.Fatal(err)
+	}
+	txs := block.Transactions()
+	if len(txs) == 0 {
+		log.Fatal("Empty transactions", blockNumber)
+	}
+	tx := txs[0]
+	// if !tx.IsSystemTx() {
+	// 	log.Fatalf("Not a system tx. block=%d, hash=%s", blockNumber, tx.Hash())
+	// }
+
+	return tx.Data()
 }
 
 func deposit() {
