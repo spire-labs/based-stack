@@ -44,8 +44,7 @@ contract ElectionTickets is ERC721, Initializable {
     /// @notice Constructs the ElectionTickets contract
     ///
     /// @param _auction The address of the Election contract
-    /// @param _genesisTicketTargets The addresses to mint the tickets to
-    constructor(address _auction, address[] memory _genesisTicketTargets) ERC721("ElectionTickets", "ET") {
+    constructor(address _auction) ERC721("ElectionTickets", "ET") {
         AUCTION = _auction;
 
         initialize(new GenesisAllocation[](0));
