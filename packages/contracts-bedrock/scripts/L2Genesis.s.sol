@@ -608,10 +608,11 @@ contract L2Genesis is Deployer {
             address(uint160(uint256(0xab0b0a68c9ab8ef73338f8ee1bce7bdfb4fdd1020b4163bec31b952651141db4)))
         ];
 
-        address[] memory _genesisAllocation = new address[](64);
+        ElectionTickets.GenesisAllocation[] memory _genesisAllocation = new ElectionTickets.GenesisAllocation[](64);
 
         for (uint256 i = 0; i < _addresses.length; i++) {
-            _genesisAllocation[i] = _addresses[i];
+            _genesisAllocation[i].target = _addresses[i];
+            _genesisAllocation[i].amount = 1;
         }
 
         ElectionTickets electionTickets = new ElectionTickets(_auction);
