@@ -541,7 +541,7 @@ contract L2Genesis is Deployer {
     /// @notice This predeploy is following the safety invariant #2.
     ///         This contract has no initializer.
     function setElectionTickets(address _auction) internal {
-        ElectionTickets electionTickets = new ElectionTickets(_auction);
+        ElectionTickets electionTickets = new ElectionTickets(_auction, new address[](0));
 
         address _electionTicketsImpl = Predeploys.predeployToCodeNamespace(Predeploys.ELECTION_TICKETS);
         console.log("Setting %s implementation at: %s", "ElectionTickets", _electionTicketsImpl);

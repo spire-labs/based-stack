@@ -35,8 +35,18 @@ contract ElectionTickets is ERC721 {
     /// @notice Constructs the ElectionTickets contract
     ///
     /// @param _auction The address of the Election contract
-    constructor(address _auction) ERC721("ElectionTickets", "ET") {
+    /// @param _genesisTicketTargets The addresses to mint the tickets to
+    constructor(address _auction, address[] memory _genesisTicketTargets) ERC721("ElectionTickets", "ET") {
         AUCTION = _auction;
+
+        uint256 _genesisTicketsAmount = _genesisTicketTargets.length;
+        for (uint256 i; i < _genesisTicketsAmount; i++) {
+            _mintTo(_genesisTicketTargets[i], i + 1);
+        }
+
+        unchecked {
+            tokenId += _genesisTicketsAmount;
+        }
     }
 
     /// @notice Mints a new ticket
@@ -51,30 +61,13 @@ contract ElectionTickets is ERC721 {
         ) revert NotAuction();
 
         uint256 _tokenId;
+
         // Not feasible for this to ever overflow
         unchecked {
             _tokenId = ++tokenId;
         }
 
-        uint256 _topTicket = _top(_to);
-
-        if (_topTicket == 0) {
-            // This is the first ticket for this address
-            // Set the top to the token id
-            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
-        } else {
-            // This is not the first ticket for this address
-            // Move the previous top down the linked list
-            ticketStack[_to][_tokenId] = _topTicket;
-            // Set the top to the token id that just got minted
-            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
-        }
-
-        // Potentially can remove this variable for more optimization?
-        // Its very nice to have for traversal and accounting though, but not necessary
-        ticketCount[_to]++;
-
-        _mint(_to, tokenId);
+        _mintTo(_to, _tokenId);
     }
 
     /// @notice Burns a ticket
@@ -139,6 +132,33 @@ contract ElectionTickets is ERC721 {
     /// @return top_ The top of the stack
     function _top(address _to) internal view returns (uint256 top_) {
         top_ = ticketStack[_to][SENTINEL_TICKET_ID];
+    }
+
+    /// @notice Mints a ticket to a given address
+    /// @dev This function does not update the tokenId of this contract
+    ///
+    /// @param _to The address to mint the ticket to
+    /// @param _tokenId The token id to mint
+    function _mintTo(address _to, uint256 _tokenId) internal {
+        uint256 _topTicket = _top(_to);
+
+        if (_topTicket == 0) {
+            // This is the first ticket for this address
+            // Set the top to the token id
+            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
+        } else {
+            // This is not the first ticket for this address
+            // Move the previous top down the linked list
+            ticketStack[_to][_tokenId] = _topTicket;
+            // Set the top to the token id that just got minted
+            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
+        }
+
+        // Potentially can remove this variable for more optimization?
+        // Its very nice to have for traversal and accounting though, but not necessary
+        ticketCount[_to]++;
+
+        _mint(_to, _tokenId);
     }
 
     /// @notice Overrides the transfer function to prevent tickets from being transferred

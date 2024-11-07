@@ -14,7 +14,32 @@ contract ElectionTickets_Test is Test {
     address public to = makeAddr("to");
 
     function setUp() public virtual {
-        electionTicket = new ElectionTickets(election);
+        electionTicket = new ElectionTickets(election, new address[](0));
+    }
+}
+
+contract ElectionTickets_constructor_Test is ElectionTickets_Test {
+    /// @dev Tests that the constructor sets the auction address.
+    function test_constructor_auction_succeeds() public {
+        ElectionTickets electionTicket = new ElectionTickets(election, new address[](0));
+        assertEq(address(electionTicket.auction()), election);
+    }
+
+    /// @dev Tests that the constructor reverts if array is not same length as genesis tickets amount.
+    /// @dev Tests that the constructor mints the genesis tickets amount.
+    function test_constructor_mintGenesisTickets_succeeds(address[] memory _genesisTicketTargets) public {
+        vm.assume(_genesisTicketTargets.length != 0);
+
+        for(uint256 i; i< _genesisTicketTargets.length; i++)
+            vm.assume(_genesisTicketTargets[i] != address(0));
+
+        ElectionTickets electionTicket = new ElectionTickets(election, _genesisTicketTargets);
+
+        assertEq(electionTicket.tokenId(), _genesisTicketTargets.length);
+
+        for (uint256 i; i < _genesisTicketTargets.length; i++) {
+            assertEq(electionTicket.ownerOf(i + 1), _genesisTicketTargets[i]);
+        }
     }
 }
 
