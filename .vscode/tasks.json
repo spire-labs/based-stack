@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "restart-dlv",
+      // run echo "r" | dlv connect localhost:2345 in shell
+      "command": ["echo", "r", "|", "dlv", "connect", "localhost:2345"],
+      "presentation": {
+        "echo": false,
+        "reveal": "never",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false
+      }
+		}
+	]
+}
