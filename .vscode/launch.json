@@ -5,14 +5,15 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "preLaunchTask": "restart-dlv",
+        // "preLaunchTask": "restart-dlv",
         // Optional: change "debug.onTaskErrors": "debugAnyway" in vscode user settings
         "name": "Connect to server",
         "type": "go",
         "request": "attach",
         "mode": "remote",
         "remotePath": "",
-        "port": 2345,
+        // "port": 2345, // tests
+        "port": 12345, // op-node
         "host": "127.0.0.1",
         "showLog": true,
         "trace": "error",

@@ -1,0 +1,25 @@
+FROM --platform=$BUILDPLATFORM golang:1.21.3-alpine3.18 AS op-node-target
+
+RUN apk add --no-cache \
+    git \
+    gcc \
+    musl-dev \
+    linux-headers \
+    bash \
+    make
+
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.23.1
+
+COPY ./go.mod /app/go.mod
+COPY ./go.sum /app/go.sum
+
+RUN echo "go mod cache: $(go env GOMODCACHE)"
+RUN echo "go build cache: $(go env GOCACHE)"
+
+WORKDIR /app
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go mod download
+# can just use this to cache downloads (go mod download isn't enough for some reason)
+# RUN go run /app/op-node/cmd/main.go --version
+
+COPY . /app
+CMD ["sleep", "infinity"]
