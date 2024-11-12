@@ -47,7 +47,7 @@ contract ElectionTickets_initialize_Test is ElectionTickets_Test {
         }
 
         ElectionTickets electionTicket = new ElectionTickets(election);
-        electionTicket = ElectionTickets(address(new ERC1967Proxy(address(electionTicket), "")));
+        electionTicket = ElectionTickets(address(new Proxy(address(electionTicket))));
         electionTicket.initialize(_genAlloc);
 
         uint256 _amountMinted;
