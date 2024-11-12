@@ -33,33 +33,31 @@ contract ElectionTickets_constructor_Test is ElectionTickets_Test {
 contract ElectionTickets_initialize_Test is ElectionTickets_Test {
     /// @dev Tests that the constructor reverts if array is not same length as genesis tickets amount.
     /// @dev Tests that the constructor mints the genesis tickets amount.
-    function test_initialize_mintGenesisTickets_succeeds(
-        ElectionTickets.GenesisAllocation[] memory _genesisTicketTargets
-    )
-        public
-    {
-        vm.assume(
-            _genesisTicketTargets.length != 0 && _genesisTicketTargets.length < 3 && _genesisTicketTargets.length < 10
-        );
+    function test_initialize_mintGenesisTickets_succeeds() public {
+        ElectionTickets.GenesisAllocation[] memory _genAlloc = new ElectionTickets.GenesisAllocation[](3);
 
-        for (uint256 i; i < _genesisTicketTargets.length; i++) {
-            vm.assume(_genesisTicketTargets[i].target != address(0));
+        _genAlloc[0] = ElectionTickets.GenesisAllocation(address(1), 1);
+        _genAlloc[1] = ElectionTickets.GenesisAllocation(address(2), 2);
+        _genAlloc[2] = ElectionTickets.GenesisAllocation(address(3), 3);
+
+        for (uint256 i; i < _genAlloc.length; i++) {
+            vm.assume(_genAlloc[i].target != address(0));
             // hardcoded to make test runtime fast
-            _genesisTicketTargets[i].amount = 3;
+            _genAlloc[i].amount = 3;
         }
 
         ElectionTickets electionTicket = new ElectionTickets(election);
         electionTicket = ElectionTickets(address(new ERC1967Proxy(address(electionTicket), "")));
-        electionTicket.initialize(_genesisTicketTargets);
+        electionTicket.initialize(_genAlloc);
 
         uint256 _amountMinted;
 
-        for (uint256 i; i < _genesisTicketTargets.length; i++) {
-            for (uint256 j; j < _genesisTicketTargets[i].amount; j++) {
-                assertEq(electionTicket.ownerOf(_amountMinted + j + 1), _genesisTicketTargets[i].target);
+        for (uint256 i; i < _genAlloc.length; i++) {
+            for (uint256 j; j < _genAlloc[i].amount; j++) {
+                assertEq(electionTicket.ownerOf(_amountMinted + j + 1), _genAlloc[i].target);
             }
 
-            _amountMinted += _genesisTicketTargets[i].amount;
+            _amountMinted += _genAlloc[i].amount;
         }
 
         assertEq(electionTicket.tokenId(), _amountMinted);
