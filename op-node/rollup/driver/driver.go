@@ -200,6 +200,9 @@ func NewDriver(
 	elec := election.NewElection(beaconClient)
 	sys.Register("election", election.NewElectionDeriver(driverCtx, beaconClient, elec, log), opts)
 
+	dataSource := derive.NewDataSourceFactory(log, cfg, l1, l1Blobs, altDA)
+	sys.Register("data-source", dataSource, opts)
+
 	ec := engine.NewEngineController(l2, log, metrics, cfg, syncCfg,
 		sys.Register("engine-controller", nil, opts))
 

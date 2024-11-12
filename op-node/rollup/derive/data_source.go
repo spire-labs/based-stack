@@ -10,6 +10,7 @@ import (
 
 	altda "github.com/ethereum-optimism/optimism/op-alt-da"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
@@ -47,6 +48,8 @@ type DataSourceFactory struct {
 	blobsFetcher L1BlobsFetcher
 	altDAFetcher AltDAInputFetcher
 	ecotoneTime  *uint64
+	emitter      event.Emitter
+	eventDeriver event.Deriver
 }
 
 func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
@@ -114,4 +117,20 @@ func isValidBatchTx(receipt *types.Receipt, batchInboxAddr common.Address, logge
 	}
 
 	return false
+}
+
+func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
+	ds.emitter = em
+}
+
+func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
+	fmt.Println("DATAFACTORY ON EVENT")
+	switch x := ev.(type) {
+	case rollup.ElectionWinnerEvent:
+		ds.log.Debug("Election winners", "winners", x.ElectionWinners)
+		// TODO(@nate): store this result
+	default:
+		return false
+	}
+	return true
 }
