@@ -574,7 +574,7 @@ jobs:
       test_parallelism:
         description: Number of test jobs to run in parallel
         type: integer
-        default: 4
+        default: 2
       test_list:
         description: List of test files to run
         type: string
