@@ -42,14 +42,15 @@ type AltDAInputFetcher interface {
 // batch submitter transactions.
 // This is not a stage in the pipeline, but a wrapper for another stage in the pipeline
 type DataSourceFactory struct {
-	log          log.Logger
-	dsCfg        DataSourceConfig
-	fetcher      L1Fetcher
-	blobsFetcher L1BlobsFetcher
-	altDAFetcher AltDAInputFetcher
-	ecotoneTime  *uint64
-	emitter      event.Emitter
-	eventDeriver event.Deriver
+	log             log.Logger
+	dsCfg           DataSourceConfig
+	fetcher         L1Fetcher
+	blobsFetcher    L1BlobsFetcher
+	altDAFetcher    AltDAInputFetcher
+	ecotoneTime     *uint64
+	emitter         event.Emitter
+	eventDeriver    event.Deriver
+	electionWinners []*eth.ElectionWinner
 }
 
 func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
@@ -124,11 +125,10 @@ func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
 }
 
 func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
-	fmt.Println("DATAFACTORY ON EVENT")
 	switch x := ev.(type) {
 	case rollup.ElectionWinnerEvent:
 		ds.log.Debug("Election winners", "winners", x.ElectionWinners)
-		// TODO(@nate): store this result
+		ds.electionWinners = x.ElectionWinners
 	default:
 		return false
 	}
