@@ -47,7 +47,13 @@ contract ElectionTickets_initialize_Test is ElectionTickets_Test {
         }
 
         ElectionTickets electionTicket = new ElectionTickets(election);
-        electionTicket = ElectionTickets(address(new Proxy(address(electionTicket))));
+        Proxy proxy = new Proxy(address(to));
+
+        vm.prank(to);
+        proxy.upgradeTo(address(electionTicket));
+
+        electionTicket = ElectionTickets(address(proxy));
+
         electionTicket.initialize(_genAlloc);
 
         uint256 _amountMinted;
