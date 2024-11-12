@@ -38,7 +38,9 @@ contract ElectionTickets_initialize_Test is ElectionTickets_Test {
     )
         public
     {
-        vm.assume(_genesisTicketTargets.length != 0 && _genesisTicketTargets.length < 3);
+        vm.assume(
+            _genesisTicketTargets.length != 0 && _genesisTicketTargets.length < 3 && _genesisTicketTargets.length < 10
+        );
 
         for (uint256 i; i < _genesisTicketTargets.length; i++) {
             vm.assume(_genesisTicketTargets[i].target != address(0));
