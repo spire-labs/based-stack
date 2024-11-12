@@ -25,6 +25,7 @@ import { IAnchorStateRegistry } from "src/dispute/interfaces/IAnchorStateRegistr
 
 // Contracts
 import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
+import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 
 /// @title Initializer_Test
 /// @dev Ensures that the `initialize()` function on contracts cannot be called more than
@@ -170,6 +171,13 @@ contract Initializer_Test is Bridge_Initializer {
                         GameType.wrap(uint32(deploy.cfg().respectedGameType()))
                     )
                 )
+            })
+        );
+        contracts.push(
+            InitializeableContract({
+                name: "ElectionTickets",
+                target: address(electionTickets),
+                initCalldata: abi.encodeCall(ElectionTickets.initialize, (deploy.cfg().genesisAllocation()))
             })
         );
         // SystemConfigImpl
