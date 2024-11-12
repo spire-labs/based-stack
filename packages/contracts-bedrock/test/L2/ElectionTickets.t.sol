@@ -53,7 +53,7 @@ contract ElectionTickets_initialize_Test is ElectionTickets_Test {
         uint256 _amountMinted;
 
         for (uint256 i; i < _genesisTicketTargets.length; i++) {
-            for(uint256 j; j < _genesisTicketTargets[i].amount; j++) {
+            for (uint256 j; j < _genesisTicketTargets[i].amount; j++) {
                 assertEq(electionTicket.ownerOf(_amountMinted + j + 1), _genesisTicketTargets[i].target);
             }
 
