@@ -3,7 +3,7 @@ pragma solidity 0.8.15;
 
 // Testing
 import { Test } from "forge-std/Test.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Proxy } from "src/universal/Proxy.sol";
 
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
