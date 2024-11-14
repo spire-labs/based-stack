@@ -63,8 +63,7 @@ func main() {
 			Action: func(clx *cli.Context) error {
 				start := clx.Int64("start")
 				end := clx.Int64("end")
-				field := clx.String("field")
-				l1Block(field, start, end)
+				l1Block(start, end)
 				return nil
 			},
 		},
@@ -106,7 +105,7 @@ func main() {
 	}
 }
 
-func l1Block(field string, start, end int64) {
+func l1Block(start, end int64) {
 	l2Client, err := ethclient.Dial(l2Url)
 	if err != nil {
 		log.Fatal(err)

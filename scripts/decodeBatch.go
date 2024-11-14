@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -96,10 +97,21 @@ func decodeBatch(start, end int) {
 		log.Fatal(err)
 	}
 
+	l2Client, err := ethclient.Dial(l2Url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	l2Genesis, err := l2Client.BlockByNumber(context.Background(), big.NewInt(0))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	L2GenesisTime := l2Genesis.Time()
+
 	sanityCheck()
 
 	runCommand("go", "run", ".", "fetch", "--start", fmt.Sprintf("%d", start), "--end", fmt.Sprintf("%d", end), "--inbox", batchInbox, "--l1", l1Url, "--l1.beacon", l1Beacon, "--out", txCache)
-	runCommand("go", "run", ".", "reassemble-devnet", "--in", txCache, "--out", channelCache)
+	runCommand("go", "run", ".", "reassemble-devnet", "--in", txCache, "--out", channelCache, "--l2-genesis", fmt.Sprintf("%d", L2GenesisTime))
 
 	// read all reassembled channels
 	_, err = os.Stat(channelCache)

@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/ethereum-optimism/optimism/op-node/cmd/batch_decoder/fetch"
@@ -184,6 +183,10 @@ func main() {
 			Name:  "reassemble-devnet",
 			Usage: "Reassembles channels from fetched batch transactions and decode batches for devnet use",
 			Flags: []cli.Flag{
+				&cli.Int64Flag{
+					Name:  "l2-genesis",
+					Usage: "Genesis timestamp of the devnet",
+				},
 				&cli.StringFlag{
 					Name:  "in",
 					Value: "/tmp/batch_decoder/transactions_cache",
@@ -202,7 +205,7 @@ func main() {
 				}
 
 				var (
-					L2GenesisTime     uint64         = rollupCfg.Genesis.L2Time
+					L2GenesisTime     uint64         = cliCtx.Uint64("l2-genesis")
 					L2BlockTime       uint64         = rollupCfg.BlockTime
 					L2ChainID         *big.Int       = rollupCfg.L2ChainID
 					BatchInboxAddress common.Address = rollupCfg.BatchInboxContractAddress
@@ -290,12 +293,7 @@ func readDevnetConfig() (cfg *rollup.Config, err error) {
 		return nil, fmt.Errorf("error during Unmarshal(): %w", err)
 	}
 
-	L2Time, _ := strconv.ParseUint(config.L1GenesisBlockTimestamp[2:], 16, 64)
-
 	rollupCfg := rollup.Config{
-		Genesis: rollup.Genesis{
-			L2Time: L2Time,
-		},
 		L2ChainID:                 config.L2ChainID,
 		BatchInboxContractAddress: config.BatchInboxAddress,
 		BlockTime:                 config.L2BlockTime,
