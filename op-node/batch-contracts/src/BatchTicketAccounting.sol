@@ -20,12 +20,12 @@ contract BatchTicketAccounting {
       ticketCountPerValidator[i] = tickets.ticketCount(addresses[i]);
     }
 
-    bytes memory _data = abi.encode(ticketCountPerValidator);
+    bytes memory data = abi.encode(ticketCountPerValidator);
 
     assembly {
-      let _dataStart := add(_data, 32)
-      let _dataEnd := sub(msize(), _dataStart)
-      return(_dataStart, _dataEnd)
+      let dataStart := add(data, 32)
+      let dataEnd := sub(msize(), dataStart)
+      return(dataStart, dataEnd)
     }
   }
 }
