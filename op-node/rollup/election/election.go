@@ -150,7 +150,7 @@ func (e *Election) GetBatchTicketAccounting(ctx context.Context, lookaheadAddres
 		return []*big.Int{}, err
 	}
 
-	e.log.Info("BatchTicketAccounting contract called succesfully, results were", "ticketCountPerValidator", ticketCountPerValidator)
+	e.log.Info("BatchTicketAccounting contract called successfully, results were", "ticketCountPerValidator", ticketCountPerValidator)
 
 	return ticketCountPerValidator, nil
 }
