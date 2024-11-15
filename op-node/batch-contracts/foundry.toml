@@ -1,0 +1,26 @@
+[fmt]
+line_length = 120
+tab_width = 2
+bracket_spacing = false
+int_types = 'long'
+quote_style = 'single'
+number_underscore = 'thousands'
+multiline_func_header = 'params_first_multi'
+sort_imports = true
+
+[profile.default]
+solc_version = '0.8.25'
+evm_version = 'paris'
+optimizer = false
+
+[profile.optimized]
+via_ir = true
+out = 'out-via-ir'
+
+
+[profile.test]
+via_ir = true
+out = 'out-via-ir'
+
+[fuzz]
+runs = 1000

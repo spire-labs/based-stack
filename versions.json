@@ -1,6 +1,6 @@
 {
   "go": "1.22.6",
-  "abigen": "v1.10.25",
+  "abigen": "v1.14.11",
   "foundry": "143abd6a768eeb52a5785240b763d72a56987b4a",
   "geth": "v1.14.7",
   "geth_release": "1.14.7-aa55f5ea",

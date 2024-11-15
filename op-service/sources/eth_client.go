@@ -247,6 +247,19 @@ func (s *EthClient) ChainID(ctx context.Context) (*big.Int, error) {
 	return (*big.Int)(&id), nil
 }
 
+func (s *EthClient) Call(ctx context.Context, callMsg map[string]interface{}) (string, error) {
+	var result string
+	err := s.client.CallContext(ctx, &result, "eth_call", callMsg, "latest")
+
+	s.log.Info("eth_call", "result", string(result))
+
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
 func (s *EthClient) InfoByHash(ctx context.Context, hash common.Hash) (eth.BlockInfo, error) {
 	if header, ok := s.headersCache.Get(hash); ok {
 		return header, nil

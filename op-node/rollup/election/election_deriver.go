@@ -13,7 +13,7 @@ import (
 )
 
 type ElectionDeriver struct {
-	client   ElectionClient
+	client   BeaconClient
 	election *Election
 	log      log.Logger
 	emitter  event.Emitter
@@ -24,7 +24,7 @@ type ElectionDeriver struct {
 	mu sync.Mutex
 }
 
-func NewElectionDeriver(ctx context.Context, client ElectionClient, election *Election, log log.Logger) *ElectionDeriver {
+func NewElectionDeriver(ctx context.Context, client BeaconClient, election *Election, log log.Logger) *ElectionDeriver {
 	lastEpoch := uint64(0)
 
 	return &ElectionDeriver{
