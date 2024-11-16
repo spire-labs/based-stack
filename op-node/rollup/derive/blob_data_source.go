@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/ethereum-optimism/optimism/op-service/eth"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
 
 type blobOrCalldata struct {
@@ -23,24 +24,26 @@ type blobOrCalldata struct {
 // BlobDataSource fetches blobs or calldata as appropriate and transforms them into usable rollup
 // data.
 type BlobDataSource struct {
-	data         []blobOrCalldata
-	ref          eth.L1BlockRef
-	batcherAddr  common.Address
-	dsCfg        DataSourceConfig
-	fetcher      L1TransactionFetcher
-	blobsFetcher L1BlobsFetcher
-	log          log.Logger
+	data             []blobOrCalldata
+	ref              eth.L1BlockRef
+	batcherAddr      common.Address
+	dsCfg            DataSourceConfig
+	fetcher          L1TransactionFetcher
+	blobsFetcher     L1BlobsFetcher
+	log              log.Logger
+	electionProvider ElectionWinnersProvider
 }
 
 // NewBlobDataSource creates a new blob data source.
-func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address) DataIter {
+func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address, electionProvider ElectionWinnersProvider) DataIter {
 	return &BlobDataSource{
-		ref:          ref,
-		dsCfg:        dsCfg,
-		fetcher:      fetcher,
-		log:          log.New("origin", ref),
-		batcherAddr:  batcherAddr,
-		blobsFetcher: blobsFetcher,
+		ref:              ref,
+		dsCfg:            dsCfg,
+		fetcher:          fetcher,
+		log:              log.New("origin", ref),
+		batcherAddr:      batcherAddr,
+		blobsFetcher:     blobsFetcher,
+		electionProvider: electionProvider,
 	}
 }
 
@@ -94,7 +97,7 @@ func (ds *BlobDataSource) open(ctx context.Context) ([]blobOrCalldata, error) {
 		txsWithReceipts[i] = TxWithReceipt{tx: tx, receipt: receipts[i]}
 	}
 
-	data, hashes := dataAndHashesFromTxs(txsWithReceipts, &ds.dsCfg, ds.log)
+	data, hashes := ds.dataAndHashesFromTxs(txsWithReceipts, &ds.dsCfg, ds.log)
 
 	if len(hashes) == 0 {
 		// there are no blobs to fetch so we can return immediately
@@ -125,16 +128,56 @@ type TxWithReceipt struct {
 	receipt *types.Receipt
 }
 
+func (ds *BlobDataSource) isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
+	electionWinners := ds.electionProvider.GetElectionWinners()
+
+	if len(electionWinners) > 0 {
+		electedAddress := electionWinners[0]
+		fmt.Println(electedAddress.Address)
+		fmt.Println(electedAddress.Time)
+	} else {
+		fmt.Println("electionWinners is empty")
+	}
+
+	if receipt.Type != types.BlobTxType {
+		// TODO(miszke): enable other DA sources
+		logger.Warn("not a blob tx")
+		return false
+	}
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
+	for _, log := range receipt.Logs {
+		// TODO(nate) compare with election winner address
+		if log.Address != batcherAddr {
+			continue
+		}
+		if log.Topics[0] != topic0 {
+			continue
+		}
+		return true
+	}
+
+	return false
+}
+
 // dataAndHashesFromTxs extracts calldata and datahashes from the input transactions and returns them. It
 // creates a placeholder blobOrCalldata element for each returned blob hash that must be populated
 // by fillBlobPointers after blob bodies are retrieved.
-func dataAndHashesFromTxs(txs []TxWithReceipt, config *DataSourceConfig, logger log.Logger) ([]blobOrCalldata, []eth.IndexedBlobHash) {
+func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *DataSourceConfig, logger log.Logger) ([]blobOrCalldata, []eth.IndexedBlobHash) {
 	data := []blobOrCalldata{}
 	var hashes []eth.IndexedBlobHash
 	blobIndex := 0 // index of each blob in the block's blob sidecar
+	// TODO:
+	// 1. get block number
+	// blockNumber := txs[0].receipt.BlockNumber
+	// 2. get election winner for whichever block this was
+	// 3. pass into isvalidbatchtx
 	for _, tx := range txs {
+
 		// skip any non-batcher transactions
-		if !isValidBatchTx(tx.receipt, config.batchInboxAddress, logger) {
+		// TODO(wintercode): replace the batchInboxAddress with the election winner
+		// for this block
+		if !ds.isValidBatchTx(tx.receipt, config.batchInboxAddress, logger) {
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}

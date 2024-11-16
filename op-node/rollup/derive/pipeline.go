@@ -73,6 +73,7 @@ type DerivationPipeline struct {
 	engineIsReset  bool
 
 	metrics Metrics
+	DataSrc *DataSourceFactory
 }
 
 // NewDerivationPipeline creates a DerivationPipeline, to turn L1 data into L2 block-inputs.
@@ -106,6 +107,7 @@ func NewDerivationPipeline(log log.Logger, rollupCfg *rollup.Config, l1Fetcher L
 		traversal: l1Traversal,
 		attrib:    attributesQueue,
 		l2:        l2Source,
+		DataSrc:   dataSrc,
 	}
 }
 

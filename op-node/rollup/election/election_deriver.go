@@ -69,7 +69,6 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
-
 	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch)
 
 	for _, winner := range electionWinners {
