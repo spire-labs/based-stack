@@ -34,6 +34,17 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		batchInboxAddress: batchInboxAddr,
 	}
 
+	// create an instance of the blob data source for testing w/o calling a function. Just create the struct
+	ds := BlobDataSource{
+		ref:              eth.L1BlockRef{},
+		dsCfg:            config,
+		fetcher:          nil,
+		log:              logger,
+		batcherAddr:      batchInboxAddr,
+		blobsFetcher:     nil,
+		electionProvider: nil,
+	}
+
 	// TODO(miszke): enable other DA sources
 	// create a valid non-blob batcher transaction and make sure it's picked up
 	// txData := &types.LegacyTx{
@@ -67,7 +78,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		}},
 	}
 	txs := []TxWithReceipt{{tx: blobTx, receipt: receipt}}
-	data, blobHashes := dataAndHashesFromTxs(txs, &config, logger)
+	data, blobHashes := ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 1, len(data))
 	require.Equal(t, 1, len(blobHashes))
 	require.Nil(t, data[0].calldata)
@@ -84,7 +95,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	blobTxData.Data = testutils.RandomData(rng, rng.Intn(1000))
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
 	txs = []TxWithReceipt{{tx: blobTx, receipt: &types.Receipt{}}}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, logger)
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 0, len(data))
 	require.Equal(t, 0, len(blobHashes))
 
@@ -93,7 +104,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	blobTxData.To = testutils.RandomAddress(rng)
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
 	txs = []TxWithReceipt{{tx: blobTx, receipt: &types.Receipt{}}}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, logger)
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 0, len(data))
 	require.Equal(t, 0, len(blobHashes))
 }

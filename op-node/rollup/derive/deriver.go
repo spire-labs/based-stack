@@ -3,7 +3,6 @@ package derive
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
@@ -136,8 +135,6 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
 	case rollup.ElectionWinnerEvent:
-		fmt.Println("DERIVER GOT ELECTION WINNERS\n")
-		fmt.Println(x.ElectionWinners)
 		d.electionWinners = x.ElectionWinners
 	default:
 		return false
