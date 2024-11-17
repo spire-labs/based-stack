@@ -129,16 +129,6 @@ type TxWithReceipt struct {
 }
 
 func (ds *BlobDataSource) isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
-	electionWinners := ds.electionProvider.GetElectionWinners()
-
-	if len(electionWinners) > 0 {
-		electedAddress := electionWinners[0]
-		fmt.Println(electedAddress.Address)
-		fmt.Println(electedAddress.Time)
-	} else {
-		fmt.Println("electionWinners is empty")
-	}
-
 	if receipt.Type != types.BlobTxType {
 		// TODO(miszke): enable other DA sources
 		logger.Warn("not a blob tx")
@@ -147,7 +137,6 @@ func (ds *BlobDataSource) isValidBatchTx(receipt *types.Receipt, batcherAddr com
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
 	for _, log := range receipt.Logs {
-		// TODO(nate) compare with election winner address
 		if log.Address != batcherAddr {
 			continue
 		}
@@ -167,17 +156,25 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 	data := []blobOrCalldata{}
 	var hashes []eth.IndexedBlobHash
 	blobIndex := 0 // index of each blob in the block's blob sidecar
-	// TODO:
-	// 1. get block number
-	// blockNumber := txs[0].receipt.BlockNumber
-	// 2. get election winner for whichever block this was
+	blockTime := ds.ref.Time
+	electionWinners := ds.electionProvider.GetElectionWinners()
+	var electionWinner *eth.ElectionWinner
+	if len(electionWinners) == 0 {
+		ds.log.Warn("No election winners found")
+		return data, hashes
+	}
+	for _, winner := range electionWinners {
+		if blockTime == winner.Time {
+			ds.log.Debug("Batch from election winner found", "winner", winner.Address)
+			electionWinner = winner
+			break
+		}
+	}
 	// 3. pass into isvalidbatchtx
 	for _, tx := range txs {
 
 		// skip any non-batcher transactions
-		// TODO(wintercode): replace the batchInboxAddress with the election winner
-		// for this block
-		if !ds.isValidBatchTx(tx.receipt, config.batchInboxAddress, logger) {
+		if !ds.isValidBatchTx(tx.receipt, electionWinner.Address, logger) {
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}
