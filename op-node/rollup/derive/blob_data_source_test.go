@@ -17,6 +17,21 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+type MockElectionWinnersProvider struct{}
+
+func (m *MockElectionWinnersProvider) GetElectionWinners() []*eth.ElectionWinner {
+	return []*eth.ElectionWinner{
+		{
+			Address: common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678"),
+			Time:    0x499602D2,
+		},
+		{
+			Address: common.HexToAddress("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+			Time:    9876543210,
+		},
+	}
+}
+
 func TestDataAndHashesFromTxs(t *testing.T) {
 	// test setup
 	rng := rand.New(rand.NewSource(12345))
@@ -34,15 +49,17 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		batchInboxAddress: batchInboxAddr,
 	}
 
+	mockElectionProvider := &MockElectionWinnersProvider{}
+
 	// create an instance of the blob data source for testing w/o calling a function. Just create the struct
 	ds := BlobDataSource{
-		ref:              eth.L1BlockRef{},
+		ref:              eth.L1BlockRef{Time: 0x499602D2},
 		dsCfg:            config,
 		fetcher:          nil,
 		log:              logger,
 		batcherAddr:      batchInboxAddr,
 		blobsFetcher:     nil,
-		electionProvider: nil,
+		electionProvider: mockElectionProvider,
 	}
 
 	// TODO(miszke): enable other DA sources
@@ -61,19 +78,21 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// require.Equal(t, 1, len(data))
 	// require.Equal(t, 0, len(blobHashes))
 
+	electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
+
 	// create a valid blob batcher tx and make sure it's picked up
 	blobHash := testutils.RandomHash(rng)
 	blobTxData := &types.BlobTx{
 		Nonce:      rng.Uint64(),
 		Gas:        2_000_000,
-		To:         batchInboxAddr,
+		To:         electionWinnerAddress,
 		BlobHashes: []common.Hash{blobHash},
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
 	receipt := &types.Receipt{
 		Type: types.BlobTxType,
 		Logs: []*types.Log{{
-			Address: batchInboxAddr,
+			Address: electionWinnerAddress,
 			Topics:  []common.Hash{batchSubmittedEventTopic},
 		}},
 	}
