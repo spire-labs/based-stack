@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
 
 type DataIter interface {
@@ -98,6 +99,27 @@ type DataSourceConfig struct {
 	l1Signer          types.Signer
 	batchInboxAddress common.Address
 	altDAEnabled      bool
+}
+
+func isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
+	if receipt.Type != types.BlobTxType {
+		// TODO(miszke): enable other DA sources
+		logger.Warn("not a blob tx")
+		return false
+	}
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
+	for _, log := range receipt.Logs {
+		if log.Address != batcherAddr {
+			continue
+		}
+		if log.Topics[0] != topic0 {
+			continue
+		}
+		return true
+	}
+
+	return false
 }
 
 func (ds *DataSourceFactory) GetElectionWinners() []*eth.ElectionWinner {

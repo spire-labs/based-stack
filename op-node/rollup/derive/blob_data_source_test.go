@@ -191,10 +191,6 @@ func TestIsValidBatchTx(t *testing.T) {
 	chainId := new(big.Int).SetUint64(rng.Uint64())
 	signer := types.NewCancunSigner(chainId)
 
-	ds := BlobDataSource{
-		log: logger,
-	}
-
 	t.Run("Valid blob batch transaction", func(t *testing.T) {
 		electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
 		blobTxData := &types.BlobTx{
@@ -212,7 +208,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			}},
 		}
 		fmt.Println(blobTx)
-		valid := ds.isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, batcherAddr, logger)
 		require.True(t, valid, "Expected transaction to be valid")
 	})
 
@@ -225,7 +221,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			}},
 		}
 
-		valid := ds.isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, batcherAddr, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to receipt type")
 	})
 
@@ -238,7 +234,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			}},
 		}
 
-		valid := ds.isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, batcherAddr, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to log address mismatch")
 	})
 
@@ -251,7 +247,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			}},
 		}
 
-		valid := ds.isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, batcherAddr, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to incorrect log topic")
 	})
 
@@ -261,7 +257,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			Logs: []*types.Log{},
 		}
 
-		valid := ds.isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, batcherAddr, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to missing logs")
 	})
 }

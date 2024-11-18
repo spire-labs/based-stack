@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/ethereum-optimism/optimism/op-service/eth"
-	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
 
 type blobOrCalldata struct {
@@ -128,26 +127,26 @@ type TxWithReceipt struct {
 	receipt *types.Receipt
 }
 
-func (ds *BlobDataSource) isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
-	if receipt.Type != types.BlobTxType {
-		// TODO(miszke): enable other DA sources
-		logger.Warn("not a blob tx")
-		return false
-	}
-	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
-	for _, log := range receipt.Logs {
-		if log.Address != batcherAddr {
-			continue
-		}
-		if log.Topics[0] != topic0 {
-			continue
-		}
-		return true
-	}
+// func (ds *BlobDataSource) isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
+// 	if receipt.Type != types.BlobTxType {
+// 		// TODO(miszke): enable other DA sources
+// 		logger.Warn("not a blob tx")
+// 		return false
+// 	}
+// 	batchInboxAbi := snapshots.LoadBatchInboxABI()
+// 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
+// 	for _, log := range receipt.Logs {
+// 		if log.Address != batcherAddr {
+// 			continue
+// 		}
+// 		if log.Topics[0] != topic0 {
+// 			continue
+// 		}
+// 		return true
+// 	}
 
-	return false
-}
+// 	return false
+// }
 
 // dataAndHashesFromTxs extracts calldata and datahashes from the input transactions and returns them. It
 // creates a placeholder blobOrCalldata element for each returned blob hash that must be populated
@@ -159,10 +158,7 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 	blockTime := ds.ref.Time
 	electionWinners := ds.electionProvider.GetElectionWinners()
 	var electionWinner *eth.ElectionWinner
-	if len(electionWinners) == 0 {
-		ds.log.Warn("No election winners found")
-		return data, hashes
-	}
+
 	for _, winner := range electionWinners {
 		if blockTime == winner.Time {
 			ds.log.Debug("Batch from election winner found", "winner", winner.Address)
@@ -170,11 +166,15 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 			break
 		}
 	}
+	if electionWinner == nil {
+		ds.log.Warn("No election winner found for block", "blockTime", blockTime)
+		return data, hashes
+	}
+
 	// 3. pass into isvalidbatchtx
 	for _, tx := range txs {
-
 		// skip any non-batcher transactions
-		if !ds.isValidBatchTx(tx.receipt, electionWinner.Address, logger) {
+		if !isValidBatchTx(tx.receipt, electionWinner.Address, logger) {
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}
