@@ -21,6 +21,7 @@ import { AddressAliasHelper } from "src/vendor/AddressAliasHelper.sol";
 // Contracts
 import { BatchInbox } from "src/L1/BatchInbox.sol";
 import { BlockDutchAuction } from "src/L1/BlockDutchAuction.sol";
+import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 
 // Interfaces
 import { IOptimismPortal } from "src/L1/interfaces/IOptimismPortal.sol";
@@ -112,6 +113,7 @@ contract Setup {
     IWETH weth = IWETH(payable(Predeploys.WETH));
     ISuperchainWETH superchainWeth = ISuperchainWETH(payable(Predeploys.SUPERCHAIN_WETH));
     IETHLiquidity ethLiquidity = IETHLiquidity(Predeploys.ETH_LIQUIDITY);
+    ElectionTickets electionTickets = ElectionTickets(Predeploys.ELECTION_TICKETS);
 
     // TODO: Replace with OptimismSuperchainERC20Factory when updating pragmas
     IOptimismERC20Factory l2OptimismSuperchainERC20Factory =

@@ -8,6 +8,7 @@ import { Executables } from "scripts/libraries/Executables.sol";
 import { Process } from "scripts/libraries/Process.sol";
 import { Chains } from "scripts/libraries/Chains.sol";
 import { Config, Fork, ForkUtils } from "scripts/libraries/Config.sol";
+import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 
 /// @title DeployConfig
 /// @notice Represents the configuration required to deploy the system. It is expected
@@ -92,6 +93,8 @@ contract DeployConfig is Script {
     address public customGasTokenAddress;
 
     bool public useInterop;
+
+    ElectionTickets.GenesisAllocation[] internal _genesisAllocation;
 
     function read(string memory _path) public {
         console.log("DeployConfig: reading file %s", _path);
@@ -180,6 +183,18 @@ contract DeployConfig is Script {
         // Election system config
         minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
         electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
+
+        address[] memory targets = _readOr(_json, "$.genesisAllocation.targets", new address[](0));
+        uint256[] memory amounts = _readOr(_json, "$.genesisAllocation.amounts", new uint256[](0));
+
+        // Sanity check that the arrays are parallel
+        if (targets.length != amounts.length) {
+            revert("GenesisAllocation: targets and amounts must be the same length");
+        }
+
+        for (uint256 i = 0; i < targets.length; i++) {
+            _genesisAllocation.push(ElectionTickets.GenesisAllocation({ target: targets[i], amount: amounts[i] }));
+        }
     }
 
     function fork() public view returns (Fork fork_) {
@@ -248,6 +263,10 @@ contract DeployConfig is Script {
         customGasTokenAddress = _token;
     }
 
+    function genesisAllocation() public view returns (ElectionTickets.GenesisAllocation[] memory) {
+        return _genesisAllocation;
+    }
+
     function latestGenesisFork() internal view returns (Fork) {
         if (l2GenesisGraniteTimeOffset == 0) {
             return Fork.GRANITE;
@@ -280,6 +299,30 @@ contract DeployConfig is Script {
 
     function _readOr(string memory json, string memory key, address defaultValue) internal view returns (address) {
         return vm.keyExistsJson(json, key) ? json.readAddress(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        address[] memory defaultValue
+    )
+        internal
+        view
+        returns (address[] memory)
+    {
+        return vm.keyExistsJson(json, key) ? json.readAddressArray(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        uint256[] memory defaultValue
+    )
+        internal
+        view
+        returns (uint256[] memory)
+    {
+        return vm.keyExistsJson(json, key) ? json.readUintArray(key) : defaultValue;
     }
 
     function _isNull(string memory json, string memory key) internal pure returns (bool) {

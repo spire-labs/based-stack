@@ -12,3 +12,6 @@ error NoTicketsLeft();
 
 /// @notice Thrown when a ticket is attempted to be transferred
 error Untransferable();
+
+/// @notice Thrown when an invalid genesis allocation is provided
+error InvalidGenesisAllocation();

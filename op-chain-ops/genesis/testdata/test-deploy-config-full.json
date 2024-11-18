@@ -96,5 +96,9 @@
   "daResolveWindow": 0,
   "daResolverRefundPercentage": 0,
   "minimumPreconfirmationCollateral": 0,
-  "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "genesisAllocation": {
+    "targets": [],
+    "amounts": []
+  }
 }
