@@ -31,7 +31,6 @@ contract ElectionTickets_constructor_Test is ElectionTickets_Test {
 }
 
 contract ElectionTickets_initialize_Test is ElectionTickets_Test {
-    /// @dev Tests that the constructor reverts if array is not same length as genesis tickets amount.
     /// @dev Tests that the constructor mints the genesis tickets amount.
     function test_initialize_mintGenesisTickets_succeeds() public {
         ElectionTickets.GenesisAllocation[] memory _genAlloc = new ElectionTickets.GenesisAllocation[](3);
