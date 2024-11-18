@@ -69,3 +69,11 @@ type ElectionErrorEvent struct {
 func (ev ElectionErrorEvent) String() string {
 	return "election-error"
 }
+
+type NextElectionWinnerEvent struct {
+	ElectionWinners []*eth.ElectionWinner
+}
+
+func (ev NextElectionWinnerEvent) String() string {
+	return "next-election-winner"
+}

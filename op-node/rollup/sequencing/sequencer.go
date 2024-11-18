@@ -111,10 +111,11 @@ type Sequencer struct {
 	nextAction   time.Time
 	nextActionOK bool
 
-	latest          BuildingState
-	latestSealed    eth.L2BlockRef
-	latestHead      eth.L2BlockRef
-	electionWinners []*eth.ElectionWinner
+	latest              BuildingState
+	latestSealed        eth.L2BlockRef
+	latestHead          eth.L2BlockRef
+	electionWinners     []*eth.ElectionWinner
+	nextElectionWinners []*eth.ElectionWinner
 
 	latestHeadSet chan struct{}
 
@@ -191,6 +192,8 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 		d.onForkchoiceUpdate(x)
 	case rollup.ElectionWinnerEvent:
 		d.electionWinners = x.ElectionWinners
+	case rollup.NextElectionWinnerEvent:
+		d.nextElectionWinners = x.ElectionWinners
 	default:
 		return false
 	}
@@ -509,6 +512,13 @@ func (d *Sequencer) startBuildingBlock() {
 	fetchCtx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
+	if len(d.electionWinners) != 0 {
+		if l2Head.Time > d.electionWinners[(len(d.electionWinners)-1)].Time {
+			d.log.Info("L2 block time is greater than the last election winner time", "l2HeadTime", l2Head.Time, "lastWinnerTime", d.electionWinners[(len(d.electionWinners)-1)].Time)
+			d.electionWinners = d.nextElectionWinners
+		}
+	}
+
 	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), d.electionWinners)
 	if err != nil {
 		if errors.Is(err, derive.ErrTemporary) {
@@ -525,6 +535,8 @@ func (d *Sequencer) startBuildingBlock() {
 			return
 		}
 	}
+
+	d.log.Info("Election winners after attributes preparation", "winners", d.electionWinners)
 
 	// If our next L2 block timestamp is beyond the Sequencer drift threshold, then we must produce
 	// empty blocks (other than the L1 info deposit and any user deposits). We handle this by

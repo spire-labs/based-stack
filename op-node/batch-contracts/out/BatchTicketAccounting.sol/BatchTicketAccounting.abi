@@ -1,0 +1,13 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "addresses",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

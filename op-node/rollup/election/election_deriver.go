@@ -64,13 +64,14 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 
 	// We dont need to recalculate the winners as we already did it for this epoch
 	// If they are equal and its zero, then its the genesis epoch
-	if epoch < ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
+	if epoch <= ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
 		err := fmt.Errorf("epoch %d is not greater than the last epoch saved which was %d", epoch, ed.lastEpoch)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
 
 	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch)
+	nextElectionWinners, _ := ed.election.GetWinnersAtEpoch(ed.ctx, epoch+1)
 
 	for _, winner := range electionWinners {
 		address := &winner.Address
@@ -85,7 +86,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		defer ed.mu.Unlock()
 
 		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
+		log.Info("Next election winners", "epoch", epoch+1, "electionWinners", nextElectionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
+		ed.emitter.Emit(rollup.NextElectionWinnerEvent{ElectionWinners: nextElectionWinners})
 
 		// Only update the last epoch if we got a valid winner
 		ed.lastEpoch = epoch
