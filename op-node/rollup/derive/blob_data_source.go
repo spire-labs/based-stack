@@ -127,27 +127,6 @@ type TxWithReceipt struct {
 	receipt *types.Receipt
 }
 
-// func (ds *BlobDataSource) isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
-// 	if receipt.Type != types.BlobTxType {
-// 		// TODO(miszke): enable other DA sources
-// 		logger.Warn("not a blob tx")
-// 		return false
-// 	}
-// 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-// 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
-// 	for _, log := range receipt.Logs {
-// 		if log.Address != batcherAddr {
-// 			continue
-// 		}
-// 		if log.Topics[0] != topic0 {
-// 			continue
-// 		}
-// 		return true
-// 	}
-
-// 	return false
-// }
-
 // dataAndHashesFromTxs extracts calldata and datahashes from the input transactions and returns them. It
 // creates a placeholder blobOrCalldata element for each returned blob hash that must be populated
 // by fillBlobPointers after blob bodies are retrieved.
