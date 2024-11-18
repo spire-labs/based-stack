@@ -101,8 +101,6 @@ type DataSourceConfig struct {
 }
 
 func (ds *DataSourceFactory) GetElectionWinners() []*eth.ElectionWinner {
-	fmt.Println(ds.electionWinners)
-	// TODO(nate) is a mutex needed here?
 	return ds.electionWinners
 }
 
