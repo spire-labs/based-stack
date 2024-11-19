@@ -247,9 +247,9 @@ func (s *EthClient) ChainID(ctx context.Context) (*big.Int, error) {
 	return (*big.Int)(&id), nil
 }
 
-func (s *EthClient) Call(ctx context.Context, callMsg map[string]interface{}) (string, error) {
+func (s *EthClient) Call(ctx context.Context, callMsg map[string]interface{}, blockNumber string) (string, error) {
 	var result string
-	err := s.client.CallContext(ctx, &result, "eth_call", callMsg, "latest")
+	err := s.client.CallContext(ctx, &result, "eth_call", callMsg, blockNumber)
 
 	s.log.Info("eth_call", "result", string(result))
 

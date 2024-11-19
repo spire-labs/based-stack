@@ -34,7 +34,7 @@ type driverClient interface {
 	SequencerActive(context.Context) (bool, error)
 	OnUnsafeL2Payload(ctx context.Context, payload *eth.ExecutionPayloadEnvelope) error
 	OverrideLeader(ctx context.Context) error
-	GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error)
+	GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error)
 }
 
 type SafeDBReader interface {
@@ -175,9 +175,9 @@ func (n *nodeAPI) Version(ctx context.Context) (string, error) {
 	return version.Version + "-" + version.Meta, nil
 }
 
-func (n *nodeAPI) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+func (n *nodeAPI) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
 	recordDur := n.m.RecordRPCServerRequest("optimism_getElectionWinners")
 	defer recordDur()
 
-	return n.dr.GetElectionWinners(ctx, epoch)
+	return n.dr.GetElectionWinners(ctx, epoch, blockNumber)
 }

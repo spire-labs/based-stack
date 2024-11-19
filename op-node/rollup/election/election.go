@@ -40,7 +40,8 @@ func NewElection(bc BeaconClient, l2 *sources.EthClient, log log.Logger) *Electi
 	}
 }
 
-func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64) ([]*eth.ElectionWinner, error) {
+// blockNumber is passed in as a hexadecimal string
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, blockNumber string) ([]*eth.ElectionWinner, error) {
 	var electionWinners []*eth.ElectionWinner
 	var lookaheadAddresses []common.Address
 
@@ -57,7 +58,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64) ([]*eth.
 		lookaheadAddresses = append(lookaheadAddresses, address)
 	}
 
-	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses)
+	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses, blockNumber)
 
 	if err != nil {
 		log.Error("Failed to get ticket count per validator", "err", err)
@@ -90,7 +91,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64) ([]*eth.
 	return electionWinners, nil
 }
 
-func (e *Election) GetBatchTicketAccounting(ctx context.Context, lookaheadAddresses []common.Address) ([]*big.Int, error) {
+func (e *Election) GetBatchTicketAccounting(ctx context.Context, lookaheadAddresses []common.Address, blockNumber string) ([]*big.Int, error) {
 	bin := BatchTicketAccounting.BatchTicketAccountingMetaData.Bin
 	abiJson := BatchTicketAccounting.BatchTicketAccountingMetaData.ABI
 
@@ -112,7 +113,8 @@ func (e *Election) GetBatchTicketAccounting(ctx context.Context, lookaheadAddres
 
 	creationCode := "0x" + hex.EncodeToString(append(common.FromHex(bin), constructorArgs...))
 
-	encodedReturnData, err := e.l2.Call(ctx, toBatchCallMsg(common.Address{}, creationCode))
+	// NOTE: Should we be using latest here?
+	encodedReturnData, err := e.l2.Call(ctx, toBatchCallMsg(common.Address{}, creationCode), blockNumber)
 
 	if err != nil {
 		// If we cant determine ticket accounting, we cant determine the winners
