@@ -1,7 +1,6 @@
 package derive
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -184,6 +183,7 @@ func TestIsValidBatchTx(t *testing.T) {
 	privateKey := testutils.InsecureRandomKey(rng)
 	batcherAddr := testutils.RandomAddress(rng)
 	logger := testlog.Logger(t, log.LvlInfo)
+	electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
 
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	batchSubmittedEventTopic := batchInboxAbi.Events["BatchSubmitted"].ID
@@ -191,51 +191,56 @@ func TestIsValidBatchTx(t *testing.T) {
 	chainId := new(big.Int).SetUint64(rng.Uint64())
 	signer := types.NewCancunSigner(chainId)
 
-	t.Run("Valid blob batch transaction", func(t *testing.T) {
-		electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
+	t.Run("Valid blob batch transaction with correct election winner", func(t *testing.T) {
 		blobTxData := &types.BlobTx{
 			Nonce:      rng.Uint64(),
 			Gas:        2_000_000,
 			To:         electionWinnerAddress,
 			BlobHashes: []common.Hash{testutils.RandomHash(rng)},
 		}
-		blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
+		_, _ = types.SignNewTx(privateKey, signer, blobTxData)
 		receipt := &types.Receipt{
 			Type: types.BlobTxType,
 			Logs: []*types.Log{{
-				Address: batcherAddr,
+				Address: electionWinnerAddress,
 				Topics:  []common.Hash{batchSubmittedEventTopic},
 			}},
 		}
-		fmt.Println(blobTx)
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		require.True(t, valid, "Expected transaction and winner to be valid")
+	})
+
+	t.Run("Valid blob batch transaction with incorrect election winner", func(t *testing.T) {
+		blobTxData := &types.BlobTx{
+			Nonce:      rng.Uint64(),
+			Gas:        2_000_000,
+			To:         electionWinnerAddress,
+			BlobHashes: []common.Hash{testutils.RandomHash(rng)},
+		}
+		_, _ = types.SignNewTx(privateKey, signer, blobTxData)
+		receipt := &types.Receipt{
+			Type: types.BlobTxType,
+			Logs: []*types.Log{{
+				Address: electionWinnerAddress,
+				Topics:  []common.Hash{batchSubmittedEventTopic},
+			}},
+		}
+		// batcherAddr instead of electionWinnerAddress
 		valid := isValidBatchTx(receipt, batcherAddr, logger)
-		require.True(t, valid, "Expected transaction to be valid")
+		require.False(t, valid, "Expected transaction to be invalid due to incorrect election winner")
 	})
 
 	t.Run("Invalid receipt type", func(t *testing.T) {
 		receipt := &types.Receipt{
 			Type: types.LegacyTxType,
 			Logs: []*types.Log{{
-				Address: batcherAddr,
+				Address: electionWinnerAddress,
 				Topics:  []common.Hash{batchSubmittedEventTopic},
 			}},
 		}
 
-		valid := isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to receipt type")
-	})
-
-	t.Run("Log address does not match batcher address", func(t *testing.T) {
-		receipt := &types.Receipt{
-			Type: types.BlobTxType,
-			Logs: []*types.Log{{
-				Address: testutils.RandomAddress(rng),
-				Topics:  []common.Hash{batchSubmittedEventTopic},
-			}},
-		}
-
-		valid := isValidBatchTx(receipt, batcherAddr, logger)
-		require.False(t, valid, "Expected transaction to be invalid due to log address mismatch")
 	})
 
 	t.Run("Log topic does not match BatchSubmitted event", func(t *testing.T) {
@@ -247,7 +252,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			}},
 		}
 
-		valid := isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to incorrect log topic")
 	})
 
@@ -257,7 +262,7 @@ func TestIsValidBatchTx(t *testing.T) {
 			Logs: []*types.Log{},
 		}
 
-		valid := isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to missing logs")
 	})
 }
