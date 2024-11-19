@@ -206,7 +206,7 @@ func TestGetElectionWinners(t *testing.T) {
 	drClient := &mockDriverClient{}
 	safeReader := &mockSafeDBReader{}
 	epoch := uint64(123)
-	blockNumber := "0x1234"
+	blockNumber := "latest"
 	expected := []eth.ElectionWinner{
 		{
 			Address: common.Address{0x1},
@@ -217,7 +217,7 @@ func TestGetElectionWinners(t *testing.T) {
 			Time:    1235,
 		},
 	}
-	drClient.On("GetElectionWinners", epoch).Return(expected, nil)
+	drClient.On("GetElectionWinners", epoch, blockNumber).Return(expected, nil)
 
 	rpcCfg := &RPCConfig{
 		ListenAddr: "localhost",
