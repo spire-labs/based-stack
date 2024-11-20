@@ -9,7 +9,7 @@ PYTHON?=python3
 help: ## Prints this help message
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-build: build-config build-go build-contracts ## Builds Go components and contracts-bedrock
+build: build-config build-contracts build-go ## Builds Go components and contracts-bedrock
 .PHONY: build
 
 build-go: submodules op-node op-proposer op-batcher ## Builds op-node, op-proposer and op-batcher
@@ -18,6 +18,9 @@ build-go: submodules op-node op-proposer op-batcher ## Builds op-node, op-propos
 build-contracts:
 	(cd packages/contracts-bedrock && just build)
 .PHONY: build-contracts
+
+build-batch-contracts:
+	(cd op-node/batch-contracts && ./generate.sh)
 
 build-config:
 	$(PYTHON) ./ops/scripts/generate-config.py
@@ -97,7 +100,7 @@ submodules: ## Updates git submodules
 .PHONY: submodules
 
 
-op-node: ## Builds op-node binary
+op-node: build-batch-contracts ## Builds op-node binary
 	make -C ./op-node op-node
 .PHONY: op-node
 
@@ -175,12 +178,15 @@ nuke: clean devnet-clean ## Completely clean the project directory
 .PHONY: nuke
 
 ## Prepares for running a local devnet
-pre-devnet: submodules $(DEVNET_CANNON_PRESTATE_FILES)
+pre-devnet: build-batch-contracts submodules $(DEVNET_CANNON_PRESTATE_FILES)
 	@if ! [ -x "$(command -v geth)" ]; then \
 		make install-geth; \
 	fi
 	@if ! [ -x "$(command -v eth2-testnet-genesis)" ]; then \
 		make install-eth2-testnet-genesis; \
+	fi
+	@if ! [ -x "$(command -v abigen -v)" ]; then \
+		make install-abigen; \
 	fi
 .PHONY: pre-devnet
 
@@ -252,3 +258,7 @@ install-geth: ## Installs or updates Geth if versions do not match
 install-eth2-testnet-genesis:
 	go install -v github.com/protolambda/eth2-testnet-genesis@$(shell jq -r .eth2_testnet_genesis < versions.json)
 .PHONY: install-eth2-testnet-genesis
+
+install-abigen:
+	go install -v github.com/ethereum/go-ethereum/cmd/abigen@$(shell jq -r .abigen < versions.json)
+.PHONY: install-abigen

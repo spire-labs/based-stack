@@ -143,8 +143,8 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 	}
 }
 
-func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
-	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch)
+func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
+	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber)
 
 	if err != nil {
 		return []eth.ElectionWinner{}, err
