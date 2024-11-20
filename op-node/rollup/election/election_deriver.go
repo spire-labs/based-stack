@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/status"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
@@ -13,7 +14,7 @@ import (
 )
 
 type ElectionDeriver struct {
-	client   ElectionClient
+	client   BeaconClient
 	election *Election
 	log      log.Logger
 	emitter  event.Emitter
@@ -21,10 +22,13 @@ type ElectionDeriver struct {
 
 	lastEpoch uint64
 
+	l2Unsafe      eth.L2BlockRef
+	l2PendingSafe eth.L2BlockRef
+
 	mu sync.Mutex
 }
 
-func NewElectionDeriver(ctx context.Context, client ElectionClient, election *Election, log log.Logger) *ElectionDeriver {
+func NewElectionDeriver(ctx context.Context, client BeaconClient, election *Election, log log.Logger) *ElectionDeriver {
 	lastEpoch := uint64(0)
 
 	return &ElectionDeriver{
@@ -45,6 +49,9 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	// Do we want to do l1unsafe or l1safe here?
 	case status.L1UnsafeEvent:
 		ed.ProcessNewL1Block(x.L1Unsafe)
+	case engine.PendingSafeUpdateEvent:
+		ed.l2PendingSafe = x.PendingSafe
+		ed.l2Unsafe = x.Unsafe
 
 	default:
 		return false
@@ -64,12 +71,13 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 
 	// We dont need to recalculate the winners as we already did it for this epoch
 	// If they are equal and its zero, then its the genesis epoch
-	if epoch < ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
+	if epoch <= ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
 		err := fmt.Errorf("epoch %d is not greater than the last epoch saved which was %d", epoch, ed.lastEpoch)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
-	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch)
+
+	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, "0x"+fmt.Sprintf("%x", ed.l2PendingSafe.Number))
 
 	for _, winner := range electionWinners {
 		address := &winner.Address

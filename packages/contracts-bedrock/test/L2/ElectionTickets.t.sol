@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
+// Testing
 import { Test } from "forge-std/Test.sol";
+import { Proxy } from "src/universal/Proxy.sol";
+
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
 import { Constants } from "src/libraries/Constants.sol";
+
 import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
 import "src/libraries/ElectionTicketErrors.sol";
 
@@ -15,6 +19,53 @@ contract ElectionTickets_Test is Test {
 
     function setUp() public virtual {
         electionTicket = new ElectionTickets(election);
+    }
+}
+
+contract ElectionTickets_constructor_Test is ElectionTickets_Test {
+    /// @dev Tests that the constructor sets the auction address.
+    function test_constructor_auction_succeeds() public {
+        ElectionTickets electionTicket = new ElectionTickets(election);
+        assertEq(address(electionTicket.auction()), election);
+    }
+}
+
+contract ElectionTickets_initialize_Test is ElectionTickets_Test {
+    /// @dev Tests that the constructor mints the genesis tickets amount.
+    function test_initialize_mintGenesisTickets_succeeds() public {
+        ElectionTickets.GenesisAllocation[] memory _genAlloc = new ElectionTickets.GenesisAllocation[](3);
+
+        _genAlloc[0] = ElectionTickets.GenesisAllocation(address(1), 1);
+        _genAlloc[1] = ElectionTickets.GenesisAllocation(address(2), 2);
+        _genAlloc[2] = ElectionTickets.GenesisAllocation(address(3), 3);
+
+        for (uint256 i; i < _genAlloc.length; i++) {
+            vm.assume(_genAlloc[i].target != address(0));
+            // hardcoded to make test runtime fast
+            _genAlloc[i].amount = 3;
+        }
+
+        ElectionTickets electionTicket = new ElectionTickets(election);
+        Proxy proxy = new Proxy(address(to));
+
+        vm.prank(to);
+        proxy.upgradeTo(address(electionTicket));
+
+        electionTicket = ElectionTickets(address(proxy));
+
+        electionTicket.initialize(_genAlloc);
+
+        uint256 _amountMinted;
+
+        for (uint256 i; i < _genAlloc.length; i++) {
+            for (uint256 j; j < _genAlloc[i].amount; j++) {
+                assertEq(electionTicket.ownerOf(_amountMinted + j + 1), _genAlloc[i].target);
+            }
+
+            _amountMinted += _genAlloc[i].amount;
+        }
+
+        assertEq(electionTicket.tokenId(), _amountMinted);
     }
 }
 

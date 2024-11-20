@@ -43,7 +43,33 @@ jobs:
           PR_BRANCH="${{ steps.create_pr_branch.outputs.pr_branch }}"
           CURRENT_DATE=$(date '+%Y-%m-%d')
 
+          # Get the last assignee and find the next one in the list
+          ASSIGNEES=(nyospe excaliborr wintercode-co michalsidzej)
+          NUM_ASSIGNEES=${#ASSIGNEES[@]}
+
+          LAST_ASSIGNEE=$(gh pr list --repo "$GITHUB_REPOSITORY" --author "github-actions[bot]" --state all --limit 1 --json assignees --jq '.[0].assignees[0].login // empty')
+
+          echo "Last assignee was: $LAST_ASSIGNEE"
+
+          if [[ -z "$LAST_ASSIGNEE" ]]; then
+            INDEX=-1
+          else
+            INDEX=-1
+            for i in "${!ASSIGNEES[@]}"; do
+              if [[ "${ASSIGNEES[$i]}" == "$LAST_ASSIGNEE" ]]; then
+                INDEX=$i
+                break
+              fi
+            done
+          fi
+
+          NEXT_INDEX=$(( (INDEX + 1) % NUM_ASSIGNEES ))
+          ASSIGNEE=${ASSIGNEES[$NEXT_INDEX]}
+
+          echo "Assigning PR to: $ASSIGNEE"
+
           gh pr create --repo "$GITHUB_REPOSITORY" --base develop --head "$GITHUB_REPOSITORY_OWNER:$PR_BRANCH" \
             --title "Syncing with upstream on $CURRENT_DATE" \
             --body "Merging changes from upstream/develop." \
-            --reviewer "nyospe,excaliborr,wintercode-co,michalsidzej"
+            --reviewer "nyospe,excaliborr,wintercode-co,michalsidzej" \
+            --assignee "$ASSIGNEE"

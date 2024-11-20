@@ -547,6 +547,8 @@ contract L2Genesis is Deployer {
         console.log("Setting %s implementation at: %s", "ElectionTickets", _electionTicketsImpl);
         vm.etch(_electionTicketsImpl, address(electionTickets).code);
 
+        ElectionTickets(Predeploys.ELECTION_TICKETS).initialize(cfg.genesisAllocation());
+
         // Reset so its not included state dump
         vm.etch(address(electionTickets), "");
         vm.resetNonce(address(electionTickets));

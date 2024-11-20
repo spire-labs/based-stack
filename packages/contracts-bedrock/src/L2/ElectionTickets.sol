@@ -2,6 +2,7 @@
 pragma solidity 0.8.15;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { Constants } from "src/libraries/Constants.sol";
 import { Predeploys } from "src/libraries/Predeploys.sol";
 import { ICrossDomainMessenger } from "src/universal/interfaces/ICrossDomainMessenger.sol";
@@ -11,7 +12,15 @@ import "src/libraries/ElectionTicketErrors.sol";
 /// @custom:predeploy 0x4200000000000000000000000000000000000028
 /// @title ElectionTickets
 /// @notice The ERC721 token representing a ticket for sequencing rights of the L2
-contract ElectionTickets is ERC721 {
+contract ElectionTickets is ERC721, Initializable {
+    /// @notice The struct for the genesis allocation
+    /// @param target The address to mint the ticket to
+    /// @param amount The amount of tickets to mint
+    struct GenesisAllocation {
+        address target;
+        uint256 amount;
+    }
+
     /// @notice The address of the auction contract on L1
     /// @dev This is used to check that a message being received is sent from the correct contract
     address internal immutable AUCTION;
@@ -37,6 +46,27 @@ contract ElectionTickets is ERC721 {
     /// @param _auction The address of the Election contract
     constructor(address _auction) ERC721("ElectionTickets", "ET") {
         AUCTION = _auction;
+
+        initialize(new GenesisAllocation[](0));
+    }
+
+    /// @notice Initializes the ElectionTickets contract
+    ///
+    /// @param _genesisAllocation The array of allocation details to mint the genesis tickets to
+    function initialize(GenesisAllocation[] memory _genesisAllocation) public initializer {
+        uint256 _amountMinted;
+        uint256 _genesisTicketsAmount = _genesisAllocation.length;
+        for (uint256 i; i < _genesisTicketsAmount; i++) {
+            for (uint256 j; j < _genesisAllocation[i].amount; j++) {
+                _mintTo(_genesisAllocation[i].target, _amountMinted + j + 1);
+            }
+
+            _amountMinted += _genesisAllocation[i].amount;
+        }
+
+        unchecked {
+            tokenId += _amountMinted;
+        }
     }
 
     /// @notice Mints a new ticket
@@ -51,30 +81,13 @@ contract ElectionTickets is ERC721 {
         ) revert NotAuction();
 
         uint256 _tokenId;
+
         // Not feasible for this to ever overflow
         unchecked {
             _tokenId = ++tokenId;
         }
 
-        uint256 _topTicket = _top(_to);
-
-        if (_topTicket == 0) {
-            // This is the first ticket for this address
-            // Set the top to the token id
-            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
-        } else {
-            // This is not the first ticket for this address
-            // Move the previous top down the linked list
-            ticketStack[_to][_tokenId] = _topTicket;
-            // Set the top to the token id that just got minted
-            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
-        }
-
-        // Potentially can remove this variable for more optimization?
-        // Its very nice to have for traversal and accounting though, but not necessary
-        ticketCount[_to]++;
-
-        _mint(_to, tokenId);
+        _mintTo(_to, _tokenId);
     }
 
     /// @notice Burns a ticket
@@ -139,6 +152,33 @@ contract ElectionTickets is ERC721 {
     /// @return top_ The top of the stack
     function _top(address _to) internal view returns (uint256 top_) {
         top_ = ticketStack[_to][SENTINEL_TICKET_ID];
+    }
+
+    /// @notice Mints a ticket to a given address
+    /// @dev This function does not update the tokenId of this contract
+    ///
+    /// @param _to The address to mint the ticket to
+    /// @param _tokenId The token id to mint
+    function _mintTo(address _to, uint256 _tokenId) internal {
+        uint256 _topTicket = _top(_to);
+
+        if (_topTicket == 0) {
+            // This is the first ticket for this address
+            // Set the top to the token id
+            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
+        } else {
+            // This is not the first ticket for this address
+            // Move the previous top down the linked list
+            ticketStack[_to][_tokenId] = _topTicket;
+            // Set the top to the token id that just got minted
+            ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
+        }
+
+        // Potentially can remove this variable for more optimization?
+        // Its very nice to have for traversal and accounting though, but not necessary
+        ticketCount[_to]++;
+
+        _mint(_to, _tokenId);
     }
 
     /// @notice Overrides the transfer function to prevent tickets from being transferred
