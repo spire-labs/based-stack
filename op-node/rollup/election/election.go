@@ -87,7 +87,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 			}(),
 			Time: time,
 			ParentSlot: func() uint64 {
-				// TODO: This breaks if L2 block time is not == L1 block time
+				// TODO(spire): This breaks if L2 block time is not == L1 block time
 				// Should also not be hardcoded but gotten from the rollup config
 				if time == unsafeParentSlotTime+e.cfg.BlockTime {
 					return unsafeParentSlotTime

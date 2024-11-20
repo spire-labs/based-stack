@@ -161,7 +161,7 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumb
 	for i, winner := range res {
 		winners[i] = *winner
 
-		// TODO: How do we get the tip of the chain to return the correct parent slot?
+		// TODO(spire): How do we get the tip of the chain to return the correct parent slot?
 		// in the context of an api call?
 		// set at zero for now
 		// Maybe we can just make this api call return an array of addresses or something?

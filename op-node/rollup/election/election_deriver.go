@@ -80,7 +80,7 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 	// We use unsafe because even if there is a reorg, the time should still be the same
 	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, "0x"+fmt.Sprintf("%x", ed.l2PendingSafe.Number), ed.l2Unsafe.Time)
 
-	// TODO: Adjust this to handle potential state changes from the previous election
+	// TODO(spire): Adjust this to handle potential state changes from the previous election
 	nextElectionWinners, _ := ed.election.GetWinnersAtEpoch(ed.ctx, epoch+1, "0x"+fmt.Sprintf("%x", ed.l2PendingSafe.Number), electionWinners[len(electionWinners)-1].Time)
 
 	for _, winner := range electionWinners {
