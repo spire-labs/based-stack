@@ -31,6 +31,48 @@ contract ElectionTickets_constructor_Test is ElectionTickets_Test {
 }
 
 contract ElectionTickets_initialize_Test is ElectionTickets_Test {
+    /// @dev Tests that the constructor reverts if array is not same length as genesis tickets amount.
+    /// @dev Tests that the constructor mints the genesis tickets amount.
+    function test_initialize_mintGenesisTickets_succeeds(
+        ElectionTickets.GenesisAllocation[] memory _genesisTicketTargets
+    )
+        public
+    {
+        vm.assume(_genesisTicketTargets.length != 0 && _genesisTicketTargets.length < 3);
+
+        for (uint256 i; i < _genesisTicketTargets.length; i++) {
+            vm.assume(_genesisTicketTargets[i].target != address(0));
+            // hardcoded to make test runtime fast
+            _genesisTicketTargets[i].amount = 3;
+        }
+
+        ElectionTickets electionTicket = new ElectionTickets(election);
+        electionTicket = ElectionTickets(address(new ERC1967Proxy(address(electionTicket), "")));
+        electionTicket.initialize(_genesisTicketTargets);
+
+        uint256 _amountMinted;
+
+        for (uint256 i; i < _genesisTicketTargets.length; i++) {
+            for(uint256 j; j < _genesisTicketTargets[i].amount; j++) {
+                assertEq(electionTicket.ownerOf(_amountMinted + j + 1), _genesisTicketTargets[i].target);
+            }
+
+            _amountMinted += _genesisTicketTargets[i].amount;
+        }
+
+        assertEq(electionTicket.tokenId(), _amountMinted);
+    }
+}
+
+contract ElectionTickets_constructor_Test is ElectionTickets_Test {
+    /// @dev Tests that the constructor sets the auction address.
+    function test_constructor_auction_succeeds() public {
+        ElectionTickets electionTicket = new ElectionTickets(election);
+        assertEq(address(electionTicket.auction()), election);
+    }
+}
+
+contract ElectionTickets_initialize_Test is ElectionTickets_Test {
     /// @dev Tests that the constructor mints the genesis tickets amount.
     function test_initialize_mintGenesisTickets_succeeds() public {
         ElectionTickets.GenesisAllocation[] memory _genAlloc = new ElectionTickets.GenesisAllocation[](3);

@@ -541,6 +541,80 @@ contract L2Genesis is Deployer {
     /// @notice This predeploy is following the safety invariant #2.
     ///         This contract has no initializer.
     function setElectionTickets(address _auction) internal {
+        address[64] memory _addresses = [
+            address(uint160(uint256(0xa39882700ed7f72fcdbac07081b7c0c912cb8647ed8494926e6c9c2fc1a7415c))),
+            address(uint160(uint256(0x8efdefbccd6479b9953a5ec6416e6d48201865968567379b213040dbf0be7efa))),
+            address(uint160(uint256(0xb7f682183f898daaf1b98f9e946c1ad58818fcf19d1922e867b8d54549d5551d))),
+            address(uint160(uint256(0xa8a4c939ec0ee6ff6c58ace82cb82a603fd246defc10fdb37f6d66b5d1f2a1f9))),
+            address(uint160(uint256(0xaf88318ed207829fe806e3a78499a64d13b0cf033812d949cf0f0446bba2fc38))),
+            address(uint160(uint256(0xaacaf07d7ade408847d18ef8410f6da332ab0a370c337007e64ce98343369aac))),
+            address(uint160(uint256(0xae809a58eb62ac77b1a9c4b0ba4a3e3dc5024027de9f568cc91b66f1b7426feb))),
+            address(uint160(uint256(0x980f54178ab1e2d21822e9cd7327acb170269e6215cc8151f5f9c74d3e9ed4fd))),
+            address(uint160(uint256(0xa86404df6d392d2ba08e01a3a967bfd58f081f45bec4e68bf91302f1918870f8))),
+            address(uint160(uint256(0xa2794c3671f0520ffa1032dac4ef67b0a00a65255e522449bf8cabd775db13dd))),
+            address(uint160(uint256(0x858b74656127a05134b7614d5fba180e97739c99cf60a42498f1e9c7eda0a88a))),
+            address(uint160(uint256(0xb4a484c89a1f85c32773f80e915a1441d7e83db65e06382f5eb7660eee9ebff3))),
+            address(uint160(uint256(0xa90d4602211e30aa9f2d0fdb179bd113492028ca5e0da87871c18777fa8ecd31))),
+            address(uint160(uint256(0xb22df594adad3ae08c339d6e2079ec7b4c69cab5e8f5fb55680221ba40ffcd38))),
+            address(uint160(uint256(0x89931c9f649137fe9a6d59a455bcc695af861fa080fef0d598cc2ae66ed19393))),
+            address(uint160(uint256(0x88091d52b099523e2717d3a526f8a41a7ff20ca4e4b4d153ebafe6f9265e58f8))),
+            address(uint160(uint256(0xa459e9ad0870b24aeb95d53b437014dc5dd97bbe38d78b51797da732e26e70e4))),
+            address(uint160(uint256(0xb88c4324866296a28c22416988207436ec2878ec617c048ce44da43e97381a09))),
+            address(uint160(uint256(0x8bf7c9c9972045c582b7363af44e93da26aef3c8fce81a0469d0c5f48199312f))),
+            address(uint160(uint256(0xae23fb1b0c76e4fd9800c18945094932655fa3a6aea990392c08c16e9816b363))),
+            address(uint160(uint256(0xa125a3659c269801fb2e00c8f38d6b6fbe91a85dc99691db008cf325ef4ca744))),
+            address(uint160(uint256(0x847cddf22fe1483b2808f08bb98586deba65165fab87d7c60f8081af495c3d9b))),
+            address(uint160(uint256(0x8dc5f6f45cc02e68b008e6035492c3c10835e9247899a5bccc559aa3158e581a))),
+            address(uint160(uint256(0xa77a318dd834183c3e3b3921c94b1dbb8d1bb2c619e0c492a592c2de5a91e73b))),
+            address(uint160(uint256(0xb0591fe44b7eba93e4f088344d0b924bbe3c7ed9bfb42bf0193ea020f2c7eb8a))),
+            address(uint160(uint256(0xb5889b85291f380a80e2cdf02fc62edf4041ef1fb0810b01ebbaacf917c0d54f))),
+            address(uint160(uint256(0x935b301be1f67fc6a896b57309e546bfc1ae731a19b73777ca848fb81f4d8d7b))),
+            address(uint160(uint256(0xb505fbc0beb4fef613b0720292aa7d74b59ee7ae38055f5b0358f26c52df26bf))),
+            address(uint160(uint256(0x961d5cb5deed3612dfbbbffccada34d5a940bcb9b8002452be08d3d69e69274a))),
+            address(uint160(uint256(0xa960c5230b2348f3121d891aeabb2d3598893f7d32c675b6a4ef40a1331fe4b9))),
+            address(uint160(uint256(0xb37774192885fd4974e3621e13020acb2208c2b25f0754d3ee5d606fe98da22f))),
+            address(uint160(uint256(0x85bc68a8c76d4f706648059fa2d3b387c86ee65082e5fc16713794c6c0f8277d))),
+            address(uint160(uint256(0xb563024394c9553c1123af15dce2630b60eaaafd74a1787ad9d65352df660904))),
+            address(uint160(uint256(0x8f1e06e20ac5dd13518bd6c5e19c0a00a9dac968a13167087d9f8199bcb2e93f))),
+            address(uint160(uint256(0xa1ae1d14d16cf61a6ae0c9589a19a8f38e161f02dbd98c9f5400fc63689af3af))),
+            address(uint160(uint256(0x95419a10ad9771dc7545637bc14e4eb7938e0bcc57a42000ddbb117750570fb5))),
+            address(uint160(uint256(0x89929f3a811cf44f70d60ccaa4571dff9371c73f60b70b7a50f2cf816861daeb))),
+            address(uint160(uint256(0x988085e2781db7997526af727a32b8660d4022251202f534ba6edda299d5b1fa))),
+            address(uint160(uint256(0xa4662c910f9eda828898a0cddd61332aca5808be1efedb7aedae7978a0bc7f9d))),
+            address(uint160(uint256(0x9401d4c66e72e596e0072c27de5bcf3c99900011d36f01219b9e0dc54c852393))),
+            address(uint160(uint256(0xb2c65e1c252c703d96a29edc5e4b6d22b905a560842a2cebe06842182e9bc783))),
+            address(uint160(uint256(0x82626f97b0fc009c2d2e098e2c3b21922c6525d314552674899953fbb1c4cb48))),
+            address(uint160(uint256(0xb88c17f529454d0305f27188d32f1aea28a82881d32a1e30e7b01c9aa53b9a9e))),
+            address(uint160(uint256(0xb178bccfd693edfb8d163a2050dfb251b2a4d5b4e4a7b3787354964159d9f4d0))),
+            address(uint160(uint256(0x95123a9757f7295b4cdfeb8808d9d7de69761477db3a34aabe2cb4bffc466b65))),
+            address(uint160(uint256(0x85242431f0f8a0e939f2e469d6d35473e72a9577bf81a5ae16b345cddf1c50ee))),
+            address(uint160(uint256(0x8df81a9e3c61ff1cba9f13c792f1c933131b6d155e8b552d673df44fad4530b6))),
+            address(uint160(uint256(0x958979725c3497149c8f1ed2e3f073a56207ff17218ba3fef7fbcc6e07bbd7b8))),
+            address(uint160(uint256(0x8cf690a81a1eab3d0554acfc7087e0b9ad3dcd50b9612893f56bd1536b686509))),
+            address(uint160(uint256(0xa2ab702302efc9f00d6f50b367de843c24ef708f609b20205b46771f6603dd00))),
+            address(uint160(uint256(0x91838562f203c048b60308d5dae4e845977b8bd946806886f91f23038df2759e))),
+            address(uint160(uint256(0xb154fd14f7e9c617a1845078cc17f838621b4cfc1279eb11bd11afa4d913f023))),
+            address(uint160(uint256(0xa8b7eaa52875524b0b4716b56d2f377cb878ceb51b925c0a7fa4629f16b2a816))),
+            address(uint160(uint256(0x89d3dbfe89713fa12d2735e2379da4391e22169e967cc93eac815fd4a5e4fd37))),
+            address(uint160(uint256(0x8c3d37929876321cfb221b3dca80feb1c38159ee83e01d1ad60fd16d9d2c7899))),
+            address(uint160(uint256(0xaff9f2432d328bba781aa2a6bac512a225d2a528cbe83eeb542c3e51defa5e6c))),
+            address(uint160(uint256(0x8b49344506042460fc40f4a60d64079e86a29e87cffe29ebd8908fd1803ca21f))),
+            address(uint160(uint256(0xa3ed99f5e10128dcfa3553c0875021d57da6578892e368d97d6ca4b5d1da9615))),
+            address(uint160(uint256(0xb35142bcfe0b34acd33d38a42af340f3d4c033a5ded38b7cb186ca368c011d39))),
+            address(uint160(uint256(0x8ca1bccbe513b4503f8496b8468c42718972718feff4e3d5eec970f3c56ac0e2))),
+            address(uint160(uint256(0x99804a3e664ba9d8b0a91fdb6127f2753932e41c6f62d1c26edd5f81a12f0eb7))),
+            address(uint160(uint256(0x99729eb9833e428853a7444653824aac579864675d6c69c1fc79423f4aba0d5))),
+            address(uint160(uint256(0x87fa175dd34496aee3b88a482accaa19e271be98265981949c42769cd45b3d67))),
+            address(uint160(uint256(0xab0b0a68c9ab8ef73338f8ee1bce7bdfb4fdd1020b4163bec31b952651141db4)))
+        ];
+
+        ElectionTickets.GenesisAllocation[] memory _genesisAllocation = new ElectionTickets.GenesisAllocation[](64);
+
+        for (uint256 i = 0; i < _addresses.length; i++) {
+            _genesisAllocation[i].target = _addresses[i];
+            _genesisAllocation[i].amount = 1;
+        }
+
         ElectionTickets electionTickets = new ElectionTickets(_auction);
 
         address _electionTicketsImpl = Predeploys.predeployToCodeNamespace(Predeploys.ELECTION_TICKETS);

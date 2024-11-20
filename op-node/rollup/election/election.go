@@ -89,7 +89,6 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, safeBloc
 			ParentSlot: func() uint64 {
 				// TODO: This breaks if L2 block time is not == L1 block time
 				// Should also not be hardcoded but gotten from the rollup config
-
 				if time == unsafeParentSlotTime+e.cfg.BlockTime {
 					return unsafeParentSlotTime
 				}
@@ -110,7 +109,6 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, safeBloc
 				return parent + e.cfg.BlockTime
 			}(),
 		}
-
 		electionWinners = append(electionWinners, &winner)
 	}
 
