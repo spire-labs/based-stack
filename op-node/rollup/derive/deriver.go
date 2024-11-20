@@ -72,6 +72,7 @@ type PipelineDeriver struct {
 
 	needAttributesConfirmation bool
 	electionWinners            []*eth.ElectionWinner
+	electionWinnersQueue       [][]*eth.ElectionWinner
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
@@ -96,6 +97,11 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 			return true
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
+
+		if len(d.electionWinners) > 0 && d.electionWinners[len(d.electionWinners)-1].ParentSlot < x.PendingSafe.Time {
+			d.electionWinners = d.electionWinnersQueue[0]
+			d.electionWinnersQueue = d.electionWinnersQueue[1:]
+		}
 
 		preOrigin := d.pipeline.Origin()
 		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, d.electionWinners)
@@ -135,7 +141,12 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
 	case rollup.ElectionWinnerEvent:
-		d.electionWinners = x.ElectionWinners
+		if len(d.electionWinners) == 0 {
+			d.pipeline.log.Info("Election winners empty, updating right away")
+			d.electionWinners = x.ElectionWinners
+		}
+
+		d.electionWinnersQueue = append(d.electionWinnersQueue, x.ElectionWinners)
 	default:
 		return false
 	}

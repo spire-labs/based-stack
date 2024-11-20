@@ -111,10 +111,11 @@ type Sequencer struct {
 	nextAction   time.Time
 	nextActionOK bool
 
-	latest          BuildingState
-	latestSealed    eth.L2BlockRef
-	latestHead      eth.L2BlockRef
-	electionWinners []*eth.ElectionWinner
+	latest              BuildingState
+	latestSealed        eth.L2BlockRef
+	latestHead          eth.L2BlockRef
+	electionWinners     []*eth.ElectionWinner
+	nextElectionWinners []*eth.ElectionWinner
 
 	latestHeadSet chan struct{}
 
@@ -191,6 +192,8 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 		d.onForkchoiceUpdate(x)
 	case rollup.ElectionWinnerEvent:
 		d.electionWinners = x.ElectionWinners
+	case rollup.NextElectionWinnerEvent:
+		d.nextElectionWinners = x.ElectionWinners
 	default:
 		return false
 	}
@@ -508,6 +511,13 @@ func (d *Sequencer) startBuildingBlock() {
 
 	fetchCtx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
+
+	if len(d.nextElectionWinners) > 0 {
+		if d.electionWinners[len(d.electionWinners)-1].ParentSlot < l2Head.Time {
+			log.Info("Updating election winners", "new", d.nextElectionWinners)
+			d.electionWinners = d.nextElectionWinners
+		}
+	}
 
 	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), d.electionWinners)
 	if err != nil {

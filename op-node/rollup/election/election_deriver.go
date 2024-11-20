@@ -20,23 +20,24 @@ type ElectionDeriver struct {
 	emitter  event.Emitter
 	ctx      context.Context
 
-	lastEpoch uint64
+	nextEpochToUse uint64
 
 	l2Unsafe      eth.L2BlockRef
 	l2PendingSafe eth.L2BlockRef
+	l1Unsafe      eth.L1BlockRef
 
 	mu sync.Mutex
 }
 
 func NewElectionDeriver(ctx context.Context, client BeaconClient, election *Election, log log.Logger) *ElectionDeriver {
-	lastEpoch := uint64(0)
+	nextEpochToUse := uint64(0)
 
 	return &ElectionDeriver{
-		client:    client,
-		election:  election,
-		log:       log,
-		ctx:       ctx,
-		lastEpoch: lastEpoch,
+		client:         client,
+		election:       election,
+		log:            log,
+		ctx:            ctx,
+		nextEpochToUse: nextEpochToUse,
 	}
 }
 
@@ -48,6 +49,7 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	switch x := ev.(type) {
 	// Do we want to do l1unsafe or l1safe here?
 	case status.L1UnsafeEvent:
+		ed.l1Unsafe = x.L1Unsafe
 		ed.ProcessNewL1Block(x.L1Unsafe)
 	case engine.PendingSafeUpdateEvent:
 		ed.l2PendingSafe = x.PendingSafe
@@ -69,15 +71,17 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		return
 	}
 
-	// We dont need to recalculate the winners as we already did it for this epoch
-	// If they are equal and its zero, then its the genesis epoch
-	if epoch <= ed.lastEpoch || (epoch == ed.lastEpoch && epoch != 0) {
-		err := fmt.Errorf("epoch %d is not greater than the last epoch saved which was %d", epoch, ed.lastEpoch)
-		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
+	// If epoch hasnt changed, do nothing
+	if epoch != ed.nextEpochToUse {
+		// This is not an error or worth a log so we just return
 		return
 	}
 
-	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, "0x"+fmt.Sprintf("%x", ed.l2PendingSafe.Number))
+	// We use unsafe because even if there is a reorg, the time should still be the same
+	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2PendingSafe.Number), ed.l2Unsafe.Time)
+
+	// TODO(spire): Adjust this to handle potential state changes from the previous election
+	nextElectionWinners, _ := ed.election.GetWinnersAtEpoch(ed.ctx, epoch+1, fmt.Sprintf("0x%x", ed.l2PendingSafe.Number), electionWinners[len(electionWinners)-1].Time)
 
 	for _, winner := range electionWinners {
 		address := &winner.Address
@@ -93,8 +97,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 
 		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
+		ed.emitter.Emit(rollup.NextElectionWinnerEvent{ElectionWinners: nextElectionWinners})
 
-		// Only update the last epoch if we got a valid winner
-		ed.lastEpoch = epoch
+		// Update the next epoch to use
+		ed.nextEpochToUse = epoch + 1
 	}
 }
