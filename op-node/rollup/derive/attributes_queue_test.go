@@ -68,8 +68,9 @@ func TestAttributesQueue(t *testing.T) {
 
 	electionWinners := []*eth.ElectionWinner{
 		{
-			Address: common.Address{0xaa},
-			Time:    l1Info.InfoTime,
+			Address:    common.Address{0xaa},
+			Time:       l1Info.InfoTime,
+			ParentSlot: l1Info.InfoTime,
 		},
 	}
 
