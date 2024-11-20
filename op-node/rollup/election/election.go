@@ -44,8 +44,8 @@ func NewElection(bc BeaconClient, l2 *sources.EthClient, log log.Logger, cfg *ro
 	}
 }
 
-// safeBlockNumber is passed in as a hexadecimal string
-func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, safeBlockNumber string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
+// l2PendingSafeBlock is passed in as a hexadecimal string
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2PendingSafeBlock string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
 	var electionWinners []*eth.ElectionWinner
 	var lookaheadAddresses []common.Address
 
@@ -62,7 +62,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, safeBloc
 		lookaheadAddresses = append(lookaheadAddresses, address)
 	}
 
-	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses, safeBlockNumber)
+	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses, l2PendingSafeBlock)
 
 	if err != nil {
 		log.Error("Failed to get ticket count per validator", "err", err)

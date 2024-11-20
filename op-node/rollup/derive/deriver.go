@@ -100,7 +100,6 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 
 		if len(d.electionWinners) > 0 && d.electionWinners[len(d.electionWinners)-1].ParentSlot < x.PendingSafe.Time {
 			d.electionWinners = d.electionWinnersQueue[0]
-			// TODO: doesn't it cause memory leak?
 			d.electionWinnersQueue = d.electionWinnersQueue[1:]
 		}
 
