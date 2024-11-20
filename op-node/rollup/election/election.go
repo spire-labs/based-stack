@@ -11,6 +11,7 @@ import (
 	// is there a better place to put this? making it its own package is difficult because of go modules
 	// and us being a private fork
 	BatchTicketAccounting "github.com/ethereum-optimism/optimism/op-node/batch-contracts/bindings"
+	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/sources"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -30,18 +31,21 @@ type Election struct {
 	l2 *sources.EthClient
 
 	log log.Logger
+
+	cfg *rollup.Config
 }
 
-func NewElection(bc BeaconClient, l2 *sources.EthClient, log log.Logger) *Election {
+func NewElection(bc BeaconClient, l2 *sources.EthClient, log log.Logger, cfg *rollup.Config) *Election {
 	return &Election{
 		bc:  bc,
 		l2:  l2,
 		log: log,
+		cfg: cfg,
 	}
 }
 
-// blockNumber is passed in as a hexadecimal string
-func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, blockNumber string) ([]*eth.ElectionWinner, error) {
+// safeBlockNumber is passed in as a hexadecimal string
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, safeBlockNumber string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
 	var electionWinners []*eth.ElectionWinner
 	var lookaheadAddresses []common.Address
 
@@ -58,7 +62,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, blockNum
 		lookaheadAddresses = append(lookaheadAddresses, address)
 	}
 
-	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses, blockNumber)
+	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses, safeBlockNumber)
 
 	if err != nil {
 		log.Error("Failed to get ticket count per validator", "err", err)
@@ -82,6 +86,29 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, blockNum
 				return common.Address{}
 			}(),
 			Time: time,
+			ParentSlot: func() uint64 {
+				// TODO: This breaks if L2 block time is not == L1 block time
+				// Should also not be hardcoded but gotten from the rollup config
+
+				if time == unsafeParentSlotTime+e.cfg.BlockTime {
+					return unsafeParentSlotTime
+				}
+
+				// Sanity check, if first check fails at first index we need to return 0
+				// To avoid out of bounds error
+				if i == 0 {
+					return 0
+				}
+
+				parent := electionWinners[i-1].ParentSlot
+
+				// Keep chaining zeroes, we dont want to increment
+				if parent == 0 {
+					return 0
+				}
+
+				return parent + e.cfg.BlockTime
+			}(),
 		}
 
 		electionWinners = append(electionWinners, &winner)

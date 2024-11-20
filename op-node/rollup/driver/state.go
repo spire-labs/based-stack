@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	gosync "sync"
 	"time"
 
@@ -144,7 +145,13 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 }
 
 func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
-	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber)
+	val, err := strconv.ParseUint(blockNumber[2:], 16, 64)
+
+	if err != nil {
+		return []eth.ElectionWinner{}, err
+	}
+
+	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val)
 
 	if err != nil {
 		return []eth.ElectionWinner{}, err
@@ -153,6 +160,12 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumb
 	winners := make([]eth.ElectionWinner, len(res))
 	for i, winner := range res {
 		winners[i] = *winner
+
+		// TODO: How do we get the tip of the chain to return the correct parent slot?
+		// in the context of an api call?
+		// set at zero for now
+		// Maybe we can just make this api call return an array of addresses or something?
+		winners[i].ParentSlot = 0
 	}
 	return winners, nil
 }

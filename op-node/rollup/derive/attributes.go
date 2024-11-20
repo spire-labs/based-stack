@@ -96,7 +96,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	var winner common.Address
 
 	for _, electionWinner := range electionWinners {
-		if electionWinner.Time == l1Info.Time() {
+		if electionWinner.ParentSlot == l2Parent.Time {
 			winner = electionWinner.Address
 			break
 		}
