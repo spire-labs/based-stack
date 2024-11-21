@@ -1,6 +1,8 @@
 package event
 
-import "github.com/ethereum/go-ethereum/log"
+import (
+	"github.com/ethereum/go-ethereum/log"
+)
 
 type Event interface {
 	// String returns the name of the event.

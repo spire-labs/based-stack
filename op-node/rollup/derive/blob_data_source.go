@@ -23,24 +23,26 @@ type blobOrCalldata struct {
 // BlobDataSource fetches blobs or calldata as appropriate and transforms them into usable rollup
 // data.
 type BlobDataSource struct {
-	data         []blobOrCalldata
-	ref          eth.L1BlockRef
-	batcherAddr  common.Address
-	dsCfg        DataSourceConfig
-	fetcher      L1TransactionFetcher
-	blobsFetcher L1BlobsFetcher
-	log          log.Logger
+	data             []blobOrCalldata
+	ref              eth.L1BlockRef
+	batcherAddr      common.Address
+	dsCfg            DataSourceConfig
+	fetcher          L1TransactionFetcher
+	blobsFetcher     L1BlobsFetcher
+	log              log.Logger
+	electionProvider ElectionWinnersProvider
 }
 
 // NewBlobDataSource creates a new blob data source.
-func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address) DataIter {
+func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address, electionProvider ElectionWinnersProvider) DataIter {
 	return &BlobDataSource{
-		ref:          ref,
-		dsCfg:        dsCfg,
-		fetcher:      fetcher,
-		log:          log.New("origin", ref),
-		batcherAddr:  batcherAddr,
-		blobsFetcher: blobsFetcher,
+		ref:              ref,
+		dsCfg:            dsCfg,
+		fetcher:          fetcher,
+		log:              log.New("origin", ref),
+		batcherAddr:      batcherAddr,
+		blobsFetcher:     blobsFetcher,
+		electionProvider: electionProvider,
 	}
 }
 
@@ -94,7 +96,7 @@ func (ds *BlobDataSource) open(ctx context.Context) ([]blobOrCalldata, error) {
 		txsWithReceipts[i] = TxWithReceipt{tx: tx, receipt: receipts[i]}
 	}
 
-	data, hashes := dataAndHashesFromTxs(txsWithReceipts, &ds.dsCfg, ds.log)
+	data, hashes := ds.dataAndHashesFromTxs(txsWithReceipts, &ds.dsCfg, ds.log)
 
 	if len(hashes) == 0 {
 		// there are no blobs to fetch so we can return immediately
@@ -128,13 +130,30 @@ type TxWithReceipt struct {
 // dataAndHashesFromTxs extracts calldata and datahashes from the input transactions and returns them. It
 // creates a placeholder blobOrCalldata element for each returned blob hash that must be populated
 // by fillBlobPointers after blob bodies are retrieved.
-func dataAndHashesFromTxs(txs []TxWithReceipt, config *DataSourceConfig, logger log.Logger) ([]blobOrCalldata, []eth.IndexedBlobHash) {
+func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *DataSourceConfig, logger log.Logger) ([]blobOrCalldata, []eth.IndexedBlobHash) {
 	data := []blobOrCalldata{}
 	var hashes []eth.IndexedBlobHash
 	blobIndex := 0 // index of each blob in the block's blob sidecar
+	blockTime := ds.ref.Time
+	electionWinners := ds.electionProvider.GetElectionWinners()
+	var electionWinner *eth.ElectionWinner
+
+	for _, winner := range electionWinners {
+		if blockTime == winner.Time {
+			ds.log.Debug("Batch from election winner found", "winner", winner.Address)
+			electionWinner = winner
+			break
+		}
+	}
+	if electionWinner == nil {
+		ds.log.Warn("No election winner found for block", "blockTime", blockTime)
+		return data, hashes
+	}
+
+	// 3. pass into isvalidbatchtx
 	for _, tx := range txs {
 		// skip any non-batcher transactions
-		if !isValidBatchTx(tx.receipt, config.batchInboxAddress, logger) {
+		if !isValidBatchTx(tx.receipt, electionWinner.Address, logger) {
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}

@@ -227,6 +227,8 @@ func NewDriver(
 	sys.Register("pipeline",
 		derive.NewPipelineDeriver(driverCtx, derivationPipeline), opts)
 
+	sys.Register("data-source", derivationPipeline.DataSrc, opts)
+
 	syncDeriver := &SyncDeriver{
 		Derivation:     derivationPipeline,
 		Election:       elec,

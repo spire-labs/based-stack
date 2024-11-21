@@ -10,6 +10,7 @@ import (
 
 	altda "github.com/ethereum-optimism/optimism/op-alt-da"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
@@ -37,16 +38,22 @@ type AltDAInputFetcher interface {
 	Reset(ctx context.Context, base eth.L1BlockRef, baseCfg eth.SystemConfig) error
 }
 
+type ElectionWinnersProvider interface {
+	GetElectionWinners() []*eth.ElectionWinner
+}
+
 // DataSourceFactory reads raw transactions from a given block & then filters for
 // batch submitter transactions.
 // This is not a stage in the pipeline, but a wrapper for another stage in the pipeline
 type DataSourceFactory struct {
-	log          log.Logger
-	dsCfg        DataSourceConfig
-	fetcher      L1Fetcher
-	blobsFetcher L1BlobsFetcher
-	altDAFetcher AltDAInputFetcher
-	ecotoneTime  *uint64
+	log             log.Logger
+	dsCfg           DataSourceConfig
+	fetcher         L1Fetcher
+	blobsFetcher    L1BlobsFetcher
+	altDAFetcher    AltDAInputFetcher
+	ecotoneTime     *uint64
+	emitter         event.Emitter
+	electionWinners []*eth.ElectionWinner
 }
 
 func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
@@ -56,12 +63,14 @@ func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher,
 		altDAEnabled:      cfg.AltDAEnabled(),
 	}
 	return &DataSourceFactory{
-		log:          log,
-		dsCfg:        config,
-		fetcher:      fetcher,
-		blobsFetcher: blobsFetcher,
-		altDAFetcher: altDAFetcher,
-		ecotoneTime:  cfg.EcotoneTime,
+		log:             log,
+		dsCfg:           config,
+		fetcher:         fetcher,
+		blobsFetcher:    blobsFetcher,
+		altDAFetcher:    altDAFetcher,
+		ecotoneTime:     cfg.EcotoneTime,
+		emitter:         nil,
+		electionWinners: []*eth.ElectionWinner{},
 	}
 }
 
@@ -74,7 +83,7 @@ func (ds *DataSourceFactory) OpenData(ctx context.Context, ref eth.L1BlockRef, b
 		if ds.blobsFetcher == nil {
 			return nil, fmt.Errorf("ecotone upgrade active but beacon endpoint not configured")
 		}
-		src = NewBlobDataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ds.blobsFetcher, ref, batcherAddr)
+		src = NewBlobDataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ds.blobsFetcher, ref, batcherAddr, ds)
 	} else {
 		src = NewCalldataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ref, batcherAddr)
 	}
@@ -92,10 +101,7 @@ type DataSourceConfig struct {
 	altDAEnabled      bool
 }
 
-// isValidBatchTx returns true if:
-//  1. the transaction has a To() address that matches the batch inbox address, and
-//  2. the transaction has a valid signature from the batcher address
-func isValidBatchTx(receipt *types.Receipt, batchInboxAddr common.Address, logger log.Logger) bool {
+func isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
 	if receipt.Type != types.BlobTxType {
 		// TODO(miszke): enable other DA sources
 		logger.Warn("not a blob tx")
@@ -104,7 +110,7 @@ func isValidBatchTx(receipt *types.Receipt, batchInboxAddr common.Address, logge
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
 	for _, log := range receipt.Logs {
-		if log.Address != batchInboxAddr {
+		if log.Address != batcherAddr {
 			continue
 		}
 		if log.Topics[0] != topic0 {
@@ -114,4 +120,22 @@ func isValidBatchTx(receipt *types.Receipt, batchInboxAddr common.Address, logge
 	}
 
 	return false
+}
+
+func (ds *DataSourceFactory) GetElectionWinners() []*eth.ElectionWinner {
+	return ds.electionWinners
+}
+
+func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
+	ds.emitter = em
+}
+
+func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
+	switch x := ev.(type) {
+	case rollup.ElectionWinnerEvent:
+		ds.electionWinners = x.ElectionWinners
+	default:
+		return false
+	}
+	return true
 }

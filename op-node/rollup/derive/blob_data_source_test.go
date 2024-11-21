@@ -17,6 +17,21 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+type MockElectionWinnersProvider struct{}
+
+func (m *MockElectionWinnersProvider) GetElectionWinners() []*eth.ElectionWinner {
+	return []*eth.ElectionWinner{
+		{
+			Address: common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678"),
+			Time:    0x499602D2,
+		},
+		{
+			Address: common.HexToAddress("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+			Time:    9876543210,
+		},
+	}
+}
+
 func TestDataAndHashesFromTxs(t *testing.T) {
 	// test setup
 	rng := rand.New(rand.NewSource(12345))
@@ -32,6 +47,19 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	config := DataSourceConfig{
 		l1Signer:          signer,
 		batchInboxAddress: batchInboxAddr,
+	}
+
+	mockElectionProvider := &MockElectionWinnersProvider{}
+
+	// create an instance of the blob data source for testing w/o calling a function. Just create the struct
+	ds := BlobDataSource{
+		ref:              eth.L1BlockRef{Time: 0x499602D2},
+		dsCfg:            config,
+		fetcher:          nil,
+		log:              logger,
+		batcherAddr:      batchInboxAddr,
+		blobsFetcher:     nil,
+		electionProvider: mockElectionProvider,
 	}
 
 	// TODO(miszke): enable other DA sources
@@ -50,24 +78,26 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// require.Equal(t, 1, len(data))
 	// require.Equal(t, 0, len(blobHashes))
 
+	electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
+
 	// create a valid blob batcher tx and make sure it's picked up
 	blobHash := testutils.RandomHash(rng)
 	blobTxData := &types.BlobTx{
 		Nonce:      rng.Uint64(),
 		Gas:        2_000_000,
-		To:         batchInboxAddr,
+		To:         electionWinnerAddress,
 		BlobHashes: []common.Hash{blobHash},
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
 	receipt := &types.Receipt{
 		Type: types.BlobTxType,
 		Logs: []*types.Log{{
-			Address: batchInboxAddr,
+			Address: electionWinnerAddress,
 			Topics:  []common.Hash{batchSubmittedEventTopic},
 		}},
 	}
 	txs := []TxWithReceipt{{tx: blobTx, receipt: receipt}}
-	data, blobHashes := dataAndHashesFromTxs(txs, &config, logger)
+	data, blobHashes := ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 1, len(data))
 	require.Equal(t, 1, len(blobHashes))
 	require.Nil(t, data[0].calldata)
@@ -84,7 +114,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	blobTxData.Data = testutils.RandomData(rng, rng.Intn(1000))
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
 	txs = []TxWithReceipt{{tx: blobTx, receipt: &types.Receipt{}}}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, logger)
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 0, len(data))
 	require.Equal(t, 0, len(blobHashes))
 
@@ -93,7 +123,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	blobTxData.To = testutils.RandomAddress(rng)
 	blobTx, _ = types.SignNewTx(privateKey, signer, blobTxData)
 	txs = []TxWithReceipt{{tx: blobTx, receipt: &types.Receipt{}}}
-	data, blobHashes = dataAndHashesFromTxs(txs, &config, logger)
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 0, len(data))
 	require.Equal(t, 0, len(blobHashes))
 }
@@ -146,4 +176,93 @@ func TestFillBlobPointers(t *testing.T) {
 		require.Equal(t, blobLen, blobCount)
 		require.Equal(t, calldataLen, calldataCount)
 	}
+}
+
+func TestIsValidBatchTx(t *testing.T) {
+	rng := rand.New(rand.NewSource(12345))
+	privateKey := testutils.InsecureRandomKey(rng)
+	batcherAddr := testutils.RandomAddress(rng)
+	logger := testlog.Logger(t, log.LvlInfo)
+	electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
+
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	batchSubmittedEventTopic := batchInboxAbi.Events["BatchSubmitted"].ID
+
+	chainId := new(big.Int).SetUint64(rng.Uint64())
+	signer := types.NewCancunSigner(chainId)
+
+	t.Run("Valid blob batch transaction with correct election winner", func(t *testing.T) {
+		blobTxData := &types.BlobTx{
+			Nonce:      rng.Uint64(),
+			Gas:        2_000_000,
+			To:         electionWinnerAddress,
+			BlobHashes: []common.Hash{testutils.RandomHash(rng)},
+		}
+		_, _ = types.SignNewTx(privateKey, signer, blobTxData)
+		receipt := &types.Receipt{
+			Type: types.BlobTxType,
+			Logs: []*types.Log{{
+				Address: electionWinnerAddress,
+				Topics:  []common.Hash{batchSubmittedEventTopic},
+			}},
+		}
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		require.True(t, valid, "Expected transaction and winner to be valid")
+	})
+
+	t.Run("Valid blob batch transaction with incorrect election winner", func(t *testing.T) {
+		blobTxData := &types.BlobTx{
+			Nonce:      rng.Uint64(),
+			Gas:        2_000_000,
+			To:         electionWinnerAddress,
+			BlobHashes: []common.Hash{testutils.RandomHash(rng)},
+		}
+		_, _ = types.SignNewTx(privateKey, signer, blobTxData)
+		receipt := &types.Receipt{
+			Type: types.BlobTxType,
+			Logs: []*types.Log{{
+				Address: electionWinnerAddress,
+				Topics:  []common.Hash{batchSubmittedEventTopic},
+			}},
+		}
+		// batcherAddr instead of electionWinnerAddress
+		valid := isValidBatchTx(receipt, batcherAddr, logger)
+		require.False(t, valid, "Expected transaction to be invalid due to incorrect election winner")
+	})
+
+	t.Run("Invalid receipt type", func(t *testing.T) {
+		receipt := &types.Receipt{
+			Type: types.LegacyTxType,
+			Logs: []*types.Log{{
+				Address: electionWinnerAddress,
+				Topics:  []common.Hash{batchSubmittedEventTopic},
+			}},
+		}
+
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		require.False(t, valid, "Expected transaction to be invalid due to receipt type")
+	})
+
+	t.Run("Log topic does not match BatchSubmitted event", func(t *testing.T) {
+		receipt := &types.Receipt{
+			Type: types.BlobTxType,
+			Logs: []*types.Log{{
+				Address: batcherAddr,
+				Topics:  []common.Hash{testutils.RandomHash(rng)},
+			}},
+		}
+
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		require.False(t, valid, "Expected transaction to be invalid due to incorrect log topic")
+	})
+
+	t.Run("Receipt has no logs", func(t *testing.T) {
+		receipt := &types.Receipt{
+			Type: types.BlobTxType,
+			Logs: []*types.Log{},
+		}
+
+		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		require.False(t, valid, "Expected transaction to be invalid due to missing logs")
+	})
 }
