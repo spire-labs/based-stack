@@ -1608,28 +1608,28 @@ workflows:
       #     test_directory: ./deployer/integration_test
       #     uses_artifacts: true
       #     requires: ["contracts-bedrock-build"]
-      # - go-e2e-test:
-      #     name: op-e2e-HTTP-tests<< matrix.variant >>
-      #     matrix:
-      #       parameters:
-      #         variant: ["", "-l2oo"]
-      #     module: op-e2e
-      #     target: test-http
-      #     parallelism: 4
-      #     requires:
-      #       - go-mod-download
-      #       - contracts-bedrock-build
-      # - go-e2e-test:
-      #     name: op-e2e-action-tests<< matrix.variant >>
-      #     matrix:
-      #       parameters:
-      #         variant: ["", "-l2oo", "-altda"]
-      #     module: op-e2e
-      #     target: test-actions
-      #     parallelism: 1
-      #     requires:
-      #       - go-mod-download
-      #       - contracts-bedrock-build
+      - go-e2e-test:
+          name: op-e2e-HTTP-tests<< matrix.variant >>
+          matrix:
+            parameters:
+              variant: ["", "-l2oo"]
+          module: op-e2e
+          target: test-http
+          parallelism: 4
+          requires:
+            - go-mod-download
+            - contracts-bedrock-build
+      - go-e2e-test:
+          name: op-e2e-action-tests<< matrix.variant >>
+          matrix:
+            parameters:
+              variant: ["", "-l2oo", "-altda"]
+          module: op-e2e
+          target: test-actions
+          parallelism: 1
+          requires:
+            - go-mod-download
+            - contracts-bedrock-build
       # - go-e2e-test:
       #     name: op-e2e-fault-proof-tests
       #     module: op-e2e

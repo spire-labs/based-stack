@@ -17,6 +17,7 @@ import (
 )
 
 func TestBatcherConcurrentAltDARequests(t *testing.T) {
+	t.Skip("TODO(spire): Reenable this test once AltDA is supported")
 	op_e2e.InitParallel(t)
 
 	numL1TxsExpected := int64(10)
