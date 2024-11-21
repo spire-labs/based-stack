@@ -572,6 +572,7 @@ func (cfg SystemConfig) Start(t *testing.T, _opts ...SystemConfigOption) (*Syste
 			L2ChainID:                 cfg.L2ChainIDBig(),
 			BatchInboxContractAddress: cfg.DeployConfig.BatchInbox,
 			DepositContractAddress:    cfg.DeployConfig.OptimismPortalProxy,
+			AuctionContractAddress:    cfg.DeployConfig.BlockDutchAuction,
 			L1SystemConfigAddress:     cfg.DeployConfig.SystemConfigProxy,
 			RegolithTime:              cfg.DeployConfig.RegolithTime(uint64(cfg.DeployConfig.L1GenesisBlockTimestamp)),
 			CanyonTime:                cfg.DeployConfig.CanyonTime(uint64(cfg.DeployConfig.L1GenesisBlockTimestamp)),

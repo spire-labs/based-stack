@@ -178,6 +178,7 @@ func Setup(t require.TestingT, deployParams *DeployParams, alloc *AllocParams) *
 		L2ChainID:                 new(big.Int).SetUint64(deployConf.L2ChainID),
 		BatchInboxContractAddress: deployConf.BatchInbox,
 		DepositContractAddress:    deployConf.OptimismPortalProxy,
+		AuctionContractAddress:    deployConf.BlockDutchAuction,
 		L1SystemConfigAddress:     deployConf.SystemConfigProxy,
 		RegolithTime:              deployConf.RegolithTime(uint64(deployConf.L1GenesisBlockTimestamp)),
 		CanyonTime:                deployConf.CanyonTime(uint64(deployConf.L1GenesisBlockTimestamp)),
