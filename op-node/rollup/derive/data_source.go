@@ -133,7 +133,6 @@ func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
 func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
 	switch x := ev.(type) {
 	case rollup.ElectionWinnerEvent:
-		ds.log.Debug("Election winners", "winners", x.ElectionWinners)
 		ds.electionWinners = x.ElectionWinners
 	default:
 		return false
