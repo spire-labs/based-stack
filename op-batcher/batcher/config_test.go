@@ -21,6 +21,7 @@ func validBatcherConfig() batcher.CLIConfig {
 		L1EthRpc:               "fake",
 		L2EthRpc:               "fake",
 		RollupRpc:              "fake",
+		BeaconAddress:          "fake",
 		MaxChannelDuration:     0,
 		SubSafetyMargin:        0,
 		PollInterval:           time.Second,
