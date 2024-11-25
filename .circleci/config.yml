@@ -939,25 +939,25 @@ jobs:
             equal: ['-l2oo', <<parameters.variant>>]
           steps:
             - run:
-                name: Set DEVNET_L2OO = true
-                command: echo 'export DEVNET_L2OO=true' >> $BASH_ENV
+                name: Set DEVNET_L2OO = false
+                command: echo 'export DEVNET_L2OO=false' >> $BASH_ENV
             - run:
-                name: Set OP_E2E_USE_L2OO = true
-                command: echo 'export OP_E2E_USE_L2OO=true' >> $BASH_ENV
+                name: Set OP_E2E_USE_L2OO = false
+                command: echo 'export OP_E2E_USE_L2OO=false' >> $BASH_ENV
       - when:
           condition:
             equal: ['-altda', <<parameters.variant>>]
           steps:
             - run:
-                name: Set OP_E2E_USE_ALTDA = true
-                command: echo 'export OP_E2E_USE_ALTDA=true' >> $BASH_ENV
+                name: Set OP_E2E_USE_ALTDA = false
+                command: echo 'export OP_E2E_USE_ALTDA=false' >> $BASH_ENV
       - when:
           condition:
             equal: ['-mt-cannon', <<parameters.variant>>]
           steps:
             - run:
-                name: Set OP_E2E_USE_MT_CANNON = true
-                command: echo 'export OP_E2E_USE_MT_CANNON=true' >> $BASH_ENV
+                name: Set OP_E2E_USE_MT_CANNON = false
+                command: echo 'export OP_E2E_USE_MT_CANNON=false' >> $BASH_ENV
       - check-changed:
           patterns: op-(.+),cannon,contracts-bedrock
       - run:
