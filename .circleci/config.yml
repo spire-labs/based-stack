@@ -1159,18 +1159,18 @@ jobs:
             equal: ['altda', <<parameters.variant>>]
           steps:
             - run:
-                name: Set DEVNET_ALTDA = true
-                command: echo 'export DEVNET_ALTDA=true' >> $BASH_ENV
+                name: Set DEVNET_ALTDA = false
+                command: echo 'export DEVNET_ALTDA=false' >> $BASH_ENV
       - when:
           condition:
             equal: ['altda-generic', <<parameters.variant>>]
           steps:
             - run:
-                name: Set DEVNET_ALTDA = true
-                command: echo 'export DEVNET_ALTDA=true' >> $BASH_ENV
+                name: Set DEVNET_ALTDA = false
+                command: echo 'export DEVNET_ALTDA=false' >> $BASH_ENV
             - run:
-                name: Set GENERIC_ALTDA = true
-                command: echo 'export GENERIC_ALTDA=true' >> $BASH_ENV
+                name: Set GENERIC_ALTDA = false
+                command: echo 'export GENERIC_ALTDA=false' >> $BASH_ENV
       - restore_cache:
           name: Restore Go modules cache
           key: gomod-{{ checksum "go.sum" }}
