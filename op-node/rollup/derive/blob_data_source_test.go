@@ -62,7 +62,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		electionProvider: mockElectionProvider,
 	}
 
-	// TODO(miszke): enable other DA sources
+	// TODO(spire): enable other DA sources
 	// create a valid non-blob batcher transaction and make sure it's picked up
 	// txData := &types.LegacyTx{
 	// 	Nonce:    rng.Uint64(),
@@ -102,7 +102,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	require.Equal(t, 1, len(blobHashes))
 	require.Nil(t, data[0].calldata)
 
-	// TODO(miszke): enable other DA sources
+	// TODO(spire): enable other DA sources
 	// try again with both the blob & calldata transactions and make sure both are picked up
 	// txs = types.Transactions{blobTx, calldataTx}
 	// data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)

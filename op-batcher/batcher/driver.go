@@ -408,7 +408,7 @@ func (l *BatchSubmitter) loop() {
 			shouldPublish := l.shouldPublishPOC()
 
 			// Run the should publish function but ignore the output for now (POC ONLY).
-			// TODO(miszke): use the output here
+			// TODO(spire): use the output here
 			l.shouldPublish()
 
 			if !shouldPublish {
@@ -726,7 +726,7 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 		"size", size, "last_size", lastSize, "num_blobs", len(blobs))
 	l.Metr.RecordBlobUsedBytes(lastSize)
 
-	// TODO(miszke): enable other DA sources
+	// TODO(spire): enable other DA sources
 	// Get the current L1 block number
 	l1Tip, err := l.l1Tip(l.killCtx)
 	if err != nil {
@@ -904,14 +904,14 @@ func (l *BatchSubmitter) shouldPublish() bool {
 		l.Log.Warn("Sequencer has not prosessed the most recent L1 block.")
 		return false
 	}
-	// TODO(miszke): should we check the currentL1? What does it represent?
+	// TODO(spire): should we check the currentL1? What does it represent?
 	epoch, err := l.BeaconClient.GetEpochNumber(ctx, syncStatus.CurrentL1.Time)
 	if err != nil {
 		l.Log.Warn("Error fetching epoch number", "error", err)
 		return false
 	}
 
-	// TODO(miszke): should we check for this or the following epoch?
+	// TODO(spire): should we check for this or the following epoch?
 	// we should check for the following epoch only on the last block of the current epoch
 	// (that's when the election is fixed for the following epoch)
 	if epoch > l.lastCheckedEpoch {

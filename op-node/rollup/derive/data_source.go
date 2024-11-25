@@ -103,7 +103,7 @@ type DataSourceConfig struct {
 
 func isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
 	if receipt.Type != types.BlobTxType {
-		// TODO(miszke): enable other DA sources
+		// TODO(spire): enable other DA sources
 		logger.Warn("not a blob tx")
 		return false
 	}
