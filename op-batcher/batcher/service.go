@@ -20,12 +20,14 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/params"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-service/cliapp"
+	"github.com/ethereum-optimism/optimism/op-service/client"
 	"github.com/ethereum-optimism/optimism/op-service/dial"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/httputil"
 	opmetrics "github.com/ethereum-optimism/optimism/op-service/metrics"
 	"github.com/ethereum-optimism/optimism/op-service/oppprof"
 	oprpc "github.com/ethereum-optimism/optimism/op-service/rpc"
+	"github.com/ethereum-optimism/optimism/op-service/sources"
 	"github.com/ethereum-optimism/optimism/op-service/txmgr"
 )
 
@@ -54,6 +56,7 @@ type BatcherService struct {
 	Log              log.Logger
 	Metrics          metrics.Metricer
 	L1Client         *ethclient.Client
+	BeaconClient     BeaconClient
 	EndpointProvider dial.L2EndpointProvider
 	TxManager        *txmgr.SimpleTxManager
 	AltDA            *altda.DAClient
@@ -154,6 +157,10 @@ func (bs *BatcherService) initRPCClients(ctx context.Context, cfg *CLIConfig) er
 		return fmt.Errorf("failed to build L2 endpoint provider: %w", err)
 	}
 	bs.EndpointProvider = endpointProvider
+
+	b := client.NewBasicHTTPClient(cfg.BeaconAddress, bs.Log)
+	beaconClient := sources.NewBeaconHTTPClient(b)
+	bs.BeaconClient = sources.NewL1BeaconClient(beaconClient, sources.L1BeaconClientConfig{FetchAllSidecars: false})
 
 	return nil
 }
@@ -326,6 +333,7 @@ func (bs *BatcherService) initDriver() {
 		Config:           bs.BatcherConfig,
 		Txmgr:            bs.TxManager,
 		L1Client:         bs.L1Client,
+		BeaconClient:     bs.BeaconClient,
 		EndpointProvider: bs.EndpointProvider,
 		ChannelConfig:    bs.ChannelConfig,
 		AltDA:            bs.AltDA,

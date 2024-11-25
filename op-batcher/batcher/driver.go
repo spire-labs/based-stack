@@ -67,6 +67,12 @@ type L1Client interface {
 	NonceAt(ctx context.Context, account common.Address, blockNumber *big.Int) (uint64, error)
 }
 
+type BeaconClient interface {
+	GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error)
+	GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error)
+	GetTimeFromSlot(ctx context.Context, slot uint64) (uint64, error)
+}
+
 type L2Client interface {
 	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
 }
@@ -83,6 +89,7 @@ type DriverSetup struct {
 	Config           BatcherConfig
 	Txmgr            *txmgr.SimpleTxManager
 	L1Client         L1Client
+	BeaconClient     BeaconClient
 	EndpointProvider dial.L2EndpointProvider
 	ChannelConfig    ChannelConfigProvider
 	AltDA            *altda.DAClient
@@ -111,6 +118,8 @@ type BatchSubmitter struct {
 	lastStoredBlock eth.BlockID
 	lastL1Tip       eth.L1BlockRef
 
+	lastCheckedEpoch    uint64
+	targetTimestamps    []uint64
 	targetL1BlockNumber uint64 // (POC ONLY)
 
 	state *channelManager
@@ -396,7 +405,13 @@ func (l *BatchSubmitter) loop() {
 			}
 			// By waiting until the L1 tip == target block number - 1, we can ensure that the batcher
 			// doesn't read blocks from the safe head too early, preventing overlapping txs from being sent.
-			if !l.shouldPublish() {
+			shouldPublish := l.shouldPublishPOC()
+
+			// Run the should publish function but ignore the output for now (POC ONLY).
+			// TODO(miszke): use the output here
+			l.shouldPublish()
+
+			if !shouldPublish {
 				l.Log.Info("Target block number is not reached yet, don't fetch blocks from L2.")
 				continue
 			}
@@ -842,8 +857,84 @@ func (l *BatchSubmitter) generateTargetBlockPOC() uint64 {
 	return candidateTarget
 }
 
-// This method's logic is currently POC only
+var (
+	errNoTargetTimestamp = errors.New("no target timestamp")
+)
+
+func (l *BatchSubmitter) generateTargetTimesamps(epoch uint64) ([]uint64, error) {
+	out := []uint64{}
+	ctx := l.shutdownCtx
+	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
+	if err != nil {
+		return out, err
+	}
+
+	electionWinners, err := rollupClient.GetElectionWinners(ctx, epoch, l.lastL1Tip.Number)
+	if err != nil {
+		return out, err
+	}
+
+	l.Log.Info("Election winners from rollup client", "electionWinners", electionWinners)
+
+	for _, electionWinner := range electionWinners {
+		if electionWinner.Address == l.Txmgr.From() {
+			out = append(out, electionWinner.Time)
+		}
+	}
+
+	return out, nil
+}
+
 func (l *BatchSubmitter) shouldPublish() bool {
+	// Check if the Sequencer has processed the most recent L1 block. If so, we can
+	// begin reading unsafe L2 blocks starting at the safe L2 head.
+	ctx := l.shutdownCtx
+
+	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
+	if err != nil {
+		return false
+	}
+
+	syncStatus, err := rollupClient.SyncStatus(ctx)
+	if err != nil {
+		l.Log.Warn("Error fetching sync status", "error", err)
+		return false
+	}
+	if syncStatus.HeadL1 == (eth.L1BlockRef{}) {
+		l.Log.Warn("Sequencer has not prosessed the most recent L1 block.")
+		return false
+	}
+	// TODO(miszke): should we check the currentL1? What does it represent?
+	epoch, err := l.BeaconClient.GetEpochNumber(ctx, syncStatus.CurrentL1.Time)
+	if err != nil {
+		l.Log.Warn("Error fetching epoch number", "error", err)
+		return false
+	}
+
+	// TODO(miszke): should we check for this or the following epoch?
+	// we should check for the following epoch only on the last block of the current epoch
+	// (that's when the election is fixed for the following epoch)
+	if epoch > l.lastCheckedEpoch {
+		targetTimestamps, err := l.generateTargetTimesamps(epoch)
+		if err != nil && err == errNoTargetTimestamp {
+			l.Log.Info("No target timestamp in next epoch")
+			l.lastCheckedEpoch = epoch
+			return false
+		} else if err != nil {
+			l.Log.Warn("Error while generating target timestamp", "error", err)
+			return false
+		}
+
+		l.targetTimestamps = targetTimestamps
+		l.lastCheckedEpoch = epoch
+		l.Log.Info("Picked new target timestamps", "target", l.targetTimestamps)
+	}
+
+	return false
+}
+
+// This method's logic is currently POC only
+func (l *BatchSubmitter) shouldPublishPOC() bool {
 	// Check if the Sequencer has processed the most recent L1 block. If so, we can
 	// begin reading unsafe L2 blocks starting at the safe L2 head.
 	ctx := l.shutdownCtx
