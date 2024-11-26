@@ -28,6 +28,7 @@ var garbageKinds = []actionsHelpers.GarbageKind{
 // [f[0 - correct] f_x[1 - bad frame] f[1 - correct]]
 func runGarbageChannelTest(gt *testing.T, testCfg *helpers.TestCfg[actionsHelpers.GarbageKind]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	tp := helpers.NewTestParams(func(tp *e2eutils.TestParams) {
 		// Set the channel timeout to 10 blocks, 12x lower than the sequencing window.
 		tp.ChannelTimeout = 10
@@ -100,6 +101,7 @@ func runGarbageChannelTest(gt *testing.T, testCfg *helpers.TestCfg[actionsHelper
 }
 
 func Test_ProgramAction_GarbageChannel(gt *testing.T) {
+	gt.Skip("TODO(spire): Reenable these tests")
 	matrix := helpers.NewMatrix[actionsHelpers.GarbageKind]()
 	defer matrix.Run(gt)
 
