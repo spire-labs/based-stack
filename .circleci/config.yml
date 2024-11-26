@@ -1167,10 +1167,10 @@ jobs:
           steps:
             - run:
                 name: Set DEVNET_ALTDA = true
-                command: echo 'export DEVNET_ALTDA=false' >> $BASH_ENV
+                command: echo 'export DEVNET_ALTDA=true' >> $BASH_ENV
             - run:
                 name: Set GENERIC_ALTDA = true
-                command: echo 'export GENERIC_ALTDA=false' >> $BASH_ENV
+                command: echo 'export GENERIC_ALTDA=true' >> $BASH_ENV
       - restore_cache:
           name: Restore Go modules cache
           key: gomod-{{ checksum "go.sum" }}
