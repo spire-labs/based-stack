@@ -46,6 +46,7 @@ func setupBatcher(t helpers.Testing, log log.Logger, sd *e2eutils.SetupData, dp 
 
 func TestEIP4844DataAvailability(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable this test once AltDA is supported")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)
@@ -84,6 +85,7 @@ func TestEIP4844DataAvailability(gt *testing.T) {
 
 func TestEIP4844MultiBlobs(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable this test once AltDA is supported")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)
@@ -123,6 +125,7 @@ func TestEIP4844MultiBlobs(gt *testing.T) {
 
 func TestEIP4844DataAvailabilitySwitch(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable batcher tests")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)

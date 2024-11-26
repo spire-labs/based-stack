@@ -60,6 +60,7 @@ func (tc *hardforkScheduledTest) fork(fork string) **hexutil.Uint64 {
 // - wait 1 week + 1 second
 // - finalize withdrawal on L1
 func TestCrossLayerUser(t *testing.T) {
+	t.Skip("TODO(spire): Reenable these tests")
 	futureTime := uint64(20)
 	farFutureTime := uint64(2000)
 

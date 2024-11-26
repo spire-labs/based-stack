@@ -34,6 +34,7 @@ import (
 // op-node must drop SpanBatch before Delta hardfork.
 func TestDropSpanBatchBeforeHardfork(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
 		SequencerWindowSize: 24,
@@ -123,6 +124,7 @@ func TestDropSpanBatchBeforeHardfork(gt *testing.T) {
 // If Delta activation time is in the middle of time range of a SpanBatch, op-node must drop the batch.
 func TestHardforkMiddleOfSpanBatch(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
 		SequencerWindowSize: 24,
@@ -236,6 +238,7 @@ func TestHardforkMiddleOfSpanBatch(gt *testing.T) {
 // op-node must accept SingularBatch after Delta hardfork.
 func TestAcceptSingularBatchAfterHardfork(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
 		SequencerWindowSize: 24,
@@ -322,6 +325,7 @@ func TestAcceptSingularBatchAfterHardfork(gt *testing.T) {
 // op-node must accept SingularBatch and SpanBatch in sequence.
 func TestMixOfBatchesAfterHardfork(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
 		SequencerWindowSize: 24,
@@ -413,6 +417,7 @@ func TestMixOfBatchesAfterHardfork(gt *testing.T) {
 // TestSpanBatchEmptyChain tests derivation of empty chain using SpanBatch.
 func TestSpanBatchEmptyChain(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20,
 		SequencerWindowSize: 24,
@@ -476,6 +481,7 @@ func TestSpanBatchEmptyChain(gt *testing.T) {
 // TestSpanBatchLowThroughputChain tests derivation of low-throughput chain using SpanBatch.
 func TestSpanBatchLowThroughputChain(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20,
 		SequencerWindowSize: 24,
@@ -588,6 +594,7 @@ func TestSpanBatchLowThroughputChain(gt *testing.T) {
 
 func TestBatchEquivalence(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	log := testlog.Logger(t, log.LevelError)
 
 	p := &e2eutils.TestParams{

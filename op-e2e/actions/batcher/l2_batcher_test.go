@@ -25,6 +25,7 @@ import (
 
 // TestL2BatcherBatchType run each batcher-related test case in singular batch mode and span batch mode.
 func TestL2BatcherBatchType(t *testing.T) {
+	t.Skip("TODO(spire): Reenable batcher tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)

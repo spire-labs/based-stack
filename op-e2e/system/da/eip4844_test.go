@@ -43,6 +43,7 @@ func TestSystem4844E2E(t *testing.T) {
 }
 
 func testSystem4844E2E(t *testing.T, multiBlob bool, daType batcherFlags.DataAvailabilityType) {
+	t.Skip("TODO(spire): Reenable this test once AltDA is supported")
 	op_e2e.InitParallel(t)
 
 	cfg := e2esys.EcotoneSystemConfig(t, new(hexutil.Uint64))

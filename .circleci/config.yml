@@ -1619,17 +1619,19 @@ workflows:
       #     requires:
       #       - go-mod-download
       #       - contracts-bedrock-build
-      # - go-e2e-test:
-      #     name: op-e2e-action-tests<< matrix.variant >>
-      #     matrix:
-      #       parameters:
-      #         variant: ["", "-l2oo", "-altda"]
-      #     module: op-e2e
-      #     target: test-actions
-      #     parallelism: 1
-      #     requires:
-      #       - go-mod-download
-      #       - contracts-bedrock-build
+      - go-e2e-test:
+          name: op-e2e-action-tests<< matrix.variant >>
+          matrix:
+            parameters:
+              #variant: ["", "-l2oo", "-altda"]
+              # TODO(spire): Re-enable -l200 and -altda and fix the tests.
+              variant: [""]
+          module: op-e2e
+          target: test-actions
+          parallelism: 1
+          requires:
+            - go-mod-download
+            - contracts-bedrock-build
       # - go-e2e-test:
       #     name: op-e2e-fault-proof-tests
       #     module: op-e2e

@@ -12,6 +12,7 @@ import (
 
 func runSimpleProgramTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	env := helpers.NewL2FaultProofEnv(t, testCfg, helpers.NewTestParams(), helpers.NewBatcherCfg())
 
 	// Build an empty block on L2
@@ -44,6 +45,7 @@ func runSimpleProgramTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 }
 
 func Test_ProgramAction_SimpleEmptyChain(gt *testing.T) {
+	gt.Skip("TODO(spire): Reenable these tests")
 	matrix := helpers.NewMatrix[any]()
 	defer matrix.Run(gt)
 

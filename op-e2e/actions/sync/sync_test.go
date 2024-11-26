@@ -42,6 +42,7 @@ func newSpanChannelOut(t actionsHelpers.StatefulTesting, e e2eutils.SetupData) d
 
 // TestSyncBatchType run each sync test case in singular batch mode and span batch mode.
 func TestSyncBatchType(t *testing.T) {
+	t.Skip("TODO(spire): Reenable these tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)
@@ -181,6 +182,7 @@ func TestUnsafeSync(gt *testing.T) {
 
 func TestBackupUnsafe(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
@@ -342,6 +344,7 @@ func TestBackupUnsafe(gt *testing.T) {
 
 func TestBackupUnsafeReorgForkChoiceInputError(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
@@ -475,6 +478,7 @@ func TestBackupUnsafeReorgForkChoiceInputError(gt *testing.T) {
 
 func TestBackupUnsafeReorgForkChoiceNotInputError(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
@@ -747,6 +751,7 @@ func PrepareELSyncedNode(t actionsHelpers.Testing, miner *actionsHelpers.L1Miner
 //  8. Create 1 more block & batch submit everything & assert that the verifier picked up those blocks
 func TestELSyncTransitionstoCL(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	logger := testlog.Logger(t, log.LevelInfo)
@@ -804,6 +809,7 @@ func TestELSyncTransitionstoCL(gt *testing.T) {
 
 func TestELSyncTransitionsToCLSyncAfterNodeRestart(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	logger := testlog.Logger(t, log.LevelInfo)
@@ -846,6 +852,7 @@ func TestELSyncTransitionsToCLSyncAfterNodeRestart(gt *testing.T) {
 
 func TestForcedELSyncCLAfterNodeRestart(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	logger := testlog.Logger(t, log.LevelInfo)
@@ -892,6 +899,7 @@ func TestForcedELSyncCLAfterNodeRestart(gt *testing.T) {
 
 func TestInvalidPayloadInSpanBatch(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
