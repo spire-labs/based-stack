@@ -111,13 +111,13 @@ type Sequencer struct {
 	nextAction   time.Time
 	nextActionOK bool
 
-	latest              BuildingState
-	latestSealed        eth.L2BlockRef
-	latestHead          eth.L2BlockRef
-	electionWinners     []*eth.ElectionWinner
-	nextElectionWinners []*eth.ElectionWinner
+	latest          BuildingState
+	latestSealed    eth.L2BlockRef
+	latestHead      eth.L2BlockRef
+	electionWinners []*eth.ElectionWinner
 
-	latestHeadSet chan struct{}
+	latestHeadSet     chan struct{}
+	electionWinnersCh chan struct{}
 
 	// toBlockRef converts a payload to a block-ref, and is only configurable for test-purposes
 	toBlockRef func(rollupCfg *rollup.Config, payload *eth.ExecutionPayload) (eth.L2BlockRef, error)
@@ -133,18 +133,19 @@ func NewSequencer(driverCtx context.Context, log log.Logger, rollupCfg *rollup.C
 	asyncGossip AsyncGossiper,
 	metrics Metrics) *Sequencer {
 	return &Sequencer{
-		ctx:              driverCtx,
-		log:              log,
-		rollupCfg:        rollupCfg,
-		spec:             rollup.NewChainSpec(rollupCfg),
-		listener:         listener,
-		conductor:        conductor,
-		asyncGossip:      asyncGossip,
-		attrBuilder:      attributesBuilder,
-		l1OriginSelector: l1OriginSelector,
-		metrics:          metrics,
-		timeNow:          time.Now,
-		toBlockRef:       derive.PayloadToBlockRef,
+		ctx:               driverCtx,
+		log:               log,
+		rollupCfg:         rollupCfg,
+		spec:              rollup.NewChainSpec(rollupCfg),
+		listener:          listener,
+		conductor:         conductor,
+		asyncGossip:       asyncGossip,
+		attrBuilder:       attributesBuilder,
+		l1OriginSelector:  l1OriginSelector,
+		metrics:           metrics,
+		timeNow:           time.Now,
+		toBlockRef:        derive.PayloadToBlockRef,
+		electionWinnersCh: make(chan struct{}, 1),
 	}
 }
 
@@ -192,8 +193,6 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 		d.onForkchoiceUpdate(x)
 	case rollup.ElectionWinnerEvent:
 		d.electionWinners = x.ElectionWinners
-	case rollup.NextElectionWinnerEvent:
-		d.nextElectionWinners = x.ElectionWinners
 	default:
 		return false
 	}
@@ -380,8 +379,19 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 				DerivedFrom:  eth.L1BlockRef{},
 			})
 		} else if d.latest == (BuildingState{}) {
-			// If we have not started building anything, start building.
-			d.startBuildingBlock()
+			if len(d.electionWinners) > 0 && d.electionWinners[len(d.electionWinners)-1].ParentSlot < d.latestHead.Time {
+				d.log.Info("Waiting for election winner update...", "latestHead", "parentSlot",
+					d.latestHead.Time, d.electionWinners[len(d.electionWinners)-1].ParentSlot)
+
+				// We need to try retrying the build action when this check passes
+				// TODO(spire): This might be too aggresive of a delay time wise, we are getting a lot of logs
+				// but there are no reorgs and it seems to build correctly.
+				// This also might break when we eventually remove the l1BlockTime == l2BlockTime invariant
+				d.nextActionOK = true
+				d.nextAction = time.Now().Add(time.Second / 2)
+			} else {
+				d.startBuildingBlock()
+			}
 		}
 	}
 }
@@ -434,6 +444,7 @@ func (d *Sequencer) onEngineResetConfirmedEvent(x engine.EngineResetConfirmedEve
 func (d *Sequencer) onForkchoiceUpdate(x engine.ForkchoiceUpdateEvent) {
 	d.log.Debug("Sequencer is processing forkchoice update", "unsafe", x.UnsafeL2Head, "latest", d.latestHead)
 
+	d.log.Info("Received L2 unsafe event", "l2head", x.UnsafeL2Head.Number)
 	if !d.active.Load() {
 		d.setLatestHead(x.UnsafeL2Head)
 		return
@@ -466,6 +477,7 @@ func (d *Sequencer) onForkchoiceUpdate(x engine.ForkchoiceUpdateEvent) {
 			d.nextAction = now
 		}
 	}
+
 	d.setLatestHead(x.UnsafeL2Head)
 }
 
@@ -512,12 +524,7 @@ func (d *Sequencer) startBuildingBlock() {
 	fetchCtx, cancel := context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
 
-	if len(d.nextElectionWinners) > 0 {
-		if d.electionWinners[len(d.electionWinners)-1].ParentSlot < l2Head.Time {
-			log.Info("Updating election winners", "new", d.nextElectionWinners)
-			d.electionWinners = d.nextElectionWinners
-		}
-	}
+	log.Info("L2 Head is at block", "block", l2Head.Number, "time", l2Head.Time)
 
 	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), d.electionWinners)
 	if err != nil {

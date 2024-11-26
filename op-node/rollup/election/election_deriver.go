@@ -50,6 +50,7 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	// Do we want to do l1unsafe or l1safe here?
 	case status.L1UnsafeEvent:
 		ed.l1Unsafe = x.L1Unsafe
+		log.Info("L1 Unsafe is at block", "block", x.L1Unsafe.Number, "time", x.L1Unsafe.Time)
 		ed.ProcessNewL1Block(x.L1Unsafe)
 	case engine.PendingSafeUpdateEvent:
 		ed.l2PendingSafe = x.PendingSafe
@@ -80,9 +81,6 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 	// We use unsafe because even if there is a reorg, the time should still be the same
 	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2PendingSafe.Number), ed.l2Unsafe.Time)
 
-	// TODO(spire): Adjust this to handle potential state changes from the previous election
-	nextElectionWinners, _ := ed.election.GetWinnersAtEpoch(ed.ctx, epoch+1, fmt.Sprintf("0x%x", ed.l2PendingSafe.Number), electionWinners[len(electionWinners)-1].Time)
-
 	for _, winner := range electionWinners {
 		address := &winner.Address
 		log.Debug("This winners address is", "address", address)
@@ -97,7 +95,6 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 
 		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
-		ed.emitter.Emit(rollup.NextElectionWinnerEvent{ElectionWinners: nextElectionWinners})
 
 		// Update the next epoch to use
 		ed.nextEpochToUse = epoch + 1
