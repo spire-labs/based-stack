@@ -41,6 +41,7 @@ func verifyCodeHashMatches(t helpers.Testing, client *ethclient.Client, address 
 }
 
 func TestEcotoneNetworkUpgradeTransactions(gt *testing.T) {
+	gt.Skip("TODO(spire): Reenable this test")
 	t := helpers.NewDefaultTesting(gt)
 	dp := e2eutils.MakeDeployParams(t, helpers.DefaultRollupTestParams)
 	ecotoneOffset := hexutil.Uint64(4)

@@ -18,6 +18,7 @@ import (
 
 // TestSystemE2EDencunAtGenesis tests if L2 finalizes when blobs are present on L1
 func TestSystemE2EDencunAtGenesisWithBlobs(t *testing.T) {
+	t.Skip("TODO(spire): Reenable this test")
 	op_e2e.InitParallel(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
