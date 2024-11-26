@@ -384,7 +384,7 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 					d.latestHead.Time, d.electionWinners[len(d.electionWinners)-1].ParentSlot)
 
 				// We need to try retrying the build action when this check passes
-				// TODO(spire): This might be too aggresive of a delay time wise, we are getting a lot of logs
+				// TODO(spire): This might be too aggressive of a delay time wise, we are getting a lot of logs
 				// but there are no reorgs and it seems to build correctly.
 				// This also might break when we eventually remove the l1BlockTime == l2BlockTime invariant
 				d.nextActionOK = true
