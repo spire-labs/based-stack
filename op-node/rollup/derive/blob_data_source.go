@@ -157,7 +157,7 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}
-		// TODO(miszke): enable other DA sources
+		// TODO(spire): enable other DA sources
 		// handle non-blob batcher transactions by extracting their calldata
 		// if tx.tx.Type() != types.BlobTxType {
 		// 	calldata := eth.Data(tx.tx.Data())

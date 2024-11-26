@@ -29,6 +29,9 @@ type CLIConfig struct {
 	// RollupRpc is the HTTP provider URL for the L2 rollup node. A comma-separated list enables the active L2 provider. Such a list needs to match the number of L2EthRpcs provided.
 	RollupRpc string
 
+	// BeaconAddress is the address of L1 Beacon API endpoint to use.
+	BeaconAddress string
+
 	// MaxChannelDuration is the maximum duration (in #L1-blocks) to keep a
 	// channel open. This allows to more eagerly send batcher transactions
 	// during times of low L2 transaction volume. Note that the effective
@@ -119,6 +122,9 @@ func (c *CLIConfig) Check() error {
 	if c.RollupRpc == "" {
 		return errors.New("empty rollup RPC URL")
 	}
+	if c.BeaconAddress == "" {
+		return errors.New("empty beacon address")
+	}
 	if strings.Count(c.RollupRpc, ",") != strings.Count(c.L2EthRpc, ",") {
 		return errors.New("number of rollup and eth URLs must match")
 	}
@@ -171,6 +177,7 @@ func NewConfig(ctx *cli.Context) *CLIConfig {
 		L1EthRpc:        ctx.String(flags.L1EthRpcFlag.Name),
 		L2EthRpc:        ctx.String(flags.L2EthRpcFlag.Name),
 		RollupRpc:       ctx.String(flags.RollupRpcFlag.Name),
+		BeaconAddress:   ctx.String(flags.BeaconAddressFlag.Name),
 		SubSafetyMargin: ctx.Uint64(flags.SubSafetyMarginFlag.Name),
 		PollInterval:    ctx.Duration(flags.PollIntervalFlag.Name),
 

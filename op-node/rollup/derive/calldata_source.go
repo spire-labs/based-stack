@@ -78,7 +78,7 @@ func (ds *CalldataSource) Next(ctx context.Context) (eth.Data, error) {
 // This will return an empty array if no valid transactions are found.
 func DataFromEVMTransactions(dsCfg DataSourceConfig, batcherAddr common.Address, txs types.Transactions, log log.Logger) []eth.Data {
 	out := []eth.Data{}
-	// TODO(miszke): enable other data sources
+	// TODO(spire): enable other data sources
 	// for _, tx := range txs {
 	// 	continue
 	// 	if isValidBatchTx(tx, dsCfg.batchInboxAddress, log) {

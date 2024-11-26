@@ -37,7 +37,7 @@ import (
 // that DataFromEVMTransactions properly filters and returns the data from the authorized transactions
 // inside the transaction set.
 func TestDataFromEVMTransactions(t *testing.T) {
-	// TODO(miszke): enable other DA sources
+	// TODO(spire): enable other DA sources
 	t.Skip("only blob data source supported for now")
 	// inboxPriv := testutils.RandomKey()
 	// batcherPriv := testutils.RandomKey()
