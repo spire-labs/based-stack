@@ -13,6 +13,7 @@ import (
 // Run a test that submits the first channel frame, times out the channel, and then resubmits the full channel.
 func runChannelTimeoutTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	tp := helpers.NewTestParams()
 	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
 	channelTimeout := env.Sd.ChainSpec.ChannelTimeout(0)

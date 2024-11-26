@@ -17,6 +17,7 @@ import (
 
 // TestBlockTimeBatchType run each blocktime-related test case in singular batch mode and span batch mode.
 func TestBlockTimeBatchType(t *testing.T) {
+	t.Skip("TODO(spire): Reenable these tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)

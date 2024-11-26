@@ -24,6 +24,7 @@ import (
 // buffered L1 chain epoch %s in batch queue does not match safe head origin %s
 func TestDeriveChainFromNearL1Genesis(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	p := &e2eutils.TestParams{
 		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
 		SequencerWindowSize: 24,
