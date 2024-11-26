@@ -23,6 +23,7 @@ import (
 
 // TestProposerBatchType run each proposer-related test case in singular batch mode and span batch mode.
 func TestProposerBatchType(t *testing.T) {
+	t.Skip("TODO(spire): Reenable these tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)

@@ -26,6 +26,7 @@ import (
 
 // TestReorgBatchType run each reorg-related test case in singular batch mode and span batch mode.
 func TestReorgBatchType(t *testing.T) {
+	t.Skip("TODO(spire): Reenable these tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)

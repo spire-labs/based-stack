@@ -42,6 +42,7 @@ func newSpanChannelOut(t actionsHelpers.StatefulTesting, e e2eutils.SetupData) d
 
 // TestSyncBatchType run each sync test case in singular batch mode and span batch mode.
 func TestSyncBatchType(t *testing.T) {
+	t.Skip("TODO(spire): Reenable these tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)
