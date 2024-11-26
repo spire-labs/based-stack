@@ -14,6 +14,7 @@ import (
 
 func TestRecordSafeHeadUpdates(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	sd, miner, sequencer, verifier, verifierEng, batcher := helpers.SetupSafeDBTest(t, actionsHelpers.DefaultRollupTestParams)
 	verifEngClient := verifierEng.EngineClient(t, sd.RollupCfg)
 

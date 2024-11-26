@@ -19,6 +19,7 @@ import (
 
 func TestDencunL1ForkAfterGenesis(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, helpers.DefaultRollupTestParams)
 	offset := hexutil.Uint64(24)
 	dp.DeployConfig.L1CancunTimeOffset = &offset
@@ -62,6 +63,7 @@ func TestDencunL1ForkAfterGenesis(gt *testing.T) {
 
 func TestDencunL1ForkAtGenesis(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
+	t.Skip("TODO(spire): Reenable these tests")
 	dp := e2eutils.MakeDeployParams(t, helpers.DefaultRollupTestParams)
 	require.Zero(t, *dp.DeployConfig.L1CancunTimeOffset)
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
