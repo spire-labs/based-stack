@@ -743,6 +743,7 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 		TxData: fullTxData,
 		To:     &l.RollupConfig.BatchInboxContractAddress,
 		Blobs:  blobs,
+		// TODO(spire): fix this
 		// POC ONLY: we cannot use eth_estimateGas or intrinsic gas calculation
 		// but hardcoding the gasLimit works fine on devnet. This should be updated
 		// once we finalise the BatchInbox contract.
