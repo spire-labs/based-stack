@@ -62,14 +62,6 @@ func (ev ElectionWinnerEvent) String() string {
 	return "election-winner"
 }
 
-type NextElectionWinnerEvent struct {
-	ElectionWinners []*eth.ElectionWinner
-}
-
-func (ev NextElectionWinnerEvent) String() string {
-	return "next-election-winner"
-}
-
 type ElectionErrorEvent struct {
 	Err error
 }
