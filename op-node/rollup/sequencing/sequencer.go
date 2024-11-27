@@ -132,19 +132,18 @@ func NewSequencer(driverCtx context.Context, log log.Logger, rollupCfg *rollup.C
 	asyncGossip AsyncGossiper,
 	metrics Metrics) *Sequencer {
 	return &Sequencer{
-		ctx:               driverCtx,
-		log:               log,
-		rollupCfg:         rollupCfg,
-		spec:              rollup.NewChainSpec(rollupCfg),
-		listener:          listener,
-		conductor:         conductor,
-		asyncGossip:       asyncGossip,
-		attrBuilder:       attributesBuilder,
-		l1OriginSelector:  l1OriginSelector,
-		metrics:           metrics,
-		timeNow:           time.Now,
-		toBlockRef:        derive.PayloadToBlockRef,
-		electionWinnersCh: make(chan struct{}, 1),
+		ctx:              driverCtx,
+		log:              log,
+		rollupCfg:        rollupCfg,
+		spec:             rollup.NewChainSpec(rollupCfg),
+		listener:         listener,
+		conductor:        conductor,
+		asyncGossip:      asyncGossip,
+		attrBuilder:      attributesBuilder,
+		l1OriginSelector: l1OriginSelector,
+		metrics:          metrics,
+		timeNow:          time.Now,
+		toBlockRef:       derive.PayloadToBlockRef,
 	}
 }
 
