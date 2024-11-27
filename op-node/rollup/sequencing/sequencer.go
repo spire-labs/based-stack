@@ -116,8 +116,7 @@ type Sequencer struct {
 	latestHead      eth.L2BlockRef
 	electionWinners []*eth.ElectionWinner
 
-	latestHeadSet     chan struct{}
-	electionWinnersCh chan struct{}
+	latestHeadSet chan struct{}
 
 	// toBlockRef converts a payload to a block-ref, and is only configurable for test-purposes
 	toBlockRef func(rollupCfg *rollup.Config, payload *eth.ExecutionPayload) (eth.L2BlockRef, error)
