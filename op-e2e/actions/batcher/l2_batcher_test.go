@@ -66,7 +66,7 @@ func NormalBatcher(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
 	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
-	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), &sync.Config{})
+	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 	rollupSeqCl := sequencer.RollupClient()
 	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),
@@ -291,7 +291,7 @@ func GarbageBatch(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 		log := testlog.Logger(t, log.LevelError)
 		miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
 
-		_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), &sync.Config{})
+		_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 		batcherCfg := actionsHelpers.DefaultBatcherCfg(dp)
 
@@ -371,7 +371,7 @@ func ExtendedTimeWithoutL1Batches(gt *testing.T, deltaTimeOffset *hexutil.Uint64
 	log := testlog.Logger(t, log.LevelError)
 	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
 
-	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), &sync.Config{})
+	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),
 		sequencer.RollupClient(), miner.EthClient(), engine.EthClient(), engine.EngineClient(t, sd.RollupCfg))
@@ -427,7 +427,7 @@ func BigL2Txs(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	log := testlog.Logger(t, log.LevelInfo)
 	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
 
-	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), &sync.Config{})
+	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, &actionsHelpers.BatcherCfg{
 		MinL1TxSize:          0,

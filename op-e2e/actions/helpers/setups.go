@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-e2e/actions/upgrades/helpers"
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/sync"
 	"github.com/ethereum-optimism/optimism/op-service/sources"
 	"github.com/ethereum-optimism/optimism/op-service/testlog"
@@ -29,12 +30,12 @@ func SetupSequencerTest(t Testing, sd *e2eutils.SetupData, log log.Logger, opts 
 	l2Cl, err := sources.NewEngineClient(engine.RPCClient(), log, nil, sources.EngineClientDefaultConfig(sd.RollupCfg))
 	require.NoError(t, err)
 
-	sequencer := NewL2Sequencer(t, log.New("role", "sequencer"), l1F, miner.BlobStore(), altda.Disabled, l2Cl, sd.RollupCfg, 0, cfg.InteropBackend)
+	sequencer := NewL2Sequencer(t, log.New("role", "sequencer"), l1F, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, l2Cl, sd.RollupCfg, 0, cfg.InteropBackend)
 	return miner, engine, sequencer
 }
 
 func SetupVerifier(t Testing, sd *e2eutils.SetupData, log log.Logger,
-	l1F derive.L1Fetcher, blobSrc derive.L1BlobsFetcher, syncCfg *sync.Config, opts ...VerifierOpt) (*L2Engine, *L2Verifier) {
+	l1F derive.L1Fetcher, blobSrc derive.L1BlobsFetcher, beaconClient election.BeaconClient, syncCfg *sync.Config, opts ...VerifierOpt) (*L2Engine, *L2Verifier) {
 	cfg := DefaultVerifierCfg()
 	for _, opt := range opts {
 		opt(cfg)
@@ -42,14 +43,14 @@ func SetupVerifier(t Testing, sd *e2eutils.SetupData, log log.Logger,
 	jwtPath := e2eutils.WriteDefaultJWT(t)
 	engine := NewL2Engine(t, log.New("role", "verifier-engine"), sd.L2Cfg, sd.RollupCfg.Genesis.L1, jwtPath, EngineWithP2P())
 	engCl := engine.EngineClient(t, sd.RollupCfg)
-	verifier := NewL2Verifier(t, log.New("role", "verifier"), l1F, blobSrc, altda.Disabled, engCl, sd.RollupCfg, syncCfg, cfg.SafeHeadListener, cfg.InteropBackend)
+	verifier := NewL2Verifier(t, log.New("role", "verifier"), l1F, blobSrc, beaconClient, altda.Disabled, engCl, sd.RollupCfg, syncCfg, cfg.SafeHeadListener, cfg.InteropBackend)
 	return engine, verifier
 }
 
 func SetupVerifierOnlyTest(t Testing, sd *e2eutils.SetupData, log log.Logger) (*L1Miner, *L2Engine, *L2Verifier) {
 	miner := NewL1Miner(t, log, sd.L1Cfg)
 	l1Cl := miner.L1Client(t, sd.RollupCfg)
-	engine, verifier := SetupVerifier(t, sd, log, l1Cl, miner.BlobStore(), &sync.Config{})
+	engine, verifier := SetupVerifier(t, sd, log, l1Cl, miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	return miner, engine, verifier
 }
 
@@ -67,7 +68,7 @@ func SetupReorgTestActors(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.Set
 	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 	sequencer.ActL2PipelineFull(t)
-	verifEngine, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), &sync.Config{})
+	verifEngine, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 	batcher := NewL2Batcher(log, sd.RollupCfg, DefaultBatcherCfg(dp),
 		rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))

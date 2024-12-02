@@ -25,11 +25,15 @@ func setupEIP4844Test(t helpers.Testing, log log.Logger) (*e2eutils.SetupData, *
 	dp.DeployConfig.L2GenesisDeltaTimeOffset = &genesisActivation
 	dp.DeployConfig.L2GenesisEcotoneTimeOffset = &genesisActivation
 
+	// TODO(spire): set those for the entire e22 env
+	dp.DeployConfig.L1BlockTime = 12
+	dp.DeployConfig.L2BlockTime = 12
+
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	miner, seqEngine, sequencer := helpers.SetupSequencerTest(t, sd, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 	sequencer.ActL2PipelineFull(t)
-	verifEngine, verifier := helpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), &sync.Config{})
+	verifEngine, verifier := helpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	return sd, dp, miner, sequencer, seqEngine, verifier, verifEngine
 }
 
@@ -46,7 +50,6 @@ func setupBatcher(t helpers.Testing, log log.Logger, sd *e2eutils.SetupData, dp 
 
 func TestEIP4844DataAvailability(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
-	t.Skip("TODO(spire): Reenable this test once AltDA is supported")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)
@@ -85,7 +88,6 @@ func TestEIP4844DataAvailability(gt *testing.T) {
 
 func TestEIP4844MultiBlobs(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
-	t.Skip("TODO(spire): Reenable this test once AltDA is supported")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)
@@ -125,7 +127,7 @@ func TestEIP4844MultiBlobs(gt *testing.T) {
 
 func TestEIP4844DataAvailabilitySwitch(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
-	t.Skip("TODO(spire): Reenable batcher tests")
+	t.Skip("TODO(spire): enable other DA sources")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)

@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/op-service/txmgr"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 )
 
 type SyncStatusAPI interface {
@@ -263,6 +264,9 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 		payload = comm.TxData()
 	}
 
+	syncStatus, err := s.syncStatusAPI.SyncStatus(t.Ctx())
+	require.NoError(t, err, "no sync status error")
+
 	nonce, err := s.l1.PendingNonceAt(t.Ctx(), s.BatcherAddr)
 	require.NoError(t, err, "need batcher nonce")
 
@@ -300,10 +304,13 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 		if blobFeeCap.Lt(uint256.NewInt(params.GWei)) { // ensure we meet 1 gwei geth tx-pool minimum
 			blobFeeCap = uint256.NewInt(params.GWei)
 		}
+		calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Number+1)
+		require.NoError(t, err)
+
 		txData = &types.BlobTx{
 			To:         s.rollupCfg.BatchInboxContractAddress,
-			Data:       nil,
-			Gas:        params.TxGas, // intrinsic gas only
+			Data:       calldata,
+			Gas:        30000, // TODO(spire): POC ONLY
 			BlobHashes: blobHashes,
 			Sidecar:    sidecar,
 			ChainID:    uint256.MustFromBig(s.rollupCfg.L1ChainID),
@@ -323,6 +330,18 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 	err = s.l1.SendTransaction(t.Ctx(), tx)
 	require.NoError(t, err, "need to send tx")
 	s.LastSubmitted = tx
+}
+
+func submitTxCalldata(t require.TestingT, submitBlockNumber uint64) ([]byte, error) {
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	require.True(t, ok)
+
+	inputs, err := submitMethod.Inputs.Pack(new(big.Int).SetUint64(submitBlockNumber))
+	require.NoError(t, err)
+
+	submitSel := submitMethod.ID
+	return append(submitSel[:], inputs...), nil
 }
 
 func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
@@ -366,6 +385,9 @@ func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
 		require.NoError(t, blobs[i].FromData(data.Bytes()), "must turn data into blob")
 	}
 
+	syncStatus, err := s.syncStatusAPI.SyncStatus(t.Ctx())
+	require.NoError(t, err, "no sync status error")
+
 	nonce, err := s.l1.PendingNonceAt(t.Ctx(), s.BatcherAddr)
 	require.NoError(t, err, "need batcher nonce")
 
@@ -382,10 +404,14 @@ func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
 	if blobFeeCap.Lt(uint256.NewInt(params.GWei)) { // ensure we meet 1 gwei geth tx-pool minimum
 		blobFeeCap = uint256.NewInt(params.GWei)
 	}
+
+	calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Number+1)
+	require.NoError(t, err)
+
 	txData := &types.BlobTx{
 		To:         s.rollupCfg.BatchInboxContractAddress,
-		Data:       nil,
-		Gas:        params.TxGas, // intrinsic gas only
+		Data:       calldata,
+		Gas:        30000, // TODO(spire): POC ONLY
 		BlobHashes: blobHashes,
 		Sidecar:    sidecar,
 		ChainID:    uint256.MustFromBig(s.rollupCfg.L1ChainID),

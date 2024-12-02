@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/confdepth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/interop"
@@ -51,9 +52,9 @@ type L2Sequencer struct {
 }
 
 func NewL2Sequencer(t Testing, log log.Logger, l1 derive.L1Fetcher, blobSrc derive.L1BlobsFetcher,
-	altDASrc driver.AltDAIface, eng L2API, cfg *rollup.Config, seqConfDepth uint64,
+	beaconClient election.BeaconClient, altDASrc driver.AltDAIface, eng L2API, cfg *rollup.Config, seqConfDepth uint64,
 	interopBackend interop.InteropBackend) *L2Sequencer {
-	ver := NewL2Verifier(t, log, l1, blobSrc, altDASrc, eng, cfg, &sync.Config{}, safedb.Disabled, interopBackend)
+	ver := NewL2Verifier(t, log, l1, blobSrc, beaconClient, altDASrc, eng, cfg, &sync.Config{}, safedb.Disabled, interopBackend)
 	attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, eng)
 	seqConfDepthL1 := confdepth.NewConfDepth(seqConfDepth, ver.syncStatus.L1Head, l1)
 	l1OriginSelector := &MockL1OriginSelector{
