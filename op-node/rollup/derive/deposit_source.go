@@ -17,6 +17,7 @@ const (
 	L1InfoDepositSourceDomain     = 1
 	UpgradeDepositSourceDomain    = 2
 	AfterForceIncludeSourceDomain = 3
+	BurnSourceDomain              = 4
 )
 
 func (dep *UserDepositSource) SourceHash() common.Hash {
