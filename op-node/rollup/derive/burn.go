@@ -49,7 +49,7 @@ func BuildBurnTx(ctx context.Context, address common.Address) (*types.DepositTx,
 
 	// NOTE(spire): For some reason if system transaction is true, the tx fails
 	// it passes with it being false though
-	// i believe it is still forcefully included in the deriv pipeline anyway though
+	// i believe it is still forcefully included in the deriv pipeline anyway
 	out := &types.DepositTx{
 		SourceHash:          source.SourceHash(),
 		From:                BurnDepositerAddress,

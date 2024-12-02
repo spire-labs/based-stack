@@ -123,7 +123,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.Equal(t, l2Parent.Time+cfg.BlockTime, uint64(attrs.Timestamp))
 		require.Equal(t, eth.Bytes32(l1Info.InfoMixDigest), attrs.PrevRandao)
 		require.Equal(t, predeploys.SequencerFeeVaultAddr, attrs.SuggestedFeeRecipient)
-		require.Equal(t, 1, len(attrs.Transactions))
+		require.Equal(t, 2, len(attrs.Transactions))
 		require.Equal(t, l1InfoTx, []byte(attrs.Transactions[0]))
 		require.True(t, attrs.NoTxPool)
 	})
@@ -152,8 +152,11 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		epoch := l1Info.ID()
 		l1InfoTx, err := L1InfoDepositBytes(cfg, testSysCfg, 0, l1Info, 0, common.Address{})
 		require.NoError(t, err)
+		burnTx, err := BurnTxBytes(context.Background(), common.Address{})
+		require.NoError(t, err)
 
 		l2Txs := append(append(make([]eth.Data, 0), l1InfoTx), usedDepositTxs...)
+		l2Txs = append(l2Txs, burnTx)
 
 		l1Fetcher.ExpectFetchReceipts(epoch.Hash, l1Info, receipts, nil)
 		attrBuilder := NewFetchingAttributesBuilder(cfg, l1Fetcher, l1CfgFetcher)
@@ -191,7 +194,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.Equal(t, l2Parent.Time+cfg.BlockTime, uint64(attrs.Timestamp))
 		require.Equal(t, eth.Bytes32(l1Info.InfoMixDigest), attrs.PrevRandao)
 		require.Equal(t, predeploys.SequencerFeeVaultAddr, attrs.SuggestedFeeRecipient)
-		require.Equal(t, 1, len(attrs.Transactions))
+		require.Equal(t, 2, len(attrs.Transactions))
 		require.Equal(t, l1InfoTx, []byte(attrs.Transactions[0]))
 		require.True(t, attrs.NoTxPool)
 	})
@@ -227,10 +230,13 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.NoError(t, err)
 		depositsComplete, err := DepositsCompleteBytes(seqNumber, l1Info)
 		require.NoError(t, err)
+		burnTx, err := BurnTxBytes(context.Background(), common.Address{})
+		require.NoError(t, err)
 
 		var l2Txs []eth.Data
 		l2Txs = append(l2Txs, l1InfoTx)
 		l2Txs = append(l2Txs, userDepositTxs...)
+		l2Txs = append(l2Txs, burnTx)
 		l2Txs = append(l2Txs, depositsComplete)
 
 		l1Fetcher.ExpectFetchReceipts(epoch.Hash, l1Info, receipts, nil)
@@ -258,6 +264,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		l1Info := testutils.RandomBlockInfo(rng)
 		l1Info.InfoHash = l2Parent.L1Origin.Hash
 		l1Info.InfoNum = l2Parent.L1Origin.Number // same origin again, so the sequence number is not reset
+		ctx := context.Background()
 
 		// sets config to post-interop
 		cfg.ActivateAtGenesis(rollup.Interop)
@@ -268,9 +275,12 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.NoError(t, err)
 		depositsComplete, err := DepositsCompleteBytes(seqNumber, l1Info)
 		require.NoError(t, err)
+		burnTx, err := BurnTxBytes(ctx, common.Address{})
+		require.NoError(t, err)
 
 		var l2Txs []eth.Data
 		l2Txs = append(l2Txs, l1InfoTx)
+		l2Txs = append(l2Txs, burnTx)
 		l2Txs = append(l2Txs, depositsComplete)
 
 		l1Fetcher.ExpectInfoByHash(epoch.Hash, l1Info, nil)
