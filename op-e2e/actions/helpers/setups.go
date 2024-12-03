@@ -17,7 +17,6 @@ import (
 
 func SetupElectionTest(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.SetupData, log log.Logger, opts ...SequencerOpt) (*L1Miner, *L2Engine, *L2Sequencer, *L2Verifier, *L2Engine, *L2Batcher) {
 	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, log)
-	// _, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	verifEngine, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 	batcher := NewL2Batcher(log, sd.RollupCfg, DefaultBatcherCfg(dp),
