@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/clsync"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/finality"
@@ -73,6 +74,7 @@ type L2Verifier struct {
 
 type L2API interface {
 	engine.Engine
+	Call(ctx context.Context, callMsg map[string]interface{}, blockNumber string) (string, error)
 	L2BlockRefByNumber(ctx context.Context, num uint64) (eth.L2BlockRef, error)
 	InfoByHash(ctx context.Context, hash common.Hash) (eth.BlockInfo, error)
 	// GetProof returns a proof of the account, it may return a nil result without error if the address was not found.
@@ -86,7 +88,7 @@ type safeDB interface {
 }
 
 func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
-	blobsSrc derive.L1BlobsFetcher, altDASrc driver.AltDAIface,
+	blobsSrc derive.L1BlobsFetcher, beaconClient election.BeaconClient, altDASrc driver.AltDAIface,
 	eng L2API, cfg *rollup.Config, syncCfg *sync.Config, safeHeadListener safeDB,
 	interopBackend interop.InteropBackend) *L2Verifier {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -116,6 +118,9 @@ func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 	ec := engine.NewEngineController(eng, log, metrics, cfg, syncCfg,
 		sys.Register("engine-controller", nil, opts))
 
+	elec := election.NewElection(beaconClient, eng, log, cfg)
+	sys.Register("election", election.NewElectionDeriver(ctx, beaconClient, elec, log), opts)
+
 	sys.Register("engine-reset",
 		engine.NewEngineResetDeriver(ctx, log, cfg, l1, eng, syncCfg), opts)
 
@@ -135,6 +140,8 @@ func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 
 	pipeline := derive.NewDerivationPipeline(log, cfg, l1, blobsSrc, altDASrc, eng, metrics)
 	sys.Register("pipeline", derive.NewPipelineDeriver(ctx, pipeline), opts)
+
+	sys.Register("data-source", pipeline.DataSrc, opts)
 
 	testActionEmitter := sys.Register("test-action", nil, opts)
 

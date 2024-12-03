@@ -27,6 +27,8 @@ type L1Miner struct {
 
 	blobStore *e2eutils.BlobsStore
 
+	fakeLookahead e2eutils.FakeLookahead
+
 	// L1 block building preferences
 	prefCoinbase common.Address
 
@@ -47,8 +49,9 @@ type L1Miner struct {
 func NewL1Miner(t Testing, log log.Logger, genesis *core.Genesis) *L1Miner {
 	rep := NewL1Replica(t, log, genesis)
 	return &L1Miner{
-		L1Replica: *rep,
-		blobStore: e2eutils.NewBlobStore(),
+		L1Replica:     *rep,
+		blobStore:     e2eutils.NewBlobStore(),
+		fakeLookahead: e2eutils.NewBeaconClient(genesis),
 	}
 }
 
@@ -58,6 +61,10 @@ func (s *L1Miner) BlobSource() prefetcher.L1BlobSource {
 
 func (s *L1Miner) BlobStore() *e2eutils.BlobsStore {
 	return s.blobStore
+}
+
+func (s *L1Miner) BeaconClient() e2eutils.FakeLookahead {
+	return s.fakeLookahead
 }
 
 // ActL1StartBlock returns an action to build a new L1 block on top of the head block,
