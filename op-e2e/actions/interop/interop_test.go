@@ -36,7 +36,7 @@ func TestInteropVerifier(gt *testing.T) {
 
 	verMockBackend := &testutils.MockInteropBackend{}
 	_, ver := helpers.SetupVerifier(t, sd, logger,
-		l1Miner.L1Client(t, sd.RollupCfg), l1Miner.BlobStore(), &sync.Config{},
+		l1Miner.L1Client(t, sd.RollupCfg), l1Miner.BlobStore(), l1Miner.BeaconClient(), &sync.Config{},
 		helpers.WithInteropBackend(verMockBackend))
 
 	seq.ActL2PipelineFull(t)

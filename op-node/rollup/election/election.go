@@ -13,7 +13,6 @@ import (
 	BatchTicketAccounting "github.com/ethereum-optimism/optimism/op-node/batch-contracts/bindings"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
-	"github.com/ethereum-optimism/optimism/op-service/sources"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
@@ -26,16 +25,20 @@ type BeaconClient interface {
 	GetTimeFromSlot(ctx context.Context, slot uint64) (uint64, error)
 }
 
+type L2Caller interface {
+	Call(ctx context.Context, callMsg map[string]interface{}, blockNumber string) (string, error)
+}
+
 type Election struct {
 	bc BeaconClient
-	l2 *sources.EthClient
+	l2 L2Caller
 
 	log log.Logger
 
 	cfg *rollup.Config
 }
 
-func NewElection(bc BeaconClient, l2 *sources.EthClient, log log.Logger, cfg *rollup.Config) *Election {
+func NewElection(bc BeaconClient, l2 L2Caller, log log.Logger, cfg *rollup.Config) *Election {
 	return &Election{
 		bc:  bc,
 		l2:  l2,
