@@ -1009,14 +1009,13 @@ func TestSpanBatchAtomicity_Consolidation(gt *testing.T) {
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
-	dp.DeployConfig.L2BlockTime = 2
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelInfo)
 	_, _, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
 	seqEngCl, err := sources.NewEngineClient(seqEng.RPCClient(), log, nil, sources.EngineClientDefaultConfig(sd.RollupCfg))
 	require.NoError(t, err)
 
-	targetHeadNumber := uint64(6) // L1 block time / L2 block time
+	targetHeadNumber := uint64(1) // L1 block time / L2 block time
 
 	sequencer.ActL2PipelineFull(t)
 	verifier.ActL2PipelineFull(t)
@@ -1077,12 +1076,11 @@ func TestSpanBatchAtomicity_ForceAdvance(gt *testing.T) {
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
-	dp.DeployConfig.L2BlockTime = 2
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelInfo)
 	_, _, miner, sequencer, _, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
 
-	targetHeadNumber := uint64(6) // L1 block time / L2 block time
+	targetHeadNumber := uint64(1) // L1 block time / L2 block time
 
 	sequencer.ActL2PipelineFull(t)
 	verifier.ActL2PipelineFull(t)
