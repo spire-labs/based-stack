@@ -101,25 +101,38 @@ type DataSourceConfig struct {
 	altDAEnabled      bool
 }
 
-func isValidBatchTx(receipt *types.Receipt, batcherAddr common.Address, logger log.Logger) bool {
+func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, logger log.Logger, batchInboxAddress common.Address) bool {
 	if receipt.Type != types.BlobTxType {
 		// TODO(spire): enable other DA sources
 		logger.Warn("not a blob tx")
 		return false
 	}
+
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
 	for _, log := range receipt.Logs {
-		if log.Address != batcherAddr {
+		// TODO: This is a bug -> check the inbox addr here, and the
+		// election winner elsewhere
+		// if log.Address != batcherAddr {
+		if log.Address != batchInboxAddress {
 			continue
 		}
 		if log.Topics[0] != topic0 {
+			continue
+		}
+		senderAddr := addressFromTopic(log.Topics[1])
+		if senderAddr != electionWinnerAddr {
+			logger.Warn("Invalid batch sender", "expected", electionWinnerAddr, "got", senderAddr)
 			continue
 		}
 		return true
 	}
 
 	return false
+}
+
+func addressFromTopic(topic common.Hash) common.Address {
+	return common.Address(topic.Bytes()[12:])
 }
 
 func (ds *DataSourceFactory) GetElectionWinners() []*eth.ElectionWinner {
