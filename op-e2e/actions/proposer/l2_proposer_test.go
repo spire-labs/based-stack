@@ -52,7 +52,7 @@ func RunProposerTest(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 
 	rollupSeqCl := sequencer.RollupClient()
 	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),

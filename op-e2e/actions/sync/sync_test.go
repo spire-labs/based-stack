@@ -702,7 +702,7 @@ func TestELSync(gt *testing.T) {
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelInfo)
 
-	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	// Enable engine P2P sync
 	verEng, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{SyncMode: sync.ELSync})
 
@@ -758,7 +758,7 @@ func TestELSyncTransitionstoCL(gt *testing.T) {
 
 	captureLog, captureLogHandler := testlog.CaptureLogger(t, log.LevelInfo)
 
-	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, logger)
+	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, logger)
 	batcher := actionsHelpers.NewL2Batcher(logger, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp), sequencer.RollupClient(), miner.EthClient(), seqEng.EthClient(), seqEng.EngineClient(t, sd.RollupCfg))
 	// Enable engine P2P sync
 	verEng, verifier := actionsHelpers.SetupVerifier(t, sd, captureLog, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{SyncMode: sync.ELSync})
@@ -816,7 +816,7 @@ func TestELSyncTransitionsToCLSyncAfterNodeRestart(gt *testing.T) {
 
 	captureLog, captureLogHandler := testlog.CaptureLogger(t, log.LevelInfo)
 
-	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, logger)
+	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, logger)
 	batcher := actionsHelpers.NewL2Batcher(logger, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp), sequencer.RollupClient(), miner.EthClient(), seqEng.EthClient(), seqEng.EngineClient(t, sd.RollupCfg))
 	// Enable engine P2P sync
 	verEng, verifier := actionsHelpers.SetupVerifier(t, sd, captureLog, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{SyncMode: sync.ELSync})
@@ -859,7 +859,7 @@ func TestForcedELSyncCLAfterNodeRestart(gt *testing.T) {
 
 	captureLog, captureLogHandler := testlog.CaptureLogger(t, log.LevelInfo)
 
-	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, logger)
+	miner, seqEng, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, logger)
 	batcher := actionsHelpers.NewL2Batcher(logger, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp), sequencer.RollupClient(), miner.EthClient(), seqEng.EthClient(), seqEng.EngineClient(t, sd.RollupCfg))
 	// Enable engine P2P sync
 	verEng, verifier := actionsHelpers.SetupVerifier(t, sd, captureLog, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{SyncMode: sync.ELSync})

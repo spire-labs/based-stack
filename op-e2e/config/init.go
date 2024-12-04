@@ -140,8 +140,8 @@ func init() {
 	DeployConfig.L1GenesisBlockTimestamp = hexutil.Uint64(time.Now().Unix())
 	DeployConfig.FundDevAccounts = true
 	// Speed up the in memory tests
-	DeployConfig.L1BlockTime = 2
-	DeployConfig.L2BlockTime = 1
+	DeployConfig.L1BlockTime = 12
+	DeployConfig.L2BlockTime = 12
 
 	if L1Deployments != nil {
 		DeployConfig.SetDeployments(L1Deployments)

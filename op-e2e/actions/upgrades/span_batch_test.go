@@ -46,7 +46,7 @@ func TestDropSpanBatchBeforeHardfork(gt *testing.T) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, nil)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 
@@ -143,7 +143,7 @@ func TestHardforkMiddleOfSpanBatch(gt *testing.T) {
 
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	minerCl := miner.EthClient()
 	rollupSeqCl := sequencer.RollupClient()
@@ -252,7 +252,7 @@ func TestAcceptSingularBatchAfterHardfork(gt *testing.T) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 
@@ -339,7 +339,7 @@ func TestMixOfBatchesAfterHardfork(gt *testing.T) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 	seqEngCl := seqEngine.EthClient()
@@ -430,7 +430,7 @@ func TestSpanBatchEmptyChain(gt *testing.T) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 	rollupSeqCl := sequencer.RollupClient()
@@ -494,7 +494,7 @@ func TestSpanBatchLowThroughputChain(gt *testing.T) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 	rollupSeqCl := sequencer.RollupClient()
@@ -620,7 +620,7 @@ func TestBatchEquivalence(gt *testing.T) {
 	}
 
 	// Setup sequencer
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sdDeltaActivated, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sdDeltaActivated, dp, log)
 	rollupSeqCl := sequencer.RollupClient()
 	seqEngCl := seqEngine.EthClient()
 

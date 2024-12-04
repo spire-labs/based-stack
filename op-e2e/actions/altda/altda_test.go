@@ -65,7 +65,7 @@ func NewL2AltDA(t helpers.Testing, params ...AltDAParam) *L2AltDA {
 
 	require.True(t, sd.RollupCfg.AltDAEnabled())
 
-	miner := helpers.NewL1Miner(t, log, sd.L1Cfg)
+	miner := helpers.NewL1Miner(t, log, sd.L1Cfg, dp.DeployConfig)
 	l1Client := miner.EthClient()
 
 	jwtPath := e2eutils.WriteDefaultJWT(t)

@@ -27,7 +27,7 @@ func SetupSafeDBTestActors(t helpers.Testing, dp *e2eutils.DeployParams, sd *e2e
 	t.Cleanup(func() {
 		_ = db.Close()
 	})
-	miner, seqEngine, sequencer := helpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := helpers.SetupSequencerTest(t, sd, dp, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 	sequencer.ActL2PipelineFull(t)
 	verifEngine, verifier := helpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{}, helpers.WithSafeHeadListener(db))

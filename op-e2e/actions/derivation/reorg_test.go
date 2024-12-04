@@ -586,7 +586,7 @@ func RestartOpGeth(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	log := testlog.Logger(t, log.LevelDebug)
 	jwtPath := e2eutils.WriteDefaultJWT(t)
 	// L1
-	miner := actionsHelpers.NewL1Miner(t, log, sd.L1Cfg)
+	miner := actionsHelpers.NewL1Miner(t, log, sd.L1Cfg, dp.DeployConfig)
 	l1F, err := sources.NewL1Client(miner.RPCClient(), log, nil, sources.L1ClientDefaultConfig(sd.RollupCfg, false, sources.RPCKindStandard))
 	require.NoError(t, err)
 	// Sequencer

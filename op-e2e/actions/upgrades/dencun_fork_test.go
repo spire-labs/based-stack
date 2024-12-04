@@ -229,7 +229,7 @@ func TestDencunBlobTxInclusion(gt *testing.T) {
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
 
-	_, engine, sequencer := helpers.SetupSequencerTest(t, sd, log)
+	_, engine, sequencer := helpers.SetupSequencerTest(t, sd, dp, log)
 	sequencer.ActL2PipelineFull(t)
 
 	tx := aliceSimpleBlobTx(t, dp)

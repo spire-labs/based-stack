@@ -23,7 +23,7 @@ func TestL2Verifier_SequenceWindow(gt *testing.T) {
 	dp := e2eutils.MakeDeployParams(t, p)
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, engine, verifier := helpers.SetupVerifierOnlyTest(t, sd, log)
+	miner, engine, verifier := helpers.SetupVerifierOnlyTest(t, sd, dp, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 
 	// Make two sequence windows worth of empty L1 blocks. After we pass the first sequence window, the L2 chain should get blocks
