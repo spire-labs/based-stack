@@ -17,17 +17,15 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-type MockElectionWinnersProvider struct{}
+type MockElectionWinnersProvider struct {
+	electionWinner common.Address
+}
 
 func (m *MockElectionWinnersProvider) GetElectionWinners() []*eth.ElectionWinner {
 	return []*eth.ElectionWinner{
 		{
-			Address: common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678"),
+			Address: m.electionWinner,
 			Time:    0x499602D2,
-		},
-		{
-			Address: common.HexToAddress("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
-			Time:    9876543210,
 		},
 	}
 }
@@ -37,6 +35,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	rng := rand.New(rand.NewSource(12345))
 	privateKey := testutils.InsecureRandomKey(rng)
 	batchInboxAddr := testutils.RandomAddress(rng)
+	electionWinnerAddr := testutils.RandomAddress(rng)
 	logger := testlog.Logger(t, log.LvlInfo)
 
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
@@ -49,7 +48,7 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		batchInboxAddress: batchInboxAddr,
 	}
 
-	mockElectionProvider := &MockElectionWinnersProvider{}
+	mockElectionProvider := &MockElectionWinnersProvider{electionWinner: electionWinnerAddr}
 
 	// create an instance of the blob data source for testing w/o calling a function. Just create the struct
 	ds := BlobDataSource{
@@ -78,22 +77,20 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	// require.Equal(t, 1, len(data))
 	// require.Equal(t, 0, len(blobHashes))
 
-	electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
-
 	// create a valid blob batcher tx and make sure it's picked up
 	blobHash := testutils.RandomHash(rng)
 	blobTxData := &types.BlobTx{
 		Nonce:      rng.Uint64(),
 		Gas:        2_000_000,
-		To:         electionWinnerAddress,
+		To:         batchInboxAddr,
 		BlobHashes: []common.Hash{blobHash},
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
 	receipt := &types.Receipt{
 		Type: types.BlobTxType,
 		Logs: []*types.Log{{
-			Address: electionWinnerAddress,
-			Topics:  []common.Hash{batchSubmittedEventTopic},
+			Address: batchInboxAddr,
+			Topics:  []common.Hash{batchSubmittedEventTopic, padAddress(electionWinnerAddr)},
 		}},
 	}
 	txs := []TxWithReceipt{{tx: blobTx, receipt: receipt}}
@@ -181,9 +178,16 @@ func TestFillBlobPointers(t *testing.T) {
 func TestIsValidBatchTx(t *testing.T) {
 	rng := rand.New(rand.NewSource(12345))
 	privateKey := testutils.InsecureRandomKey(rng)
-	batcherAddr := testutils.RandomAddress(rng)
+	batchInboxAddr := testutils.RandomAddress(rng)
+	electionWinnerAddr := testutils.RandomAddress(rng)
+	randomAddr := testutils.RandomAddress(rng)
+
 	logger := testlog.Logger(t, log.LvlInfo)
-	electionWinnerAddress := common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678")
+	cfg := &DataSourceConfig{
+		batchInboxAddress: batchInboxAddr,
+	}
+
+	electionWinnerTopic := padAddress(electionWinnerAddr)
 
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	batchSubmittedEventTopic := batchInboxAbi.Events["BatchSubmitted"].ID
@@ -195,18 +199,18 @@ func TestIsValidBatchTx(t *testing.T) {
 		blobTxData := &types.BlobTx{
 			Nonce:      rng.Uint64(),
 			Gas:        2_000_000,
-			To:         electionWinnerAddress,
+			To:         electionWinnerAddr,
 			BlobHashes: []common.Hash{testutils.RandomHash(rng)},
 		}
 		_, _ = types.SignNewTx(privateKey, signer, blobTxData)
 		receipt := &types.Receipt{
 			Type: types.BlobTxType,
 			Logs: []*types.Log{{
-				Address: electionWinnerAddress,
-				Topics:  []common.Hash{batchSubmittedEventTopic},
+				Address: batchInboxAddr,
+				Topics:  []common.Hash{batchSubmittedEventTopic, electionWinnerTopic},
 			}},
 		}
-		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddr, cfg, logger)
 		require.True(t, valid, "Expected transaction and winner to be valid")
 	})
 
@@ -214,19 +218,18 @@ func TestIsValidBatchTx(t *testing.T) {
 		blobTxData := &types.BlobTx{
 			Nonce:      rng.Uint64(),
 			Gas:        2_000_000,
-			To:         electionWinnerAddress,
+			To:         batchInboxAddr,
 			BlobHashes: []common.Hash{testutils.RandomHash(rng)},
 		}
 		_, _ = types.SignNewTx(privateKey, signer, blobTxData)
 		receipt := &types.Receipt{
 			Type: types.BlobTxType,
 			Logs: []*types.Log{{
-				Address: electionWinnerAddress,
-				Topics:  []common.Hash{batchSubmittedEventTopic},
+				Address: batchInboxAddr,
+				Topics:  []common.Hash{batchSubmittedEventTopic, padAddress(randomAddr)},
 			}},
 		}
-		// batcherAddr instead of electionWinnerAddress
-		valid := isValidBatchTx(receipt, batcherAddr, logger)
+		valid := isValidBatchTx(receipt, batchInboxAddr, cfg, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to incorrect election winner")
 	})
 
@@ -234,12 +237,12 @@ func TestIsValidBatchTx(t *testing.T) {
 		receipt := &types.Receipt{
 			Type: types.LegacyTxType,
 			Logs: []*types.Log{{
-				Address: electionWinnerAddress,
-				Topics:  []common.Hash{batchSubmittedEventTopic},
+				Address: electionWinnerAddr,
+				Topics:  []common.Hash{batchSubmittedEventTopic, electionWinnerTopic},
 			}},
 		}
 
-		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddr, cfg, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to receipt type")
 	})
 
@@ -247,12 +250,12 @@ func TestIsValidBatchTx(t *testing.T) {
 		receipt := &types.Receipt{
 			Type: types.BlobTxType,
 			Logs: []*types.Log{{
-				Address: batcherAddr,
+				Address: batchInboxAddr,
 				Topics:  []common.Hash{testutils.RandomHash(rng)},
 			}},
 		}
 
-		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddr, cfg, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to incorrect log topic")
 	})
 
@@ -262,7 +265,13 @@ func TestIsValidBatchTx(t *testing.T) {
 			Logs: []*types.Log{},
 		}
 
-		valid := isValidBatchTx(receipt, electionWinnerAddress, logger)
+		valid := isValidBatchTx(receipt, electionWinnerAddr, cfg, logger)
 		require.False(t, valid, "Expected transaction to be invalid due to missing logs")
 	})
+}
+
+func padAddress(address common.Address) common.Hash {
+	padded := make([]byte, 32)
+	copy(padded[32-len(address.Bytes()):], address.Bytes())
+	return common.BytesToHash(padded)
 }

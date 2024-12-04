@@ -956,11 +956,10 @@ func (l *BatchSubmitter) shouldPublishPOC() bool {
 		return false
 	}
 	syncL1BlockNumber := syncStatus.CurrentL1.Number
-	l.Log.Info("Current L1 block number from sequencer", syncL1BlockNumber)
-	l.Log.Info("Target L1 block number", l.targetL1BlockNumber)
+	l.Log.Info("Checking if should publish", "sequencerCurrentL1", syncL1BlockNumber, "tergetL1BlockNumber", l.targetL1BlockNumber)
 
 	// If targetL1BlockNumber is unitilized, pick a new target block
-	// TODO: This is POC logic only - this will be removed once reading election winners
+	// TODO(spire): This is POC logic only - this will be removed once reading election winners
 	if l.targetL1BlockNumber == 0 {
 		candidateTarget := l.generateTargetBlockPOC()
 		l.targetL1BlockNumber = candidateTarget
