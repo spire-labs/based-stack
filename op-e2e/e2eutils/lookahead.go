@@ -29,7 +29,7 @@ func NewBeaconClient(genesis *core.Genesis, cfg *genesis.DeployConfig) FakeLooka
 
 func (l FakeLookahead) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
 	out := eth.APIGetLookaheadResponse{}
-	address, err := hex.DecodeString(strings.TrimPrefix("0x7c60541eB6f54f0F3c8B34D0a00De9045d2f5534", "0x"))
+	address, err := hex.DecodeString(strings.TrimPrefix("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", "0x"))
 	if err != nil {
 		return out, err
 	}
