@@ -59,7 +59,7 @@ func BatcherKeyRotation(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 	sequencer.ActL2PipelineFull(t)
 	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
@@ -241,7 +241,7 @@ func GPOParamsChange(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),
 		sequencer.RollupClient(), miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 
@@ -368,7 +368,7 @@ func GasLimitChange(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),
 		sequencer.RollupClient(), miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 

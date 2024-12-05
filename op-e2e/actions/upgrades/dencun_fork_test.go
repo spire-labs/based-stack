@@ -122,6 +122,9 @@ func verifyEcotoneBlock(gt *testing.T, header *types.Header) {
 func TestDencunL2ForkAfterGenesis(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
 	dp := e2eutils.MakeDeployParams(t, helpers.DefaultRollupTestParams)
+
+	dp.DeployConfig.MaxSequencerDrift = 50
+
 	require.Zero(t, *dp.DeployConfig.L1CancunTimeOffset)
 	// This test wil fork on the second block
 	offset := hexutil.Uint64(dp.DeployConfig.L2BlockTime * 2)
@@ -229,7 +232,7 @@ func TestDencunBlobTxInclusion(gt *testing.T) {
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
 
-	_, engine, sequencer := helpers.SetupSequencerTest(t, sd, log)
+	_, engine, sequencer := helpers.SetupSequencerTest(t, sd, dp, log)
 	sequencer.ActL2PipelineFull(t)
 
 	tx := aliceSimpleBlobTx(t, dp)
