@@ -77,7 +77,7 @@ func TestAttributesQueue(t *testing.T) {
 	rollupCfg := rollup.Config{}
 	l1InfoTx, err := L1InfoDepositBytes(&rollupCfg, expectedL1Cfg, safeHead.SequenceNumber+1, l1Info, 0, common.Address{0xaa})
 	require.NoError(t, err)
-	burnTx, err := BurnTxBytes(context.Background(), common.Address{0xaa})
+	burnTx, err := BurnTxBytes(common.Address{0xaa})
 	require.NoError(t, err)
 	attrs := eth.PayloadAttributes{
 		Timestamp:             eth.Uint64Quantity(safeHead.Time + cfg.BlockTime),

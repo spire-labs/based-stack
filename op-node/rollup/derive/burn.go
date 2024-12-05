@@ -2,7 +2,6 @@ package derive
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
 	"math/big"
 
@@ -20,7 +19,7 @@ const (
 var (
 	BurnSelector         = crypto.Keccak256([]byte(BurnSignature))[:4]
 	ElectionTickets      = common.HexToAddress("0x4200000000000000000000000000000000000028")
-	BurnDepositerAddress = common.HexToAddress("0xdeaddeaddeaddeaddeaddeaddeaddeaddead0001")
+	BurnDepositorAddress = common.HexToAddress("0xdeaddeaddeaddeaddeaddeaddeaddeaddead0001")
 )
 
 type BurnSource struct {
@@ -37,12 +36,12 @@ func (src *BurnSource) SourceHash() common.Hash {
 
 }
 
-func BuildBurnTx(ctx context.Context, address common.Address) (*types.DepositTx, error) {
+func BuildBurnTx(address common.Address) (*types.DepositTx, error) {
 	source := BurnSource{
 		Address: address,
 	}
 
-	data, err := marhsalBinaryBurnTx(address)
+	data, err := marshsalBinaryBurnTx(address)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +51,7 @@ func BuildBurnTx(ctx context.Context, address common.Address) (*types.DepositTx,
 	// i believe it is still forcefully included in the deriv pipeline anyway
 	out := &types.DepositTx{
 		SourceHash:          source.SourceHash(),
-		From:                BurnDepositerAddress,
+		From:                BurnDepositorAddress,
 		IsSystemTransaction: false,
 		To:                  &ElectionTickets,
 		Mint:                nil,
@@ -64,8 +63,8 @@ func BuildBurnTx(ctx context.Context, address common.Address) (*types.DepositTx,
 	return out, nil
 }
 
-func BurnTxBytes(ctx context.Context, address common.Address) ([]byte, error) {
-	tx, err := BuildBurnTx(ctx, address)
+func BurnTxBytes(address common.Address) ([]byte, error) {
+	tx, err := BuildBurnTx(address)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +78,7 @@ func BurnTxBytes(ctx context.Context, address common.Address) ([]byte, error) {
 
 }
 
-func marhsalBinaryBurnTx(address common.Address) ([]byte, error) {
+func marshsalBinaryBurnTx(address common.Address) ([]byte, error) {
 	w := bytes.NewBuffer(make([]byte, 0, BurnLen))
 
 	if err := solabi.WriteSignature(w, BurnSelector); err != nil {

@@ -152,7 +152,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		epoch := l1Info.ID()
 		l1InfoTx, err := L1InfoDepositBytes(cfg, testSysCfg, 0, l1Info, 0, common.Address{})
 		require.NoError(t, err)
-		burnTx, err := BurnTxBytes(context.Background(), common.Address{})
+		burnTx, err := BurnTxBytes(common.Address{})
 		require.NoError(t, err)
 
 		l2Txs := append(append(make([]eth.Data, 0), l1InfoTx), usedDepositTxs...)
@@ -230,7 +230,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.NoError(t, err)
 		depositsComplete, err := DepositsCompleteBytes(seqNumber, l1Info)
 		require.NoError(t, err)
-		burnTx, err := BurnTxBytes(context.Background(), common.Address{})
+		burnTx, err := BurnTxBytes(common.Address{})
 		require.NoError(t, err)
 
 		var l2Txs []eth.Data
@@ -264,7 +264,6 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		l1Info := testutils.RandomBlockInfo(rng)
 		l1Info.InfoHash = l2Parent.L1Origin.Hash
 		l1Info.InfoNum = l2Parent.L1Origin.Number // same origin again, so the sequence number is not reset
-		ctx := context.Background()
 
 		// sets config to post-interop
 		cfg.ActivateAtGenesis(rollup.Interop)
@@ -275,7 +274,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.NoError(t, err)
 		depositsComplete, err := DepositsCompleteBytes(seqNumber, l1Info)
 		require.NoError(t, err)
-		burnTx, err := BurnTxBytes(ctx, common.Address{})
+		burnTx, err := BurnTxBytes(common.Address{})
 		require.NoError(t, err)
 
 		var l2Txs []eth.Data

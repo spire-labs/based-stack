@@ -140,7 +140,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	}
 
 	// burn the winners ticket at top of the block
-	burnTx, err := BurnTxBytes(ctx, winner)
+	burnTx, err := BurnTxBytes(winner)
 
 	if err != nil {
 		return nil, NewCriticalError(fmt.Errorf("failed to create burnTx: %w", err))
