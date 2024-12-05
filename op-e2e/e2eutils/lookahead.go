@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum/go-ethereum/core"
 )
@@ -16,16 +17,19 @@ type FakeLookahead struct {
 	slotsPerEpoch    uint64
 }
 
-func NewBeaconClient(genesis *core.Genesis) FakeLookahead {
+func NewBeaconClient(genesis *core.Genesis, cfg *genesis.DeployConfig) FakeLookahead {
 	return FakeLookahead{
-		slotsPerEpoch:    8,
-		blockTime:        12,
+		// TODO(spire): mocking a long lookahead makes it easy to fix some tests.
+		// we should test the epoch switch in e2e as well.
+		// This field should be configurable.
+		slotsPerEpoch:    200,
+		blockTime:        cfg.L1BlockTime,
 		genesisTimestamp: genesis.Timestamp}
 }
 
 func (l FakeLookahead) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
 	out := eth.APIGetLookaheadResponse{}
-	address, err := hex.DecodeString(strings.TrimPrefix("0x7c60541eB6f54f0F3c8B34D0a00De9045d2f5534", "0x"))
+	address, err := hex.DecodeString(strings.TrimPrefix("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", "0x"))
 	if err != nil {
 		return out, err
 	}
@@ -34,10 +38,6 @@ func (l FakeLookahead) GetLookahead(ctx context.Context, epoch uint64) (eth.APIG
 	copy(pubkey[:], address[:])
 
 	for i := 0; i < int(l.slotsPerEpoch); i++ {
-		if err != nil {
-			return eth.APIGetLookaheadResponse{}, err
-		}
-		// TODO: fix parent slot
 		out.Data = append(out.Data, &eth.Validator{Pubkey: pubkey, Slot: eth.Uint64String(i)})
 	}
 

@@ -28,7 +28,7 @@ func TestInteropVerifier(gt *testing.T) {
 	sd.RollupCfg.InteropTime = new(uint64)
 	logger := testlog.Logger(t, log.LevelDebug)
 	seqMockBackend := &testutils.MockInteropBackend{}
-	l1Miner, seqEng, seq := helpers.SetupSequencerTest(t, sd, logger,
+	l1Miner, seqEng, seq := helpers.SetupSequencerTest(t, sd, dp, logger,
 		helpers.WithVerifierOpts(helpers.WithInteropBackend(seqMockBackend)))
 
 	batcher := helpers.NewL2Batcher(logger, sd.RollupCfg, helpers.DefaultBatcherCfg(dp),

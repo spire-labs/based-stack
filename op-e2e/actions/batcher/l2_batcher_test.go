@@ -65,7 +65,7 @@ func NormalBatcher(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	verifEngine, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
 	rollupSeqCl := sequencer.RollupClient()
@@ -134,7 +134,7 @@ func L2Finalization(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 
 	sequencer.ActL2PipelineFull(t)
 
@@ -231,7 +231,7 @@ func L2FinalizationWithSparseL1(gt *testing.T, deltaTimeOffset *hexutil.Uint64) 
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 
 	sequencer.ActL2PipelineFull(t)
 
@@ -289,7 +289,7 @@ func GarbageBatch(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	for _, garbageKind := range actionsHelpers.GarbageKinds {
 		sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 		log := testlog.Logger(t, log.LevelError)
-		miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+		miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 
 		_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
@@ -369,7 +369,7 @@ func ExtendedTimeWithoutL1Batches(gt *testing.T, deltaTimeOffset *hexutil.Uint64
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelError)
-	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 
 	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 
@@ -425,7 +425,7 @@ func BigL2Txs(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelInfo)
-	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, log)
+	miner, engine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 
 	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 

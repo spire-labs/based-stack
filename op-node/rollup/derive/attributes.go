@@ -139,9 +139,17 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		afterForceIncludeTxs = append(afterForceIncludeTxs, depositsCompleteTx)
 	}
 
+	// burn the winners ticket at top of the block
+	burnTx, err := BurnTxBytes(winner)
+
+	if err != nil {
+		return nil, NewCriticalError(fmt.Errorf("failed to create burnTx: %w", err))
+	}
+
 	txs := make([]hexutil.Bytes, 0, 1+len(depositTxs)+len(afterForceIncludeTxs)+len(upgradeTxs))
 	txs = append(txs, l1InfoTx)
 	txs = append(txs, depositTxs...)
+	txs = append(txs, burnTx)
 	txs = append(txs, afterForceIncludeTxs...)
 	txs = append(txs, upgradeTxs...)
 

@@ -61,6 +61,7 @@ func MakeDeployParams(t require.TestingT, tp *TestParams) *DeployParams {
 	deployConfig.SequencerWindowSize = tp.SequencerWindowSize
 	deployConfig.ChannelTimeoutBedrock = tp.ChannelTimeout
 	deployConfig.L1BlockTime = tp.L1BlockTime
+	deployConfig.L2BlockTime = tp.L1BlockTime
 	deployConfig.UseAltDA = tp.UseAltDA
 	ApplyDeployConfigForks(deployConfig)
 
