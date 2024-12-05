@@ -107,6 +107,7 @@ func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, c
 		logger.Warn("not a blob tx")
 		return false
 	}
+
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
 	for _, log := range receipt.Logs {

@@ -15,6 +15,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func SetupElectionTest(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.SetupData, log log.Logger, opts ...SequencerOpt) (*L1Miner, *L2Engine, *L2Sequencer, *L2Verifier, *L2Engine, *L2Batcher) {
+	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, dp, log)
+	verifEngine, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
+	rollupSeqCl := sequencer.RollupClient()
+	batcher := NewL2Batcher(log, sd.RollupCfg, BlobBatcherCfg(dp),
+		rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
+	return miner, seqEngine, sequencer, verifier, verifEngine, batcher
+}
+
 func SetupSequencerTest(t Testing, sd *e2eutils.SetupData, dp *e2eutils.DeployParams, log log.Logger, opts ...SequencerOpt) (*L1Miner, *L2Engine, *L2Sequencer) {
 	jwtPath := e2eutils.WriteDefaultJWT(t)
 	cfg := DefaultSequencerConfig()

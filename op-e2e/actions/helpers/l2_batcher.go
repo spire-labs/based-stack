@@ -75,6 +75,15 @@ func DefaultBatcherCfg(dp *e2eutils.DeployParams) *BatcherCfg {
 	}
 }
 
+func BlobBatcherCfg(dp *e2eutils.DeployParams) *BatcherCfg {
+	return &BatcherCfg{
+		MinL1TxSize:          0,
+		MaxL1TxSize:          128_000,
+		BatcherKey:           dp.Secrets.Batcher,
+		DataAvailabilityType: batcherFlags.BlobsType,
+	}
+}
+
 func AltDABatcherCfg(dp *e2eutils.DeployParams, altDA AltDAInputSetter) *BatcherCfg {
 	return &BatcherCfg{
 		MinL1TxSize:          0,
