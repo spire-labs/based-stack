@@ -65,7 +65,7 @@ func NewL2FaultProofEnv[c any](t helpers.Testing, testCfg *TestCfg[c], tp *e2eut
 	jwtPath := e2eutils.WriteDefaultJWT(t)
 	cfg := &helpers.SequencerCfg{VerifierCfg: *helpers.DefaultVerifierCfg()}
 
-	miner := helpers.NewL1Miner(t, log.New("role", "l1-miner"), sd.L1Cfg)
+	miner := helpers.NewL1Miner(t, log.New("role", "l1-miner"), sd.L1Cfg, dp.DeployConfig)
 
 	l1Cl, err := sources.NewL1Client(miner.RPCClient(), log, nil, sources.L1ClientDefaultConfig(sd.RollupCfg, false, sources.RPCKindStandard))
 	require.NoError(t, err)

@@ -27,7 +27,7 @@ func TestL2Sequencer_SequencerDrift(gt *testing.T) {
 	dp := e2eutils.MakeDeployParams(t, p)
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, engine, sequencer := helpers.SetupSequencerTest(t, sd, log)
+	miner, engine, sequencer := helpers.SetupSequencerTest(t, sd, dp, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 
 	sequencer.ActL2PipelineFull(t)
@@ -95,7 +95,7 @@ func TestL2Sequencer_SequencerOnlyReorg(gt *testing.T) {
 	dp := e2eutils.MakeDeployParams(t, helpers.DefaultRollupTestParams)
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
-	miner, _, sequencer := helpers.SetupSequencerTest(t, sd, log)
+	miner, _, sequencer := helpers.SetupSequencerTest(t, sd, dp, log)
 
 	// Sequencer at first only recognizes the genesis as safe.
 	// The rest of the L1 chain will be incorporated as L1 origins into unsafe L2 blocks.

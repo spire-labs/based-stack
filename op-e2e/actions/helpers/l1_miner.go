@@ -3,6 +3,7 @@ package helpers
 import (
 	"math/big"
 
+	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
 	"github.com/ethereum-optimism/optimism/op-program/host/prefetcher"
 	"github.com/stretchr/testify/require"
 
@@ -46,12 +47,12 @@ type L1Miner struct {
 }
 
 // NewL1Miner creates a new L1Replica that can also build blocks.
-func NewL1Miner(t Testing, log log.Logger, genesis *core.Genesis) *L1Miner {
+func NewL1Miner(t Testing, log log.Logger, genesis *core.Genesis, cfg *genesis.DeployConfig) *L1Miner {
 	rep := NewL1Replica(t, log, genesis)
 	return &L1Miner{
 		L1Replica:     *rep,
 		blobStore:     e2eutils.NewBlobStore(),
-		fakeLookahead: e2eutils.NewBeaconClient(genesis),
+		fakeLookahead: e2eutils.NewBeaconClient(genesis, cfg),
 	}
 }
 

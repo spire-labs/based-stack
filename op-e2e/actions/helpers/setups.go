@@ -16,7 +16,7 @@ import (
 )
 
 func SetupElectionTest(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.SetupData, log log.Logger, opts ...SequencerOpt) (*L1Miner, *L2Engine, *L2Sequencer, *L2Verifier, *L2Engine, *L2Batcher) {
-	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, dp, log)
 	verifEngine, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 	batcher := NewL2Batcher(log, sd.RollupCfg, BlobBatcherCfg(dp),
@@ -24,14 +24,14 @@ func SetupElectionTest(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.SetupD
 	return miner, seqEngine, sequencer, verifier, verifEngine, batcher
 }
 
-func SetupSequencerTest(t Testing, sd *e2eutils.SetupData, log log.Logger, opts ...SequencerOpt) (*L1Miner, *L2Engine, *L2Sequencer) {
+func SetupSequencerTest(t Testing, sd *e2eutils.SetupData, dp *e2eutils.DeployParams, log log.Logger, opts ...SequencerOpt) (*L1Miner, *L2Engine, *L2Sequencer) {
 	jwtPath := e2eutils.WriteDefaultJWT(t)
 	cfg := DefaultSequencerConfig()
 	for _, opt := range opts {
 		opt(cfg)
 	}
 
-	miner := NewL1Miner(t, log.New("role", "l1-miner"), sd.L1Cfg)
+	miner := NewL1Miner(t, log.New("role", "l1-miner"), sd.L1Cfg, dp.DeployConfig)
 
 	l1F, err := sources.NewL1Client(miner.RPCClient(), log, nil, sources.L1ClientDefaultConfig(sd.RollupCfg, false, sources.RPCKindStandard))
 	require.NoError(t, err)
@@ -56,8 +56,8 @@ func SetupVerifier(t Testing, sd *e2eutils.SetupData, log log.Logger,
 	return engine, verifier
 }
 
-func SetupVerifierOnlyTest(t Testing, sd *e2eutils.SetupData, log log.Logger) (*L1Miner, *L2Engine, *L2Verifier) {
-	miner := NewL1Miner(t, log, sd.L1Cfg)
+func SetupVerifierOnlyTest(t Testing, sd *e2eutils.SetupData, dp *e2eutils.DeployParams, log log.Logger) (*L1Miner, *L2Engine, *L2Verifier) {
+	miner := NewL1Miner(t, log, sd.L1Cfg, dp.DeployConfig)
 	l1Cl := miner.L1Client(t, sd.RollupCfg)
 	engine, verifier := SetupVerifier(t, sd, log, l1Cl, miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	return miner, engine, verifier
@@ -74,7 +74,7 @@ func SetupReorgTest(t Testing, config *e2eutils.TestParams, deltaTimeOffset *hex
 }
 
 func SetupReorgTestActors(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.SetupData, log log.Logger) (*e2eutils.SetupData, *e2eutils.DeployParams, *L1Miner, *L2Sequencer, *L2Engine, *L2Verifier, *L2Engine, *L2Batcher) {
-	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, log)
+	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, dp, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 	sequencer.ActL2PipelineFull(t)
 	verifEngine, verifier := SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})

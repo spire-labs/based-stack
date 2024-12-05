@@ -36,7 +36,7 @@ func TestDeriveChainFromNearL1Genesis(gt *testing.T) {
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, nil)
 	sd := e2eutils.Setup(t, dp, helpers.DefaultAlloc)
 	logger := testlog.Logger(t, log.LevelInfo)
-	miner, seqEngine, sequencer := helpers.SetupSequencerTest(t, sd, logger)
+	miner, seqEngine, sequencer := helpers.SetupSequencerTest(t, sd, dp, logger)
 
 	miner.ActEmptyBlock(t)
 	require.EqualValues(gt, 1, miner.L1Chain().CurrentBlock().Number.Uint64())
