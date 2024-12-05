@@ -104,7 +104,7 @@ func TestElectionType(gt *testing.T) {
 	sequencer.ActL1HeadSignal(t)
 	sequencer.ActBuildToL1Head(t)
 
-	// submit all new L2 blocks, now with Blobs DA!
+	// submit all new L2 blocks
 	newBatcher.ActSubmitAll(t)
 	batchTx = newBatcher.LastSubmitted
 
