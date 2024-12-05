@@ -77,11 +77,13 @@ func TestAttributesQueue(t *testing.T) {
 	rollupCfg := rollup.Config{}
 	l1InfoTx, err := L1InfoDepositBytes(&rollupCfg, expectedL1Cfg, safeHead.SequenceNumber+1, l1Info, 0, common.Address{0xaa})
 	require.NoError(t, err)
+	burnTx, err := BurnTxBytes(common.Address{0xaa})
+	require.NoError(t, err)
 	attrs := eth.PayloadAttributes{
 		Timestamp:             eth.Uint64Quantity(safeHead.Time + cfg.BlockTime),
 		PrevRandao:            eth.Bytes32(l1Info.InfoMixDigest),
 		SuggestedFeeRecipient: predeploys.SequencerFeeVaultAddr,
-		Transactions:          []eth.Data{l1InfoTx, eth.Data("foobar"), eth.Data("example")},
+		Transactions:          []eth.Data{l1InfoTx, burnTx, eth.Data("foobar"), eth.Data("example")},
 		NoTxPool:              true,
 		GasLimit:              (*eth.Uint64Quantity)(&expectedL1Cfg.GasLimit),
 	}
