@@ -153,7 +153,7 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 	// 3. pass into isvalidbatchtx
 	for _, tx := range txs {
 		// skip any non-batcher transactions
-		if !isValidBatchTx(tx.receipt, electionWinner.Address, logger) {
+		if !isValidBatchTx(tx.receipt, electionWinner.Address, config, logger) {
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}
