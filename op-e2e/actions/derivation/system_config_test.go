@@ -62,7 +62,8 @@ func BatcherKeyRotation(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	miner, seqEngine, sequencer := actionsHelpers.SetupSequencerTest(t, sd, dp, log)
 	miner.ActL1SetFeeRecipient(common.Address{'A'})
 	sequencer.ActL2PipelineFull(t)
-	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
+	l1Cl := miner.L1Client(t, sd.RollupCfg)
+	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, l1Cl, l1Cl.EthClient, miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	rollupSeqCl := sequencer.RollupClient()
 
 	// the default batcher
@@ -412,8 +413,9 @@ func GasLimitChange(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	miner.ActL1StartBlock(12)(t)
 	miner.ActL1IncludeTx(dp.Addresses.Batcher)(t)
 	miner.ActL1EndBlock(t)
+	l1Cl := miner.L1Client(t, sd.RollupCfg)
 
-	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, miner.L1Client(t, sd.RollupCfg), miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
+	_, verifier := actionsHelpers.SetupVerifier(t, sd, log, l1Cl, l1Cl.EthClient, miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
 	verifier.ActL2PipelineFull(t)
 
 	require.Equal(t, sequencer.L2Unsafe(), verifier.L2Safe(), "verifier stays in sync, even with gaslimit changes")

@@ -8,6 +8,22 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// This is the representation of the order of precedence, each value represents an instruction for how to process the election winners, based on the system configuration
+// NO_FALLBACK is how we know to stop processing the list on-chain, and is an instruction we should never receive here, we check it only for sanity
+// TODO(spire): The current unimplemented codes are:
+//   - CURRENT_PROPOSER_WITH_CONFIG
+//   - NEXT_PROPOSER_WITH_CONFIG
+//   - PERMISSIONLESS
+const (
+	NO_FALLBACK                  = 0x00
+	CURRENT_PROPOSER             = 0x01
+	CURRENT_PROPOSER_WITH_CONFIG = 0x02
+	NEXT_PROPOSER                = 0x03
+	NEXT_PROPOSER_WITH_CONFIG    = 0x04
+	RANDOM_TICKET_HOLDER         = 0x05
+	PERMISSIONLESS               = 0x06
+)
+
 func (e *Election) HandleInstructions(instructions []uint8, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int) ([]*eth.ElectionWinner, error) {
 	var err error
 
