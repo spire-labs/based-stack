@@ -26,6 +26,7 @@ abstract contract ElectionSystemConfig {
         NEXT_PROPOSER_WITH_CONFIG, // 0x04
         RANDOM_TICKET_HOLDER, // 0x05
         PERMISSIONLESS // 0x06
+
     }
 
     // NOTE: The following structs are single values
