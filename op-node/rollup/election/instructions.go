@@ -8,6 +8,47 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+func (e *Election) HandleInstructions(instructions []uint8, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int) ([]*eth.ElectionWinner, error) {
+	var err error
+
+	// Process instructions
+	for _, instruction := range instructions {
+		switch instruction {
+		case NO_FALLBACK:
+			// We should never get here, but if we do something is wrong with the system config
+			return []*eth.ElectionWinner{}, fmt.Errorf("fallback list contained NO_FALLBACK instruction")
+		case CURRENT_PROPOSER:
+			electionWinners, err = e.ProcessCurrentProposerInstruction(electionWinners, operatorAddresses, tickets)
+			if err != nil {
+				return []*eth.ElectionWinner{}, err
+			}
+			continue
+		case CURRENT_PROPOSER_WITH_CONFIG:
+			// TODO(spire): This is not implemented yet
+			continue
+		case NEXT_PROPOSER:
+			electionWinners, err = e.ProcessNextProposerInstruction(electionWinners, operatorAddresses, tickets)
+			if err != nil {
+				return []*eth.ElectionWinner{}, err
+			}
+			continue
+		case NEXT_PROPOSER_WITH_CONFIG:
+			// TODO(spire): This is not implemented yet
+			continue
+		case RANDOM_TICKET_HOLDER:
+			// TODO(spire): This is not implemented yet
+			continue
+		case PERMISSIONLESS:
+			// TODO(spire): This is not implemented yet
+			continue
+		default:
+			return []*eth.ElectionWinner{}, fmt.Errorf("unknown fallback instruction: %d", instruction)
+		}
+	}
+
+	return electionWinners, nil
+}
+
 // If the current proposer is the winner of a slot and holds a ticket he wins the electtion for that slot
 func (e *Election) ProcessCurrentProposerInstruction(electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int) ([]*eth.ElectionWinner, error) {
 	if len(electionWinners) != len(operatorAddresses) {

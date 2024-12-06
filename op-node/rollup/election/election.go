@@ -171,46 +171,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 		electionWinners = append(electionWinners, &winner)
 	}
 
-	// Process instructions
-	for _, instruction := range fallbacklist {
-		switch instruction {
-		case NO_FALLBACK:
-			// We should never get here, but if we do something is wrong with the system config
-			e.log.Crit("Fallback list contained NO_FALLBACK instruction")
-			return []*eth.ElectionWinner{}, fmt.Errorf("fallback list contained NO_FALLBACK instruction")
-		case CURRENT_PROPOSER:
-			e.log.Info("Processing CURRENT_PROPOSER instruction")
-			electionWinners, err = e.ProcessCurrentProposerInstruction(electionWinners, operatorAddresses, tickets)
-			if err != nil {
-				return []*eth.ElectionWinner{}, err
-			}
-			continue
-		case CURRENT_PROPOSER_WITH_CONFIG:
-			// TODO(spire): This is not implemented yet
-			continue
-		case NEXT_PROPOSER:
-			e.log.Info("Processing NEXT_PROPOSER instruction")
-			electionWinners, err = e.ProcessNextProposerInstruction(electionWinners, operatorAddresses, tickets)
-			if err != nil {
-				return []*eth.ElectionWinner{}, err
-			}
-			continue
-		case NEXT_PROPOSER_WITH_CONFIG:
-			// TODO(spire): This is not implemented yet
-			continue
-		case RANDOM_TICKET_HOLDER:
-			// TODO(spire): This is not implemented yet
-			continue
-		case PERMISSIONLESS:
-			// TODO(spire): This is not implemented yet
-			continue
-		default:
-			e.log.Crit("Unknown fallback instruction", "instruction", instruction)
-			return []*eth.ElectionWinner{}, fmt.Errorf("unknown fallback instruction: %d", instruction)
-		}
-	}
-
-	return electionWinners, nil
+	return e.HandleInstructions(fallbacklist, electionWinners, operatorAddresses, tickets)
 }
 
 func (e *Election) GetBatchTicketAccounting(ctx context.Context, lookaheadAddresses []common.Address, blockNumber string) ([]*big.Int, error) {

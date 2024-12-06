@@ -9,6 +9,78 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func createMockInputsForHandleInstructions() ([]*eth.ElectionWinner, []common.Address, map[common.Address]*big.Int) {
+	electionWinners := []*eth.ElectionWinner{
+		{Address: common.Address{}},
+		{Address: common.Address{}},
+	}
+	operatorAddresses := []common.Address{
+		common.HexToAddress("0x1234567890abcdef1234567890abcdef12345678"),
+		common.HexToAddress("0xabcdef1234567890abcdef1234567890abcdef12"),
+	}
+	tickets := map[common.Address]*big.Int{
+		operatorAddresses[0]: big.NewInt(2),
+		operatorAddresses[1]: big.NewInt(3),
+	}
+	return electionWinners, operatorAddresses, tickets
+}
+
+func TestSingleCurrentProposerInstruction(t *testing.T) {
+	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	e := &Election{}
+
+	instructions := []uint8{CURRENT_PROPOSER}
+	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+
+	assert.NoError(t, err)
+	assert.Equal(t, electionWinners, result)
+}
+
+func TestSingleNextProposerInstruction(t *testing.T) {
+	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	e := &Election{}
+
+	instructions := []uint8{NEXT_PROPOSER}
+	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+
+	assert.NoError(t, err)
+	assert.Equal(t, electionWinners, result)
+}
+
+func TestMultipleInstructions(t *testing.T) {
+	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	e := &Election{}
+
+	instructions := []uint8{CURRENT_PROPOSER, NEXT_PROPOSER}
+	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+
+	assert.NoError(t, err)
+	assert.Equal(t, electionWinners, result)
+}
+
+func TestInvalidInstruction(t *testing.T) {
+	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	e := &Election{}
+
+	instructions := []uint8{255} // Unknown instruction
+	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+
+	assert.Error(t, err)
+	assert.EqualError(t, err, "unknown fallback instruction: 255")
+	assert.Empty(t, result, "Result should be empty on error")
+}
+
+func TestNoInstructions(t *testing.T) {
+	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	e := &Election{}
+
+	instructions := []uint8{}
+	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+
+	assert.NoError(t, err)
+	assert.Equal(t, electionWinners, result)
+}
+
 func TestProcessCurrentProposerInstruction(t *testing.T) {
 	// Mock input data
 	electionWinners := []*eth.ElectionWinner{
