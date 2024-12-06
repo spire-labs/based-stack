@@ -94,6 +94,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 
 	validators := resp.Data
 
+	// TODO(spire): get operation addresses for each validator somehow
 	for _, validator := range validators {
 		address := common.BytesToAddress(validator.Pubkey[:20])
 		lookaheadAddresses = append(lookaheadAddresses, address)
@@ -210,7 +211,7 @@ func (e *Election) ProcessCurrentProposerInstruction(electionWinners []*eth.Elec
 		}
 
 		if validatorTickets[i].Cmp(big.NewInt(0)) > 0 {
-			winner.Address = validatorOperatorAddresses[i]
+			electionWinners[i].Address = validatorOperatorAddresses[i]
 			validatorTickets[i] = validatorTickets[i].Sub(validatorTickets[i], big.NewInt(1))
 		}
 	}
