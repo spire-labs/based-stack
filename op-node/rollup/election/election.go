@@ -67,8 +67,8 @@ func NewElection(bc BeaconClient, l2 RpcClient, l1 RpcClient, log log.Logger, cf
 	}
 }
 
-// l2PendingSafeBlock is passed in as a hexadecimal string
-func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2PendingSafeBlock string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
+// l2UnsafeBlock is passed in as a hexadecimal string
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2UnsafeBlock string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
 	var operatorAddresses []common.Address
 
 	resp, err := e.bc.GetLookahead(ctx, epoch)
@@ -85,8 +85,8 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 		operatorAddresses = append(operatorAddresses, address)
 	}
 
-	e.log.Info("Checking ticket count per validator at L2 safe block", "l2SafeBlock", l2PendingSafeBlock)
-	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, operatorAddresses, l2PendingSafeBlock)
+	e.log.Info("Checking ticket count per validator at L2 unsafe block", "l2UnsafeBlock", l2UnsafeBlock)
+	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, operatorAddresses, l2UnsafeBlock)
 
 	tickets := make(map[common.Address]*big.Int)
 
@@ -106,7 +106,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 		return []*eth.ElectionWinner{}, err
 	}
 
-	fallbacklist, err := e.GetElectionFallbackList(ctx, l2PendingSafeBlock)
+	fallbacklist, err := e.GetElectionFallbackList(ctx, l2UnsafeBlock)
 	if err != nil {
 		log.Crit("Failed to get fallback list", "err", err)
 		return []*eth.ElectionWinner{}, err

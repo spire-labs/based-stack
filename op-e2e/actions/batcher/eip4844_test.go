@@ -56,6 +56,7 @@ func TestEIP4844DataAvailability(gt *testing.T) {
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)
 
 	batcher := setupBatcher(t, log, sd, dp, miner, sequencer, seqEngine, batcherFlags.BlobsType)
+	log.Info("Batcher is set up", "batcher", batcher)
 
 	sequencer.ActL2PipelineFull(t)
 	verifier.ActL2PipelineFull(t)

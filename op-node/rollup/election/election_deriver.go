@@ -45,9 +45,6 @@ func (ed *ElectionDeriver) AttachEmitter(emitter event.Emitter) {
 }
 
 func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
-	ed.mu.Lock()
-	defer ed.mu.Unlock()
-
 	switch x := ev.(type) {
 	case status.L1UnsafeEvent:
 		ed.l1Unsafe = x.L1Unsafe
@@ -85,6 +82,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		log.Error("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
+		ed.mu.Lock()
+		defer ed.mu.Unlock()
+
 		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
 
