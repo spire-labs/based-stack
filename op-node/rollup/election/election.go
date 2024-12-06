@@ -18,7 +18,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-// This is the representation of the order of precedence, each value represents a "opcode" for how to process the election winners, based on the system configuration
+// This is the representation of the order of precedence, each value represents an instruction for how to process the election winners, based on the system configuration
+// NO_FALLBACK is how we know to stop processing the list on-chain, and is an instruction we should never receive here, we check it only for sanity
 // TODO(spire): The current unimplemented codes are:
 //   - CURRENT_PROPOSER_WITH_CONFIG
 //   - NEXT_PROPOSER_WITH_CONFIG
@@ -84,7 +85,7 @@ func NewElection(bc BeaconClient, l2 RpcClient, l1 RpcClient, log log.Logger, cf
 
 // l2PendingSafeBlock is passed in as a hexadecimal string
 func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2PendingSafeBlock string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
-	var lookaheadAddresses []common.Address
+	var operatorAddresses []common.Address
 
 	resp, err := e.bc.GetLookahead(ctx, epoch)
 
@@ -97,11 +98,24 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 	// TODO(spire): get operation addresses for each validator somehow
 	for _, validator := range validators {
 		address := common.BytesToAddress(validator.Pubkey[:20])
-		lookaheadAddresses = append(lookaheadAddresses, address)
+		operatorAddresses = append(operatorAddresses, address)
 	}
 
 	e.log.Info("Checking ticket count per validator at L2 safe block", "l2SafeBlock", l2PendingSafeBlock)
-	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, lookaheadAddresses, l2PendingSafeBlock)
+	ticketCountPerValidator, err := e.GetBatchTicketAccounting(ctx, operatorAddresses, l2PendingSafeBlock)
+
+	tickets := make(map[common.Address]*big.Int)
+
+	for i, operatorAddress := range operatorAddresses {
+		// Already set
+		if _, ok := tickets[operatorAddress]; ok {
+			continue
+		}
+
+		tickets[operatorAddress] = ticketCountPerValidator[i]
+	}
+
+	e.log.Info("Operator addresses and tickets", "operatorAddresses", operatorAddresses, "ticketCountPerValidator", tickets)
 
 	if err != nil {
 		log.Error("Failed to get ticket count per validator", "err", err)
@@ -166,17 +180,24 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 			return []*eth.ElectionWinner{}, fmt.Errorf("fallback list contained NO_FALLBACK instruction")
 		case CURRENT_PROPOSER:
 			e.log.Info("Processing CURRENT_PROPOSER instruction")
-			electionWinners, err = e.ProcessCurrentProposerInstruction(electionWinners, lookaheadAddresses, ticketCountPerValidator)
+			electionWinners, err = e.ProcessCurrentProposerInstruction(electionWinners, operatorAddresses, tickets)
 			if err != nil {
 				return []*eth.ElectionWinner{}, err
 			}
-			e.log.Info("Ticket count per validator", "ticketCountPerValidator", ticketCountPerValidator)
+			e.log.Info("Ticket count per validator", "ticketCountPerValidator", tickets)
+			e.log.Info("Election winners after CURRENT_PROPOSER", "electionWinners", electionWinners)
 			continue
 		case CURRENT_PROPOSER_WITH_CONFIG:
 			// TODO(spire): This is not implemented yet
 			continue
 		case NEXT_PROPOSER:
-			// TODO(spire): This is not implemented yet
+			e.log.Info("Processing NEXT_PROPOSER instruction")
+			electionWinners, err = e.ProcessNextProposerInstruction(electionWinners, operatorAddresses, tickets)
+			if err != nil {
+				return []*eth.ElectionWinner{}, err
+			}
+			e.log.Info("Ticket count per validator", "tickets", tickets)
+			e.log.Info("Election winners after NEXT_PROPOSER", "electionWinners", electionWinners)
 			continue
 		case NEXT_PROPOSER_WITH_CONFIG:
 			// TODO(spire): This is not implemented yet
@@ -196,9 +217,9 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Pendin
 	return electionWinners, nil
 }
 
-// All 3 arrays are parallel arrays
-func (e *Election) ProcessCurrentProposerInstruction(electionWinners []*eth.ElectionWinner, validatorOperatorAddresses []common.Address, validatorTickets []*big.Int) ([]*eth.ElectionWinner, error) {
-	if len(electionWinners) != len(validatorOperatorAddresses) || len(electionWinners) != len(validatorTickets) {
+// If the current proposer is the winner of a slot and holds a ticket he wins the electtion for that slot
+func (e *Election) ProcessCurrentProposerInstruction(electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int) ([]*eth.ElectionWinner, error) {
+	if len(electionWinners) != len(operatorAddresses) {
 		return []*eth.ElectionWinner{}, fmt.Errorf("invalid input lengths for this instruction")
 	}
 
@@ -210,9 +231,65 @@ func (e *Election) ProcessCurrentProposerInstruction(electionWinners []*eth.Elec
 			continue
 		}
 
-		if validatorTickets[i].Cmp(big.NewInt(0)) > 0 {
-			electionWinners[i].Address = validatorOperatorAddresses[i]
-			validatorTickets[i] = validatorTickets[i].Sub(validatorTickets[i], big.NewInt(1))
+		operator := operatorAddresses[i]
+
+		operatorTickets, ok := tickets[operator]
+
+		if !ok {
+			return []*eth.ElectionWinner{}, fmt.Errorf("failed to find tickets for operator %s", winner.Address.Hex())
+		}
+
+		if operatorTickets.Cmp(big.NewInt(0)) > 0 {
+			electionWinners[i].Address = operator
+			tickets[operator] = operatorTickets.Sub(operatorTickets, big.NewInt(1))
+		}
+	}
+
+	return electionWinners, nil
+}
+
+// If a proposer is the winner of a slot and does not hold a ticket, the next proposer in the lookahead who does is the winner
+func (e *Election) ProcessNextProposerInstruction(electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int) ([]*eth.ElectionWinner, error) {
+	// must be parallel arrays
+	if len(electionWinners) != len(operatorAddresses) {
+		return []*eth.ElectionWinner{}, fmt.Errorf("invalid input lengths for this instruction")
+	}
+
+	addressZero := common.Address{}
+
+	for i, winner := range electionWinners {
+		// slot has a winner, skipping
+		if winner.Address != addressZero {
+			continue
+		}
+
+		operator := operatorAddresses[i]
+		operatorTickets, ok := tickets[operator]
+
+		if !ok {
+			return []*eth.ElectionWinner{}, fmt.Errorf("failed to find tickets for operator %s", winner.Address.Hex())
+		}
+
+		// If this proposer does hold a ticket, it should be handled in a different instruction to add it to the electionWinners
+		if operatorTickets.Cmp(big.NewInt(0)) == 0 {
+			// proposer does not hold a ticket, finding the next proposer in the lookahead who does
+			for j := i + 1; j < len(electionWinners); j++ {
+
+				// Get the new values for the operator
+				operator := operatorAddresses[j]
+				operatorTickets, ok := tickets[operator]
+
+				if !ok {
+					return []*eth.ElectionWinner{}, fmt.Errorf("failed to find tickets for operator %s", winner.Address.Hex())
+				}
+
+				// When the next proposer has a ticket, he is the winner and we can finish searching
+				if operatorTickets.Cmp(big.NewInt(0)) > 0 {
+					electionWinners[i].Address = operatorAddresses[j]
+					tickets[operator] = operatorTickets.Sub(operatorTickets, big.NewInt(1))
+					break
+				}
+			}
 		}
 	}
 

@@ -139,6 +139,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		afterForceIncludeTxs = append(afterForceIncludeTxs, depositsCompleteTx)
 	}
 
+	// TODO(spire): if winner is zero address, no one won the slot and we should not burn
 	// burn the winners ticket at top of the block
 	burnTx, err := BurnTxBytes(winner)
 
