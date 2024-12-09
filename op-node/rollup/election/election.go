@@ -106,7 +106,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Unsafe
 		return []*eth.ElectionWinner{}, err
 	}
 
-	fallbacklist, err := e.GetElectionFallbackList(ctx, l2UnsafeBlock)
+	fallbacklist, err := e.GetElectionFallbackList(ctx, l1UnsafeBlock)
 	if err != nil {
 		log.Crit("Failed to get fallback list", "err", err)
 		return []*eth.ElectionWinner{}, err
