@@ -82,6 +82,10 @@ type L2API interface {
 	OutputV0AtBlock(ctx context.Context, blockHash common.Hash) (*eth.OutputV0, error)
 }
 
+type L1API interface {
+	Call(ctx context.Context, callMsg map[string]interface{}, blockNumber string) (string, error)
+}
+
 type safeDB interface {
 	rollup.SafeHeadListener
 	node.SafeDBReader
@@ -89,7 +93,7 @@ type safeDB interface {
 
 func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 	blobsSrc derive.L1BlobsFetcher, beaconClient election.BeaconClient, altDASrc driver.AltDAIface,
-	eng L2API, cfg *rollup.Config, syncCfg *sync.Config, safeHeadListener safeDB,
+	eng L2API, l1Client L1API, cfg *rollup.Config, syncCfg *sync.Config, safeHeadListener safeDB,
 	interopBackend interop.InteropBackend) *L2Verifier {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
@@ -118,7 +122,7 @@ func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 	ec := engine.NewEngineController(eng, log, metrics, cfg, syncCfg,
 		sys.Register("engine-controller", nil, opts))
 
-	elec := election.NewElection(beaconClient, eng, log, cfg)
+	elec := election.NewElection(beaconClient, eng, l1Client, log, cfg)
 	sys.Register("election", election.NewElectionDeriver(ctx, beaconClient, elec, log), opts)
 
 	sys.Register("engine-reset",

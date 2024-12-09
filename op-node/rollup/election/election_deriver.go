@@ -22,9 +22,8 @@ type ElectionDeriver struct {
 
 	nextEpochToUse uint64
 
-	l2Unsafe      eth.L2BlockRef
-	l2PendingSafe eth.L2BlockRef
-	l1Unsafe      eth.L1BlockRef
+	l2Unsafe eth.L2BlockRef
+	l1Unsafe eth.L1BlockRef
 
 	mu sync.Mutex
 }
@@ -47,13 +46,11 @@ func (ed *ElectionDeriver) AttachEmitter(emitter event.Emitter) {
 
 func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	switch x := ev.(type) {
-	// Do we want to do l1unsafe or l1safe here?
 	case status.L1UnsafeEvent:
 		ed.l1Unsafe = x.L1Unsafe
 		log.Info("L1 Unsafe is at block", "block", x.L1Unsafe.Number, "time", x.L1Unsafe.Time)
 		ed.ProcessNewL1Block(x.L1Unsafe)
 	case engine.PendingSafeUpdateEvent:
-		ed.l2PendingSafe = x.PendingSafe
 		ed.l2Unsafe = x.Unsafe
 
 	default:
@@ -79,15 +76,10 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 	}
 
 	// We use unsafe because even if there is a reorg, the time should still be the same
-	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2PendingSafe.Number), ed.l2Unsafe.Time)
-
-	for _, winner := range electionWinners {
-		address := &winner.Address
-		log.Debug("This winners address is", "address", address)
-	}
+	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time)
 
 	if err != nil {
-		log.Warn("Failed to get election winner", "err", err)
+		log.Error("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
 		ed.mu.Lock()

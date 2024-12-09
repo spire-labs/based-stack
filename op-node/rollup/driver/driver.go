@@ -165,6 +165,7 @@ func NewDriver(
 	l2 L2Chain,
 	l2Client *sources.EthClient,
 	l1 L1Chain,
+	l1Client *sources.EthClient,
 	supervisor interop.InteropBackend, // may be nil pre-interop.
 	l1Blobs derive.L1BlobsFetcher,
 	beaconClient election.BeaconClient,
@@ -199,7 +200,7 @@ func NewDriver(
 	l1 = NewMeteredL1Fetcher(l1Tracker, metrics)
 	verifConfDepth := confdepth.NewConfDepth(driverCfg.VerifierConfDepth, statusTracker.L1Head, l1)
 
-	elec := election.NewElection(beaconClient, l2Client, log, cfg)
+	elec := election.NewElection(beaconClient, l2Client, l1Client, log, cfg)
 	sys.Register("election", election.NewElectionDeriver(driverCtx, beaconClient, elec, log), opts)
 
 	ec := engine.NewEngineController(l2, log, metrics, cfg, syncCfg,
