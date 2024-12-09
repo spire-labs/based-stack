@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	gosync "sync"
 	"time"
 
@@ -144,16 +143,39 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 	}
 }
 
-// TODO(spire): This API is broken and needs adjusting, it should not take in a blockNumber, it should get the L1 and L2 blocks
-// Dynamically based on what epoch it was run in.
-func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
-	val, err := strconv.ParseUint(blockNumber[2:], 16, 64)
+// TODO: remove blockNumber
+// instead pass in L1 and L2 blocks dynamically based on epoch parameter
+// and run an election that way
+func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	epochSize, err := s.Election.GetEpochSize(ctx, epoch)
 
 	if err != nil {
 		return []eth.ElectionWinner{}, err
 	}
 
-	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val)
+	// TODO(spire): fetch beacon chain genesis timestamp
+	// TODO(spire): fetch L1 block ref by number
+
+	//TODO(spire): assuming no missed slots
+	var l1Block uint64
+	if epoch == 0 {
+		l1Block = 0
+	} else {
+		l1Block = epochSize*(epoch+1) - epochSize - 1
+	}
+	l2Payload, err := s.L2.PayloadByNumber(ctx, l1Block)
+
+	if err != nil {
+		return []eth.ElectionWinner{}, err
+	}
+	l2Block := uint64(l2Payload.ExecutionPayload.BlockNumber) - 2
+	l2ParentTimestamp := uint64(l2Payload.ExecutionPayload.Timestamp) - (s.Config.BlockTime * 2)
+
+	s.log.Info("From API:", "l2Block", l2Block)
+	s.log.Info("From API:", "l2ParentTimestamp", l2ParentTimestamp)
+	s.log.Info("From API:", "l1Block", l1Block)
+
+	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, fmt.Sprintf("0x%x", l2Block), l2ParentTimestamp, fmt.Sprintf("0x%x", l1Block))
 
 	if err != nil {
 		return []eth.ElectionWinner{}, err

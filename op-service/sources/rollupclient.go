@@ -44,9 +44,9 @@ func (r *RollupClient) RollupConfig(ctx context.Context) (*rollup.Config, error)
 	return output, err
 }
 
-func (r *RollupClient) GetElectionWinners(ctx context.Context, epoch, blockNumber uint64) ([]eth.ElectionWinner, error) {
+func (r *RollupClient) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
 	var output []eth.ElectionWinner
-	err := r.rpc.CallContext(ctx, &output, "optimism_getElectionWinners", epoch, hexutil.EncodeUint64(blockNumber))
+	err := r.rpc.CallContext(ctx, &output, "optimism_getElectionWinners", epoch)
 	return output, err
 }
 

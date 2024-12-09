@@ -68,7 +68,7 @@ func NewElection(bc BeaconClient, l2 RpcClient, l1 RpcClient, log log.Logger, cf
 }
 
 // l2UnsafeBlock is passed in as a hexadecimal string
-func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2UnsafeBlock string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2UnsafeBlock string, unsafeParentSlotTime uint64, l1UnsafeBlock string) ([]*eth.ElectionWinner, error) {
 	var operatorAddresses []common.Address
 
 	resp, err := e.bc.GetLookahead(ctx, epoch)
@@ -106,7 +106,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Unsafe
 		return []*eth.ElectionWinner{}, err
 	}
 
-	fallbacklist, err := e.GetElectionFallbackList(ctx, l2UnsafeBlock)
+	fallbacklist, err := e.GetElectionFallbackList(ctx, l1UnsafeBlock)
 	if err != nil {
 		log.Crit("Failed to get fallback list", "err", err)
 		return []*eth.ElectionWinner{}, err
@@ -259,6 +259,19 @@ func (e *Election) GetElectionFallbackList(ctx context.Context, blockNumber stri
 	fallbacklist := res[0].([]uint8)
 
 	return fallbacklist, nil
+}
+
+func (e *Election) GetEpochSize(ctx context.Context, epoch uint64) (uint64, error) {
+	resp, err := e.bc.GetLookahead(ctx, epoch)
+
+	if err != nil {
+		return 0, err
+	}
+
+	validators := resp.Data
+
+	return uint64(len(validators)), nil
+
 }
 
 // / Helper function to format the data into the type the rpc expects
