@@ -68,7 +68,7 @@ func NewElection(bc BeaconClient, l2 RpcClient, l1 RpcClient, log log.Logger, cf
 }
 
 // l2UnsafeBlock is passed in as a hexadecimal string
-func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2UnsafeBlock string, unsafeParentSlotTime uint64) ([]*eth.ElectionWinner, error) {
+func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2UnsafeBlock string, l2UnsafeParentTime uint64, l1UnsafeBlock string) ([]*eth.ElectionWinner, error) {
 	var operatorAddresses []common.Address
 
 	resp, err := e.bc.GetLookahead(ctx, epoch)
@@ -132,8 +132,8 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Unsafe
 			ParentSlot: func() uint64 {
 				// TODO(spire): This breaks if L2 block time is not == L1 block time
 				// Should also not be hardcoded but gotten from the rollup config
-				if time == unsafeParentSlotTime+e.cfg.BlockTime {
-					return unsafeParentSlotTime
+				if time == l2UnsafeParentTime+e.cfg.BlockTime {
+					return l2UnsafeParentTime
 				}
 
 				// Sanity check, if first check fails at first index we need to return 0
