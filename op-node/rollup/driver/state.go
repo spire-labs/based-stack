@@ -143,9 +143,6 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 	}
 }
 
-// TODO: remove blockNumber
-// instead pass in L1 and L2 blocks dynamically based on epoch parameter
-// and run an election that way
 func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
 	epochSize, err := s.Election.GetEpochSize(ctx, epoch)
 
