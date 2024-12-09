@@ -127,7 +127,7 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
             assertEq(stack[i], electionTicket.tokenId() - i);
         }
 
-        assertEq(electionTicket.ticketCount(to), 10);
+        assertEq(electionTicket.balanceOf(to), 10);
     }
 }
 
@@ -193,7 +193,7 @@ contract ElectionTickets_burn_Test is ElectionTickets_Test {
 
         // Stack should be empty
         assertEq(electionTicket.top(to), 0);
-        assertEq(electionTicket.ticketCount(to), 0);
+        assertEq(electionTicket.balanceOf(to), 0);
     }
 }
 
