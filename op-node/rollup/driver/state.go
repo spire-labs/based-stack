@@ -173,7 +173,6 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 	l2Block := uint64(l2Payload.ExecutionPayload.BlockNumber) - 2
 	l2ParentTimestamp := uint64(l2Payload.ExecutionPayload.Timestamp) - (s.Config.BlockTime * 2)
 
-	// TODO(spire): fetch L1 block ref by number
 	l1BlockRef, err := s.L1.L1BlockRefByNumber(ctx, l1Block)
 
 	if err != nil {
@@ -183,7 +182,7 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 	// TODO(spire): this bit is debug - don't merge
 	// if there are missed slots, we need to search for the block with the closest timestamp to the target timestamp w/o going over
 	// and return that.
-	// Is l2Block the correct block to search for? Or should it be l1Block?
+	// Is this the correct search target?
 	actualBlockForTimestamp, err := s.SearchForBlockByTimestamp(l2Block*s.Config.BlockTime, l2Payload, uint64(beaconChainGenesisTimestamp.Data.GenesisTime))
 
 	if err != nil {
