@@ -178,7 +178,7 @@ nuke: clean devnet-clean ## Completely clean the project directory
 .PHONY: nuke
 
 ## Prepares for running a local devnet
-pre-devnet: build-batch-contracts submodules $(DEVNET_CANNON_PRESTATE_FILES)
+pre-devnet: build-config build-batch-contracts submodules $(DEVNET_CANNON_PRESTATE_FILES)
 	@if ! [ -x "$(command -v geth)" ]; then \
 		make install-geth; \
 	fi
