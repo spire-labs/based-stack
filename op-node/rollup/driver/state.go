@@ -158,7 +158,6 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 		return []eth.ElectionWinner{}, err
 	}
 
-	//TODO(spire): assuming no missed slots
 	var l1Block uint64
 	if epoch == 0 {
 		l1Block = 0
@@ -180,6 +179,18 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 	if err != nil {
 		return []eth.ElectionWinner{}, err
 	}
+
+	// TODO(spire): this bit is debug - don't merge
+	// if there are missed slots, we need to search for the block with the closest timestamp to the target timestamp w/o going over
+	// and return that.
+	// Is l2Block the correct block to search for? Or should it be l1Block?
+	actualBlockForTimestamp, err := s.SearchForBlockByTimestamp(l2Block*s.Config.BlockTime, l2Payload, uint64(beaconChainGenesisTimestamp.Data.GenesisTime))
+
+	if err != nil {
+		s.log.Error("Failed to search for block by timestamp", "err", err)
+		return []eth.ElectionWinner{}, err
+	}
+	s.log.Info("From API:", "actualBlockForTimestamp", actualBlockForTimestamp)
 
 	s.log.Info("From API:", "beaconGenesisTime", beaconChainGenesisTimestamp)
 
@@ -209,6 +220,67 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 		winners[i].ParentSlot = 0
 	}
 	return winners, nil
+}
+
+// considers missed slots
+func (s *Driver) SearchForBlockByTimestamp(targetTimestamp uint64, targetBlockPayload *eth.ExecutionPayloadEnvelope, beaconGenesisTimestamp uint64) (uint64, error) {
+	// for preventing infinite loops until this logic is working correctly
+	debugCounter := 1
+
+	// TODO(Spire): Handle the case where we can't find a block at the given timestamp and need to choose the closest previous slot
+	for {
+		s.log.Info("searchForBlockByTimestamp", "debugCounter", debugCounter)
+
+		if debugCounter > 10 {
+			s.log.Error("searchForBlockByTimestamp: Exceeded max iteration count")
+			return 0, errors.New("searchForBlockByTimestamp: Exceeded max iteration count")
+		}
+
+		targetBlockNumber := uint64(targetBlockPayload.ExecutionPayload.BlockNumber)
+		targetBlockTimestamp := uint64(targetBlockPayload.ExecutionPayload.Timestamp) - beaconGenesisTimestamp
+
+		s.log.Info("searchForBlockByTimestamp, Timestamps", "targetTimestamp", targetTimestamp, "targetBlockTimestamp", targetBlockTimestamp)
+
+		// assuming no missed slots, blocks should follow a regular interval, controlled by the block time
+		// for example, a block time of 12s we'd have:
+		// block 1: 12s
+		// block 2: 24s
+		// block 3: 36s
+		// etc.
+		// However, due to missed slots, the timestamps may not be regular, as is seen in local testing. Sometimes block 2 might be at 36s instead, etc
+		// So we need to search for the block with the closest timestamp to the target timestamp w/o going over, and return that.
+		if uint64(targetBlockTimestamp) == targetTimestamp {
+			s.log.Info("searchForBlockByTimestamp: Found target block by timestamp", "targetBlockNumber", targetBlockNumber)
+			return uint64(targetBlockNumber), nil
+		}
+
+		// however, if they are not the same, then check the difference between the two timestamps.
+		// for example, our target is 108s, we get 84s, so we take the differnce and divide by the block time to get the number of missed slots.
+		// in this case, it would be 2 missed slots.
+		// we were originally targeting block 9 at 108s, but we missed 2 slots, so our new target is 9 + 2 = 11.
+		// so we would expect the timestamp of block 11 to be 108s. We now recurse with the new target block number.
+		missedSlots := int64((targetTimestamp - uint64(targetBlockTimestamp))) / int64(s.Config.BlockTime)
+
+		// Determine the new target block number, it could be before or after the current target block number
+		var newTargetBlockNumber uint64
+		if missedSlots < 0 {
+			newTargetBlockNumber = targetBlockNumber - uint64(-missedSlots)
+		} else {
+			newTargetBlockNumber = targetBlockNumber + uint64(missedSlots)
+		}
+
+		s.log.Info("searchForBlockByTimestamp Missed slots", "missedSlots", missedSlots)
+		s.log.Info("searchForBlockByTimestamp New target block number", "newTargetBlockNumber", newTargetBlockNumber)
+
+		newTargetBlockRef, err := s.L2.PayloadByNumber(context.Background(), newTargetBlockNumber)
+		if err != nil {
+			s.log.Error("searchForBlockByTimestamp: Failed to get new target block ref", "err", err)
+			return 0, err
+		}
+
+		targetBlockPayload = newTargetBlockRef
+		debugCounter++
+	}
 }
 
 // the eventLoop responds to L1 changes and internal timers to produce L2 blocks.
