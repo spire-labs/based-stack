@@ -19,8 +19,8 @@ import (
 func TestL2Sequencer_SequencerDrift(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
 	p := &e2eutils.TestParams{
-		MaxSequencerDrift:   20, // larger than L1 block time we simulate in this test (12)
-		SequencerWindowSize: 24,
+		MaxSequencerDrift:   14, // larger than L1 block time we simulate in this test (12)
+		SequencerWindowSize: 16,
 		ChannelTimeout:      20,
 		L1BlockTime:         12,
 	}

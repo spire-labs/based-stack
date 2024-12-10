@@ -22,7 +22,7 @@ func NewBeaconClient(genesis *core.Genesis, cfg *genesis.DeployConfig) FakeLooka
 		// TODO(spire): mocking a long lookahead makes it easy to fix some tests.
 		// we should test the epoch switch in e2e as well.
 		// This field should be configurable.
-		slotsPerEpoch:    4,
+		slotsPerEpoch:    32,
 		blockTime:        cfg.L1BlockTime,
 		genesisTimestamp: genesis.Timestamp}
 }
