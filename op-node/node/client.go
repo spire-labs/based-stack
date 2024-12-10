@@ -183,6 +183,7 @@ type L1BeaconEndpointConfig struct {
 	BeaconFallbackAddrs    []string // Addresses of L1 Beacon-API fallback endpoints (only for blob sidecars retrieval)
 	BeaconCheckIgnore      bool     // When false, halt startup if the beacon version endpoint fails
 	BeaconFetchAllSidecars bool     // Whether to fetch all blob sidecars and filter locally
+	BeaconFakeLookahead    bool     // Whether to fake the lookahead. For Spire private testnet only.
 }
 
 var _ L1BeaconEndpointSetup = (*L1BeaconEndpointConfig)(nil)
@@ -198,12 +199,22 @@ func (cfg *L1BeaconEndpointConfig) Setup(ctx context.Context, log log.Logger) (c
 	}
 
 	for _, addr := range cfg.BeaconFallbackAddrs {
-		b := client.NewBasicHTTPClient(addr, log)
-		fb = append(fb, sources.NewBeaconHTTPClient(b))
+		httpClient := client.NewBasicHTTPClient(addr, log)
+		fb = append(fb, cfg.NewBeaconClient(httpClient))
 	}
 
-	a := client.NewBasicHTTPClient(cfg.BeaconAddr, log, opts...)
-	return sources.NewBeaconHTTPClient(a), fb, nil
+	httpClient := client.NewBasicHTTPClient(cfg.BeaconAddr, log, opts...)
+	return cfg.NewBeaconClient(httpClient), fb, nil
+}
+
+func (cfg *L1BeaconEndpointConfig) NewBeaconClient(httpClient client.HTTP) sources.BeaconClient {
+	var beaconClient sources.BeaconClient
+	if cfg.BeaconFakeLookahead {
+		beaconClient = sources.NewBeaconHTTPClientFakeLookahead(httpClient)
+	} else {
+		beaconClient = sources.NewBeaconHTTPClient(httpClient)
+	}
+	return beaconClient
 }
 
 func (cfg *L1BeaconEndpointConfig) Check() error {
