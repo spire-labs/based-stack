@@ -62,6 +62,11 @@ func TestElectionType(gt *testing.T) {
 	miner.ActL1StartBlock(12)(t)
 	miner.ActL1IncludeTxByHash(batchTx.Hash())(t)
 	miner.ActL1EndBlock(t)
+
+	// verifier picks up the L2 chain that was submitted
+	verifier.ActL1HeadSignal(t)
+	verifier.ActL2PipelineFull(t)
+
 	require.Equal(t, verifier.L2Safe(), sequencer.L2Unsafe(), "verifier syncs from sequencer via L1")
 	require.NotEqual(t, sequencer.L2Safe(), sequencer.L2Unsafe(), "sequencer has not processed L1 yet")
 
