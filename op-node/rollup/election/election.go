@@ -41,6 +41,7 @@ type BeaconClient interface {
 	GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error)
 	GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error)
 	GetTimeFromSlot(ctx context.Context, slot uint64) (uint64, error)
+	BeaconGenesis(ctx context.Context) (eth.APIGenesisResponse, error)
 }
 
 type RpcClient interface {
@@ -271,7 +272,10 @@ func (e *Election) GetEpochSize(ctx context.Context, epoch uint64) (uint64, erro
 	validators := resp.Data
 
 	return uint64(len(validators)), nil
+}
 
+func (e *Election) GetBeaconGenesis(ctx context.Context) (eth.APIGenesisResponse, error) {
+	return e.bc.BeaconGenesis(ctx)
 }
 
 // / Helper function to format the data into the type the rpc expects

@@ -150,8 +150,13 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 		return []eth.ElectionWinner{}, err
 	}
 
-	// TODO(spire): fetch beacon chain genesis timestamp
-	// TODO(spire): fetch L1 block ref by number
+	l2GenesisTimestamp := s.Config.Genesis.L2Time
+	// get beacon chain genesis timestamp
+	beaconChainGenesisTimestamp, err := s.Election.GetBeaconGenesis(ctx)
+
+	if err != nil {
+		return []eth.ElectionWinner{}, err
+	}
 
 	//TODO(spire): assuming no missed slots
 	var l1Block uint64
@@ -161,12 +166,27 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.El
 		l1Block = epochSize*(epoch+1) - epochSize - 1
 	}
 	l2Payload, err := s.L2.PayloadByNumber(ctx, l1Block)
+	//Note(spire): the payload and timestamp from this may be incorrect due to missed slots
 
 	if err != nil {
 		return []eth.ElectionWinner{}, err
 	}
 	l2Block := uint64(l2Payload.ExecutionPayload.BlockNumber) - 2
 	l2ParentTimestamp := uint64(l2Payload.ExecutionPayload.Timestamp) - (s.Config.BlockTime * 2)
+
+	// TODO(spire): fetch L1 block ref by number
+	l1BlockRef, err := s.L1.L1BlockRefByNumber(ctx, l1Block)
+
+	if err != nil {
+		return []eth.ElectionWinner{}, err
+	}
+
+	s.log.Info("From API:", "beaconGenesisTime", beaconChainGenesisTimestamp)
+
+	s.log.Info("From API:", "epoch", epoch)
+	s.log.Info("From API:", "epochSize", epochSize)
+	s.log.Info("From API:", "l2GenesisTimestamp", l2GenesisTimestamp)
+	s.log.Info("From API:", "l1BlockRef Time", l1BlockRef.Time)
 
 	s.log.Info("From API:", "l2Block", l2Block)
 	s.log.Info("From API:", "l2ParentTimestamp", l2ParentTimestamp)

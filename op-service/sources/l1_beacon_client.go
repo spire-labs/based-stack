@@ -43,6 +43,10 @@ type L1BeaconClient struct {
 	slotToTimeFn SlotToTimeFn
 }
 
+func (b *L1BeaconClient) BeaconGenesis(ctx context.Context) (eth.APIGenesisResponse, error) {
+	return b.cl.BeaconGenesis(ctx)
+}
+
 // BeaconClient is a thin wrapper over the Beacon APIs.
 //
 //go:generate mockery --name BeaconClient --with-expecter=true
