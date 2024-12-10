@@ -153,7 +153,7 @@ func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumb
 		return []eth.ElectionWinner{}, err
 	}
 
-	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val)
+	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val, blockNumber)
 
 	if err != nil {
 		return []eth.ElectionWinner{}, err
