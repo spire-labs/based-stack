@@ -143,6 +143,8 @@ func NewBeaconEndpointConfig(ctx *cli.Context) node.L1BeaconEndpointSetup {
 		BeaconFallbackAddrs:    ctx.StringSlice(flags.BeaconFallbackAddrs.Name),
 		BeaconCheckIgnore:      ctx.Bool(flags.BeaconCheckIgnore.Name),
 		BeaconFetchAllSidecars: ctx.Bool(flags.BeaconFetchAllSidecars.Name),
+		BeaconFakeLookahead:    ctx.Bool(flags.BeaconFakeLookahead.Name),
+		BeaconFakeValidators:   ctx.StringSlice(flags.BeaconFakeValidators.Name),
 	}
 }
 

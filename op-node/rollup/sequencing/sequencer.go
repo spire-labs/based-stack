@@ -378,8 +378,8 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 			})
 		} else if d.latest == (BuildingState{}) {
 			if len(d.electionWinners) > 0 && d.electionWinners[len(d.electionWinners)-1].ParentSlot < d.latestHead.Time {
-				d.log.Info("Waiting for election winner update...", "latestHead", "parentSlot",
-					d.latestHead.Time, d.electionWinners[len(d.electionWinners)-1].ParentSlot)
+				d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot",
+					d.electionWinners[len(d.electionWinners)-1].ParentSlot)
 
 				// We need to try retrying the build action when this check passes
 				// TODO(spire): This might be too aggressive of a delay time wise, we are getting a lot of logs
