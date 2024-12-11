@@ -144,6 +144,7 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		if len(d.electionWinners) == 0 {
 			d.pipeline.log.Info("Election winners empty, updating right away")
 			d.electionWinners = x.ElectionWinners
+			return true
 		}
 
 		d.electionWinnersQueue = append(d.electionWinnersQueue, x.ElectionWinners)
