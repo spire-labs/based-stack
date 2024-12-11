@@ -120,6 +120,14 @@ var (
 		EnvVars:  prefixEnvVars("L1_BEACON_FAKE_LOOKAHEAD"),
 		Category: SpireCategory,
 	}
+	BeaconFakeValidators = &cli.StringSliceFlag{
+		Name:     "l1.beacon.fake-validators",
+		Usage:    "Provides fake validators that will be used to form a fake lookahead. For use with Spire private testnet only.",
+		Required: false,
+		Value:    &cli.StringSlice{},
+		EnvVars:  prefixEnvVars("L1_BEACON_FAKE_VALIDATORS"),
+		Category: SpireCategory,
+	}
 	SyncModeFlag = &cli.GenericFlag{
 		Name:    "syncmode",
 		Usage:   fmt.Sprintf("Blockchain sync mode (options: %s)", openum.EnumString(sync.ModeStrings)),
@@ -397,6 +405,7 @@ var optionalFlags = []cli.Flag{
 	BeaconCheckIgnore,
 	BeaconFetchAllSidecars,
 	BeaconFakeLookahead,
+	BeaconFakeValidators,
 	SyncModeFlag,
 	RPCListenAddr,
 	RPCListenPort,

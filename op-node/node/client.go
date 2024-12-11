@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-service/client"
 	"github.com/ethereum-optimism/optimism/op-service/sources"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	gn "github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -184,6 +185,7 @@ type L1BeaconEndpointConfig struct {
 	BeaconCheckIgnore      bool     // When false, halt startup if the beacon version endpoint fails
 	BeaconFetchAllSidecars bool     // Whether to fetch all blob sidecars and filter locally
 	BeaconFakeLookahead    bool     // Whether to fake the lookahead. For Spire private testnet only.
+	BeaconFakeValidators   []string // Validators for the fake lookahead. For Spire private testnet only.
 }
 
 var _ L1BeaconEndpointSetup = (*L1BeaconEndpointConfig)(nil)
@@ -210,7 +212,11 @@ func (cfg *L1BeaconEndpointConfig) Setup(ctx context.Context, log log.Logger) (c
 func (cfg *L1BeaconEndpointConfig) NewBeaconClient(httpClient client.HTTP) sources.BeaconClient {
 	var beaconClient sources.BeaconClient
 	if cfg.BeaconFakeLookahead {
-		beaconClient = sources.NewBeaconHTTPClientFakeLookahead(httpClient)
+		addresses := []common.Address{}
+		for _, fakeValidator := range cfg.BeaconFakeValidators {
+			addresses = append(addresses, common.HexToAddress(fakeValidator))
+		}
+		beaconClient = sources.NewBeaconHTTPClientFakeLookahead(httpClient, addresses)
 	} else {
 		beaconClient = sources.NewBeaconHTTPClient(httpClient)
 	}
@@ -221,6 +227,11 @@ func (cfg *L1BeaconEndpointConfig) Check() error {
 	if cfg.BeaconAddr == "" && !cfg.BeaconCheckIgnore {
 		return errors.New("expected L1 Beacon API endpoint, but got none")
 	}
+
+	if cfg.BeaconFakeLookahead && len(cfg.BeaconFakeValidators) == 0 && !cfg.BeaconCheckIgnore {
+		return errors.New("expected at least one fake validator, but got none")
+	}
+
 	return nil
 }
 

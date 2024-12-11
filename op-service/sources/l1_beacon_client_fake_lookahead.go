@@ -2,15 +2,14 @@ package sources
 
 import (
 	"context"
-	"encoding/hex"
 	"math/rand"
 	"net/url"
 	"path"
 	"strconv"
-	"strings"
 
 	"github.com/ethereum-optimism/optimism/op-service/client"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type BeaconHTTPClientFakeLookahead struct {
@@ -18,17 +17,20 @@ type BeaconHTTPClientFakeLookahead struct {
 	validatorPubkeys []eth.Bytes48
 }
 
-func NewBeaconHTTPClientFakeLookahead(cl client.HTTP) *BeaconHTTPClientFakeLookahead {
-	pubkeys := []eth.Bytes48{fakePubkeyFromAddress("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"),
-		fakePubkeyFromAddress("0x976EA74026E726554dB657fA54763abd0C3a0aa9")}
+func NewBeaconHTTPClientFakeLookahead(cl client.HTTP, validatorAddresses []common.Address) *BeaconHTTPClientFakeLookahead {
+
+	pubkeys := []eth.Bytes48{}
+
+	for _, validator := range validatorAddresses {
+		pubkeys = append(pubkeys, fakePubkeyFromAddress(validator))
+	}
 
 	return &BeaconHTTPClientFakeLookahead{BeaconHTTPClient: *NewBeaconHTTPClient(cl), validatorPubkeys: pubkeys}
 }
 
-func fakePubkeyFromAddress(addressStr string) eth.Bytes48 {
-	address, _ := hex.DecodeString(strings.TrimPrefix(addressStr, "0x"))
+func fakePubkeyFromAddress(address common.Address) eth.Bytes48 {
 	var pubkey eth.Bytes48
-	copy(pubkey[:], address[:])
+	copy(pubkey[:], address.Bytes()[:])
 	return pubkey
 }
 

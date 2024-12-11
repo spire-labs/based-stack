@@ -105,6 +105,7 @@ services:
       --l1=ws://l1:8546
       --l1.beacon=http://l1-bn:5052
       --l1.beacon.fake-lookahead=true
+      --l1.beacon.fake-validators="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC, 0x976EA74026E726554dB657fA54763abd0C3a0aa9"
       --l1.epoch-poll-interval=12s
       --l1.http-poll-interval=6s
       --l2=http://l2:8551
@@ -160,6 +161,7 @@ services:
       --l1=ws://l1:8546
       --l1.beacon=http://l1-bn:5052
       --l1.beacon.fake-lookahead=true
+      --l1.beacon.fake-validators="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC, 0x976EA74026E726554dB657fA54763abd0C3a0aa9"
       --l1.epoch-poll-interval=12s
       --l1.http-poll-interval=6s
       --l2=http://l2:8551
