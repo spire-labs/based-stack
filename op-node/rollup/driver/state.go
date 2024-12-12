@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	gosync "sync"
 	"time"
 
@@ -75,6 +74,9 @@ type Driver struct {
 
 	driverCtx    context.Context
 	driverCancel context.CancelFunc
+
+	electionWinnersForCurrentEpoch []*eth.ElectionWinner
+	electionWinnersForNextEpoch    []*eth.ElectionWinner
 }
 
 // Start starts up the state loop.
@@ -146,30 +148,83 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 
 // TODO(spire): This API is broken and needs adjusting, it should not take in a blockNumber, it should get the L1 and L2 blocks
 // Dynamically based on what epoch it was run in.
-func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
-	val, err := strconv.ParseUint(blockNumber[2:], 16, 64)
+func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	// TODO(spire): read election winners from state
+
+	// val, err := strconv.ParseUint(blockNumber[2:], 16, 64)
+
+	// if err != nil {
+	// 	return []eth.ElectionWinner{}, err
+	// }
+
+	// res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val, blockNumber)
+
+	// if err != nil {
+	// 	return []eth.ElectionWinner{}, err
+	// }
+
+	// winners := make([]eth.ElectionWinner, len(res))
+	// for i, winner := range res {
+	// 	winners[i] = *winner
+
+	// 	// TODO(spire): How do we get the tip of the chain to return the correct parent slot?
+	// 	// in the context of an api call?
+	// 	// set at zero for now
+	// 	// Maybe we can just make this api call return an array of addresses or something?
+	// 	winners[i].ParentSlot = 0
+	// }
+	// return winners, nil
+	if s.electionWinnersForCurrentEpoch == nil {
+		return []eth.ElectionWinner{}, errors.New("no election winners for current epoch")
+	} else {
+		winners := make([]eth.ElectionWinner, len(s.electionWinnersForCurrentEpoch))
+		for i, winner := range s.electionWinnersForCurrentEpoch {
+			winners[i] = *winner
+		}
+		return winners, nil
+	}
+}
+
+func (s *Driver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
+	s.log.Info("ProcessNewL1Block in state.go", "block", l1Head.Number, "time", l1Head.Time)
+	epoch, err := s.Election.GetEpochNumber(s.Ctx, l1Head.Time)
 
 	if err != nil {
-		return []eth.ElectionWinner{}, err
+		s.Log.Warn("Failed to get epoch number", "err", err)
+		return
 	}
 
-	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val, blockNumber)
+	ctx := s.Ctx
+	l2Payload, err := s.L2.PayloadByNumber(ctx, l1Head.Number)
 
 	if err != nil {
-		return []eth.ElectionWinner{}, err
+		s.Log.Warn("Failed to get L2 payload by number", "err", err)
+		return
 	}
 
-	winners := make([]eth.ElectionWinner, len(res))
-	for i, winner := range res {
-		winners[i] = *winner
+	l2BlockNumber := uint64(l2Payload.ExecutionPayload.BlockNumber)
+	l2ParentTimestamp := uint64(l2Payload.ExecutionPayload.Timestamp) - (s.Config.BlockTime * 2)
 
-		// TODO(spire): How do we get the tip of the chain to return the correct parent slot?
-		// in the context of an api call?
-		// set at zero for now
-		// Maybe we can just make this api call return an array of addresses or something?
-		winners[i].ParentSlot = 0
+	// TODO: Spire is this needed?
+	// If epoch hasnt changed, do nothing
+	// if epoch != s.Election.nextEpochToUse {
+	// 	// This is not an error or worth a log so we just return
+	// 	return
+	// }
+
+	// We use unsafe because even if there is a reorg, the time should still be the same
+	electionWinners, err := s.Election.GetWinnersAtEpoch(s.Ctx, epoch, fmt.Sprintf("0x%x", l2BlockNumber), l2ParentTimestamp, fmt.Sprintf("0x%x", l1Head.Number))
+
+	if err != nil {
+		s.Log.Error("Failed to get election winner", "err", err)
+	} else {
+		// TODO: Update the election winners on state
+		// s.mu.Lock()
+		// defer s.mu.Unlock()
+		s.electionWinnersForCurrentEpoch = electionWinners
+
+		s.Log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 	}
-	return winners, nil
 }
 
 // the eventLoop responds to L1 changes and internal timers to produce L2 blocks.
@@ -285,6 +340,7 @@ func (s *Driver) eventLoop() {
 			}
 		case newL1Head := <-s.l1HeadSig:
 			s.Emitter.Emit(status.L1UnsafeEvent{L1Unsafe: newL1Head})
+			s.ProcessNewL1Block(newL1Head)
 			reqStep() // a new L1 head may mean we have the data to not get an EOF again.
 		case newL1Safe := <-s.l1SafeSig:
 			s.Emitter.Emit(status.L1SafeEvent{L1Safe: newL1Safe})

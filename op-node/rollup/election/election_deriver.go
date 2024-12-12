@@ -75,6 +75,9 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		return
 	}
 
+	log.Info("From Deriver:", "l2Block", ed.l2Unsafe.Number)
+	log.Info("From Deriver:", "l2ParentTimestamp", ed.l2Unsafe.Time)
+	log.Info("From Deriver:", "l1Block", ed.l1Unsafe.Number)
 	// We use unsafe because even if there is a reorg, the time should still be the same
 	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time, fmt.Sprintf("0x%x", ed.l1Unsafe.Number))
 
