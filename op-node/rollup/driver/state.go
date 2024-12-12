@@ -149,39 +149,36 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 // TODO(spire): This API is broken and needs adjusting, it should not take in a blockNumber, it should get the L1 and L2 blocks
 // Dynamically based on what epoch it was run in.
 func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
-	// TODO(spire): read election winners from state
+	currentTimestamp := uint64(time.Now().Unix())
+	currentEpoch, err := s.Election.GetEpochNumber(s.Ctx, currentTimestamp)
 
-	// val, err := strconv.ParseUint(blockNumber[2:], 16, 64)
+	if err != nil {
+		s.log.Error("state.go: Failed to get current epoch number", "err", err)
+		return []eth.ElectionWinner{}, err
+	}
 
-	// if err != nil {
-	// 	return []eth.ElectionWinner{}, err
-	// }
-
-	// res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val, blockNumber)
-
-	// if err != nil {
-	// 	return []eth.ElectionWinner{}, err
-	// }
-
-	// winners := make([]eth.ElectionWinner, len(res))
-	// for i, winner := range res {
-	// 	winners[i] = *winner
-
-	// 	// TODO(spire): How do we get the tip of the chain to return the correct parent slot?
-	// 	// in the context of an api call?
-	// 	// set at zero for now
-	// 	// Maybe we can just make this api call return an array of addresses or something?
-	// 	winners[i].ParentSlot = 0
-	// }
-	// return winners, nil
-	if s.electionWinnersForCurrentEpoch == nil {
-		return []eth.ElectionWinner{}, errors.New("no election winners for current epoch")
-	} else {
-		winners := make([]eth.ElectionWinner, len(s.electionWinnersForCurrentEpoch))
-		for i, winner := range s.electionWinnersForCurrentEpoch {
-			winners[i] = *winner
+	if currentEpoch == epoch {
+		if s.electionWinnersForCurrentEpoch == nil {
+			return []eth.ElectionWinner{}, errors.New("no election winners for current epoch")
+		} else {
+			winners := make([]eth.ElectionWinner, len(s.electionWinnersForCurrentEpoch))
+			for i, winner := range s.electionWinnersForCurrentEpoch {
+				winners[i] = *winner
+			}
+			return winners, nil
 		}
-		return winners, nil
+	} else if currentEpoch+1 == epoch {
+		if s.electionWinnersForNextEpoch == nil {
+			return []eth.ElectionWinner{}, errors.New("no election winners for next epoch")
+		} else {
+			winners := make([]eth.ElectionWinner, len(s.electionWinnersForNextEpoch))
+			for i, winner := range s.electionWinnersForNextEpoch {
+				winners[i] = *winner
+			}
+			return winners, nil
+		}
+	} else {
+		return []eth.ElectionWinner{}, errors.New("invalid epoch")
 	}
 }
 
@@ -223,7 +220,7 @@ func (s *Driver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		// defer s.mu.Unlock()
 		s.electionWinnersForCurrentEpoch = electionWinners
 
-		s.Log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
+		s.Log.Info("state.go: Election winners", "epoch", epoch, "electionWinners", electionWinners)
 	}
 }
 

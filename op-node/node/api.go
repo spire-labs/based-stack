@@ -175,7 +175,7 @@ func (n *nodeAPI) Version(ctx context.Context) (string, error) {
 	return version.Version + "-" + version.Meta, nil
 }
 
-func (n *nodeAPI) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
+func (n *nodeAPI) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
 	recordDur := n.m.RecordRPCServerRequest("optimism_getElectionWinners")
 	defer recordDur()
 
