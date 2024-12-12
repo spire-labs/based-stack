@@ -332,8 +332,8 @@ func (c *mockDriverClient) OverrideLeader(ctx context.Context) error {
 	return c.Mock.MethodCalled("OverrideLeader").Get(0).(error)
 }
 
-func (c *mockDriverClient) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
-	return c.Mock.MethodCalled("GetElectionWinners", epoch, blockNumber).Get(0).([]eth.ElectionWinner), nil
+func (c *mockDriverClient) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	return c.Mock.MethodCalled("GetElectionWinners", epoch).Get(0).([]eth.ElectionWinner), nil
 }
 
 type mockSafeDBReader struct {

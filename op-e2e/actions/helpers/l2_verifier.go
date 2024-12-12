@@ -249,7 +249,7 @@ func (s *l2VerifierBackend) OnUnsafeL2Payload(ctx context.Context, envelope *eth
 	return nil
 }
 
-func (s *l2VerifierBackend) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
+func (s *l2VerifierBackend) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
 	return []eth.ElectionWinner{}, nil
 }
 

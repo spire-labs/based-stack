@@ -26,8 +26,13 @@ import (
 // Deprecated: use eth.SyncStatus instead.
 type SyncStatus = eth.SyncStatus
 
+type ElectionTracker interface {
+	GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error)
+}
+
 type Driver struct {
 	statusTracker SyncStatusTracker
+	election      ElectionTracker
 
 	*SyncDeriver
 
@@ -74,9 +79,6 @@ type Driver struct {
 
 	driverCtx    context.Context
 	driverCancel context.CancelFunc
-
-	electionWinnersForCurrentEpoch []*eth.ElectionWinner
-	electionWinnersForNextEpoch    []*eth.ElectionWinner
 }
 
 // Start starts up the state loop.
@@ -149,79 +151,7 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 // TODO(spire): This API is broken and needs adjusting, it should not take in a blockNumber, it should get the L1 and L2 blocks
 // Dynamically based on what epoch it was run in.
 func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
-	currentTimestamp := uint64(time.Now().Unix())
-	currentEpoch, err := s.Election.GetEpochNumber(s.Ctx, currentTimestamp)
-
-	if err != nil {
-		s.log.Error("state.go: Failed to get current epoch number", "err", err)
-		return []eth.ElectionWinner{}, err
-	}
-
-	if currentEpoch == epoch {
-		if s.electionWinnersForCurrentEpoch == nil {
-			return []eth.ElectionWinner{}, errors.New("no election winners for current epoch")
-		} else {
-			winners := make([]eth.ElectionWinner, len(s.electionWinnersForCurrentEpoch))
-			for i, winner := range s.electionWinnersForCurrentEpoch {
-				winners[i] = *winner
-			}
-			return winners, nil
-		}
-	} else if currentEpoch+1 == epoch {
-		if s.electionWinnersForNextEpoch == nil {
-			return []eth.ElectionWinner{}, errors.New("no election winners for next epoch")
-		} else {
-			winners := make([]eth.ElectionWinner, len(s.electionWinnersForNextEpoch))
-			for i, winner := range s.electionWinnersForNextEpoch {
-				winners[i] = *winner
-			}
-			return winners, nil
-		}
-	} else {
-		return []eth.ElectionWinner{}, errors.New("invalid epoch")
-	}
-}
-
-func (s *Driver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
-	s.log.Info("ProcessNewL1Block in state.go", "block", l1Head.Number, "time", l1Head.Time)
-	epoch, err := s.Election.GetEpochNumber(s.Ctx, l1Head.Time)
-
-	if err != nil {
-		s.Log.Warn("Failed to get epoch number", "err", err)
-		return
-	}
-
-	ctx := s.Ctx
-	l2Payload, err := s.L2.PayloadByNumber(ctx, l1Head.Number)
-
-	if err != nil {
-		s.Log.Warn("Failed to get L2 payload by number", "err", err)
-		return
-	}
-
-	l2BlockNumber := uint64(l2Payload.ExecutionPayload.BlockNumber)
-	l2ParentTimestamp := uint64(l2Payload.ExecutionPayload.Timestamp) - (s.Config.BlockTime * 2)
-
-	// TODO: Spire is this needed?
-	// If epoch hasnt changed, do nothing
-	// if epoch != s.Election.nextEpochToUse {
-	// 	// This is not an error or worth a log so we just return
-	// 	return
-	// }
-
-	// We use unsafe because even if there is a reorg, the time should still be the same
-	electionWinners, err := s.Election.GetWinnersAtEpoch(s.Ctx, epoch, fmt.Sprintf("0x%x", l2BlockNumber), l2ParentTimestamp, fmt.Sprintf("0x%x", l1Head.Number))
-
-	if err != nil {
-		s.Log.Error("Failed to get election winner", "err", err)
-	} else {
-		// TODO: Update the election winners on state
-		// s.mu.Lock()
-		// defer s.mu.Unlock()
-		s.electionWinnersForCurrentEpoch = electionWinners
-
-		s.Log.Info("state.go: Election winners", "epoch", epoch, "electionWinners", electionWinners)
-	}
+	return s.election.GetElectionWinners(ctx, epoch)
 }
 
 // the eventLoop responds to L1 changes and internal timers to produce L2 blocks.
@@ -337,7 +267,6 @@ func (s *Driver) eventLoop() {
 			}
 		case newL1Head := <-s.l1HeadSig:
 			s.Emitter.Emit(status.L1UnsafeEvent{L1Unsafe: newL1Head})
-			s.ProcessNewL1Block(newL1Head)
 			reqStep() // a new L1 head may mean we have the data to not get an EOF again.
 		case newL1Safe := <-s.l1SafeSig:
 			s.Emitter.Emit(status.L1SafeEvent{L1Safe: newL1Safe})

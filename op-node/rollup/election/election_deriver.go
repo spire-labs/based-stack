@@ -2,6 +2,7 @@ package election
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -12,6 +13,11 @@ import (
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum/go-ethereum/log"
 )
+
+type ElectionWinners struct {
+	winners []*eth.ElectionWinner
+	epoch   uint64
+}
 
 type ElectionDeriver struct {
 	client   BeaconClient
@@ -24,6 +30,8 @@ type ElectionDeriver struct {
 
 	l2Unsafe eth.L2BlockRef
 	l1Unsafe eth.L1BlockRef
+
+	electionWinners []ElectionWinners
 
 	mu sync.Mutex
 }
@@ -91,7 +99,40 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
 
+		ed.electionWinners = append(ed.electionWinners, ElectionWinners{winners: electionWinners, epoch: epoch})
+
+		// Clear old election winners
+		start := 0
+		for i, electionWinners := range ed.electionWinners {
+			if electionWinners.epoch < epoch {
+				start = i + 1
+			}
+		}
+		if start > 0 {
+			ed.electionWinners = ed.electionWinners[start:]
+		}
+
 		// Update the next epoch to use
 		ed.nextEpochToUse = epoch + 1
 	}
+}
+
+func (ed *ElectionDeriver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	var winners []*eth.ElectionWinner
+	for _, stored := range ed.electionWinners {
+		if stored.epoch == epoch {
+			winners = stored.winners
+		}
+	}
+
+	if winners == nil {
+		return []eth.ElectionWinner{}, errors.New("invalid epoch")
+	}
+
+	out := make([]eth.ElectionWinner, len(winners))
+	for i, winner := range winners {
+		out[i] = *winner
+	}
+
+	return out, nil
 }
