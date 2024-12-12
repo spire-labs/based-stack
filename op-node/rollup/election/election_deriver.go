@@ -48,7 +48,7 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	switch x := ev.(type) {
 	case status.L1UnsafeEvent:
 		ed.l1Unsafe = x.L1Unsafe
-		log.Info("L1 Unsafe is at block", "block", x.L1Unsafe.Number, "time", x.L1Unsafe.Time)
+		ed.log.Info("L1 Unsafe is at block", "block", x.L1Unsafe.Number, "time", x.L1Unsafe.Time)
 		ed.ProcessNewL1Block(x.L1Unsafe)
 	case engine.PendingSafeUpdateEvent:
 		ed.l2Unsafe = x.Unsafe
@@ -64,7 +64,7 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 	epoch, err := ed.client.GetEpochNumber(ed.ctx, l1Head.Time)
 
 	if err != nil {
-		log.Warn("Failed to get epoch number", "err", err)
+		ed.log.Warn("Failed to get epoch number", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
@@ -76,16 +76,18 @@ func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
 	}
 
 	// We use unsafe because even if there is a reorg, the time should still be the same
-	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time, fmt.Sprintf("0x%x", ed.l1Unsafe.Number))
+	// For L1UnsafeBlock, we need to do L1UnsafeBlock-1 to calculate the election because L1UnsafeBlock should be the first block in the new epoch
+	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time, fmt.Sprintf("0x%x", ed.l1Unsafe.Number-1))
 
 	if err != nil {
-		log.Error("Failed to get election winner", "err", err)
+		// TODO(spire): This error event is not currently handled anywhere yet
+		ed.log.Error("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
 		ed.mu.Lock()
 		defer ed.mu.Unlock()
 
-		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
+		ed.log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
 
 		// Update the next epoch to use
