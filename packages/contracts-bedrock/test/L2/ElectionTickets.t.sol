@@ -248,7 +248,7 @@ contract ElectionTickets_OwnerOf_Test is ElectionTickets_Test {
     }
 
     /// @dev Tests that the `ownerOf` function returns address(0) when the token does not exist.
-    function test_ownerOf_doesNotExist_returnsZeroAddress() public {
+    function test_ownerOf_doesNotExist_returnsZeroAddress() public view {
         assertEq(electionTicket.ownerOf(69), address(0));
     }
 }
