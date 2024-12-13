@@ -38,9 +38,6 @@ contract ElectionTickets is ERC721, Initializable {
     /// @dev Implemented as a linked list
     mapping(address => mapping(uint256 => uint256)) public ticketStack;
 
-    /// @notice The number of tickets for each address
-    mapping(address => uint256) public ticketCount;
-
     /// @notice Constructs the ElectionTickets contract
     ///
     /// @param _auction The address of the Election contract
@@ -109,8 +106,6 @@ contract ElectionTickets is ERC721, Initializable {
         // Clear the reference for the burned ticket
         ticketStack[_target][_topTicket] = 0;
 
-        ticketCount[_target]--;
-
         // Remove the ticket from the stack
         _burn(_topTicket);
     }
@@ -128,7 +123,7 @@ contract ElectionTickets is ERC721, Initializable {
     /// @param _to The address to get the stack for
     /// @return stack_ The ticket stack
     function traverseTicketStack(address _to) external view returns (uint256[] memory stack_) {
-        uint256 _count = ticketCount[_to];
+        uint256 _count = balanceOf(_to);
         stack_ = new uint256[](_count);
 
         uint256 _lastTicketId = SENTINEL_TICKET_ID;
@@ -173,10 +168,6 @@ contract ElectionTickets is ERC721, Initializable {
             // Set the top to the token id that just got minted
             ticketStack[_to][SENTINEL_TICKET_ID] = _tokenId;
         }
-
-        // Potentially can remove this variable for more optimization?
-        // Its very nice to have for traversal and accounting though, but not necessary
-        ticketCount[_to]++;
 
         _mint(_to, _tokenId);
     }

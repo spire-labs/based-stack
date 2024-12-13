@@ -2,7 +2,7 @@
 pragma solidity 0.8.25;
 
 interface IElectionTickets {
-  function ticketCount(address _target) external view returns (uint256);
+  function balanceOf(address _target) external view returns (uint256);
 }
 
 /// @title BatchTicketAccounting
@@ -17,7 +17,7 @@ contract BatchTicketAccounting {
     uint256[] memory ticketCountPerValidator = new uint256[](addresses.length);
 
     for (uint256 i = 0; i < addresses.length; i++) {
-      ticketCountPerValidator[i] = tickets.ticketCount(addresses[i]);
+      ticketCountPerValidator[i] = tickets.balanceOf(addresses[i]);
     }
 
     bytes memory data = abi.encode(ticketCountPerValidator);
