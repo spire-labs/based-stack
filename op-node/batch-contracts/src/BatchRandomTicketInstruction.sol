@@ -2,9 +2,13 @@
 pragma solidity 0.8.25;
 
 interface IElectionTickets {
-  function balanceOf(address _target) external view returns (uint256);
+  function balanceOf(
+    address _target
+  ) external view returns (uint256);
   function tokenId() external view returns (uint256);
-  function ownerOf(uint256 _tokenId) external view returns (address);
+  function ownerOf(
+    uint256 _tokenId
+  ) external view returns (address);
 }
 
 struct Retdata {
@@ -26,18 +30,28 @@ contract BatchRandomTicketInstruction {
   /// @notice Determines certain timestamps slot winners based on the random ticket instruction
   ///
   /// @param timestamps The timestamps to determine the winner for
-  constructor(uint256[] memory timestamps) {
+  constructor(
+    uint256[] memory timestamps
+  ) {
     IElectionTickets tickets = IElectionTickets(0x4200000000000000000000000000000000000028);
     uint256 totalTickets = tickets.tokenId();
     Retdata[] memory retdatas = new Retdata[](timestamps.length);
 
-
     for (uint256 i; i < timestamps.length; i++) {
       // With a low "totalTickets" it is feasible to have a collision where the same tokenId wins multiple times
       // For this scenario we will choose the same winner, assuming they have enough total tickets to win
-      uint256 pseudoRandomTokenId = uint256(keccak256(abi.encodePacked(timestamps[i], block.prevrandao))) % (totalTickets + 1);
+      // We add + 1 after the modulo because we want the bounds to be [1, totalTickets] instead of [0, totalTickets-1]
+      uint256 pseudoRandomTokenId =
+        (uint256(keccak256(abi.encodePacked(timestamps[i], block.prevrandao))) % totalTickets) + 1;
 
+      // TODO(spire): ownerOf reverts if its address(0), we need to handle this case
       address winner = tickets.ownerOf(pseudoRandomTokenId);
+      if (winner == address(0)) {
+        // This could lead to many missed slots, do we maybe want to handle it somehow? or rely on other instructions?
+        retdatas[i] = Retdata(timestamps[i], winner);
+        continue;
+      }
+
       uint256 balanceOf = tickets.balanceOf(winner);
 
       bool hasSeenWinner = seenWinners[winner];
@@ -53,9 +67,13 @@ contract BatchRandomTicketInstruction {
         // They won one ticket and it will be burn so we do - 1 for future potential iterations
         balances[winner] = balanceOf - 1;
         seenWinners[winner] = true;
+      } else {
+        unchecked {
+          --balances[winner];
+        }
       }
 
-      retdatas[i] = Retdata(timestamps[i], tickets.ownerOf(pseudoRandomTokenId));
+      retdatas[i] = Retdata(timestamps[i], winner);
     }
 
     bytes memory data = abi.encode(retdatas);

@@ -141,6 +141,17 @@ contract ElectionTickets is ERC721, Initializable {
         auction_ = AUCTION;
     }
 
+    /// @notice Overrides the ownerOf function to make it not revert on address(0)
+    ///
+    /// @param _tokenId The token id to get the owner of
+    /// @return owner_ The owner of the token
+    function ownerOf(uint256 _tokenId) public view override returns (address owner_) {
+        // This can be optimized in future versions of openzeppelin, but that is a large dependency across the repo
+        if (_exists(_tokenId)) {
+            owner_ = super.ownerOf(_tokenId);
+        }
+    }
+
     /// @notice Returns the top of the ticket stack for a given address
     ///
     /// @param _to The address to get the top of the stack for

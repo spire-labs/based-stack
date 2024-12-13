@@ -232,3 +232,23 @@ contract ElectionTickets_Untransferable_Test is ElectionTickets_Test {
         electionTicket.safeTransferFrom(to, random, 1, "");
     }
 }
+
+contract ElectionTickets_OwnerOf_Test is ElectionTickets_Test {
+    /// @dev Tests that the `ownerOf` function returns the correct owner.
+    function test_ownerOf_succeeds() public {
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
+        electionTicket.mint(to);
+
+        assertEq(electionTicket.ownerOf(1), to);
+    }
+
+    /// @dev Tests that the `ownerOf` function returns address(0) when the token does not exist.
+    function test_ownerOf_doesNotExist_returnsZeroAddress() public {
+        assertEq(electionTicket.ownerOf(69), address(0));
+    }
+}
