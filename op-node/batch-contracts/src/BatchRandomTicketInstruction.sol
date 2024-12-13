@@ -44,7 +44,6 @@ contract BatchRandomTicketInstruction {
       uint256 pseudoRandomTokenId =
         (uint256(keccak256(abi.encodePacked(timestamps[i], block.prevrandao))) % totalTickets) + 1;
 
-      // TODO(spire): ownerOf reverts if its address(0), we need to handle this case
       address winner = tickets.ownerOf(pseudoRandomTokenId);
       if (winner == address(0)) {
         // This could lead to many missed slots, do we maybe want to handle it somehow? or rely on other instructions?
