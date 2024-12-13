@@ -1,6 +1,7 @@
 package election
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 
@@ -24,7 +25,7 @@ const (
 	PERMISSIONLESS               = 0x06
 )
 
-func (e *Election) HandleInstructions(instructions []uint8, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int) ([]*eth.ElectionWinner, error) {
+func (e *Election) HandleInstructions(ctx context.Context, instructions []uint8, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int, l2UnsafeBlock string) ([]*eth.ElectionWinner, error) {
 	var err error
 
 	// Process instructions
@@ -52,7 +53,10 @@ func (e *Election) HandleInstructions(instructions []uint8, electionWinners []*e
 			// TODO(spire): This is not implemented yet
 			continue
 		case RANDOM_TICKET_HOLDER:
-			// TODO(spire): This is not implemented yet
+			electionWinners, err = e.ProcessRandomTicketInstruction(ctx, electionWinners, l2UnsafeBlock)
+			if err != nil {
+				return []*eth.ElectionWinner{}, err
+			}
 			continue
 		case PERMISSIONLESS:
 			// TODO(spire): This is not implemented yet
@@ -142,4 +146,37 @@ func (e *Election) ProcessNextProposerInstruction(electionWinners []*eth.Electio
 	}
 
 	return electionWinners, nil
+}
+
+func (e *Election) ProcessRandomTicketInstruction(ctx context.Context, electionWinners []*eth.ElectionWinner, blockNumber string) ([]*eth.ElectionWinner, error) {
+	var timestamps []uint64
+	// Only get the timestamps that still need to be filled
+	for _, winner := range electionWinners {
+		if winner.Address == (common.Address{}) {
+			timestamps = append(timestamps, winner.Time)
+		}
+	}
+
+	newWinners, err := e.GetBatchRandomTicketInstruction(ctx, timestamps, blockNumber)
+	if err != nil {
+		return []*eth.ElectionWinner{}, err
+	}
+
+	for _, winner := range newWinners {
+		// Missed slot
+		if winner.Winner == (common.Address{}) {
+			continue
+		}
+
+		for i, electionWinner := range electionWinners {
+			// Search for matching
+			if electionWinner.Time == winner.Timestamp {
+				electionWinners[i].Address = winner.Winner
+				break
+			}
+		}
+	}
+
+	return electionWinners, nil
+
 }

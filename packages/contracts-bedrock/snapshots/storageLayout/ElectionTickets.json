@@ -68,12 +68,5 @@
     "offset": 0,
     "slot": "8",
     "type": "mapping(address => mapping(uint256 => uint256))"
-  },
-  {
-    "bytes": "32",
-    "label": "ticketCount",
-    "offset": 0,
-    "slot": "9",
-    "type": "mapping(address => uint256)"
   }
 ]

@@ -251,8 +251,6 @@ func (s *EthClient) Call(ctx context.Context, callMsg map[string]interface{}, bl
 	var result string
 	err := s.client.CallContext(ctx, &result, "eth_call", callMsg, blockNumber)
 
-	s.log.Info("eth_call", "result", string(result))
-
 	if err != nil {
 		return "", err
 	}

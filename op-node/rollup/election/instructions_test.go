@@ -1,6 +1,7 @@
 package election
 
 import (
+	"context"
 	"math/big"
 	"testing"
 
@@ -9,7 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createMockInputsForHandleInstructions() ([]*eth.ElectionWinner, []common.Address, map[common.Address]*big.Int) {
+type MockElection struct {
+	*Election
+	GetBatchRandomTicketInstructionFunc func(ctx context.Context, timestamps []uint64, blockNumber string) ([]RandomTicketInstructionRetdata, error)
+}
+
+// Override the function to mock the batch
+func (m *MockElection) GetBatchRandomTicketInstruction(ctx context.Context, timestamps []uint64, blockNumber string) ([]RandomTicketInstructionRetdata, error) {
+
+	return m.GetBatchRandomTicketInstructionFunc(ctx, timestamps, blockNumber)
+}
+
+func createMockInputsForHandleInstructions() (context.Context, []*eth.ElectionWinner, []common.Address, map[common.Address]*big.Int, string) {
 	electionWinners := []*eth.ElectionWinner{
 		{Address: common.Address{}},
 		{Address: common.Address{}},
@@ -22,48 +34,50 @@ func createMockInputsForHandleInstructions() ([]*eth.ElectionWinner, []common.Ad
 		operatorAddresses[0]: big.NewInt(2),
 		operatorAddresses[1]: big.NewInt(3),
 	}
-	return electionWinners, operatorAddresses, tickets
+	blockNumber := "0x1"
+	ctx := context.Background()
+	return ctx, electionWinners, operatorAddresses, tickets, blockNumber
 }
 
 func TestSingleCurrentProposerInstruction(t *testing.T) {
-	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	ctx, electionWinners, operatorAddresses, tickets, blockNumber := createMockInputsForHandleInstructions()
 	e := &Election{}
 
 	instructions := []uint8{CURRENT_PROPOSER}
-	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
 }
 
 func TestSingleNextProposerInstruction(t *testing.T) {
-	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	ctx, electionWinners, operatorAddresses, tickets, blockNumber := createMockInputsForHandleInstructions()
 	e := &Election{}
 
 	instructions := []uint8{NEXT_PROPOSER}
-	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
 }
 
 func TestMultipleInstructions(t *testing.T) {
-	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	ctx, electionWinners, operatorAddresses, tickets, blockNumber := createMockInputsForHandleInstructions()
 	e := &Election{}
 
 	instructions := []uint8{CURRENT_PROPOSER, NEXT_PROPOSER}
-	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
 }
 
 func TestInvalidInstruction(t *testing.T) {
-	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	ctx, electionWinners, operatorAddresses, tickets, blockNumber := createMockInputsForHandleInstructions()
 	e := &Election{}
 
 	instructions := []uint8{255} // Unknown instruction
-	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, "unknown fallback instruction: 255")
@@ -71,11 +85,11 @@ func TestInvalidInstruction(t *testing.T) {
 }
 
 func TestNoInstructions(t *testing.T) {
-	electionWinners, operatorAddresses, tickets := createMockInputsForHandleInstructions()
+	ctx, electionWinners, operatorAddresses, tickets, blockNumber := createMockInputsForHandleInstructions()
 	e := &Election{}
 
 	instructions := []uint8{}
-	result, err := e.HandleInstructions(instructions, electionWinners, operatorAddresses, tickets)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
