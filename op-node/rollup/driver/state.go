@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	gosync "sync"
 	"time"
 
@@ -27,8 +26,13 @@ import (
 // Deprecated: use eth.SyncStatus instead.
 type SyncStatus = eth.SyncStatus
 
+type ElectionTracker interface {
+	GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error)
+}
+
 type Driver struct {
 	statusTracker SyncStatusTracker
+	election      ElectionTracker
 
 	*SyncDeriver
 
@@ -144,32 +148,8 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 	}
 }
 
-// TODO(spire): This API is broken and needs adjusting, it should not take in a blockNumber, it should get the L1 and L2 blocks
-// Dynamically based on what epoch it was run in.
-func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64, blockNumber string) ([]eth.ElectionWinner, error) {
-	val, err := strconv.ParseUint(blockNumber[2:], 16, 64)
-
-	if err != nil {
-		return []eth.ElectionWinner{}, err
-	}
-
-	res, err := s.Election.GetWinnersAtEpoch(ctx, epoch, blockNumber, val, blockNumber)
-
-	if err != nil {
-		return []eth.ElectionWinner{}, err
-	}
-
-	winners := make([]eth.ElectionWinner, len(res))
-	for i, winner := range res {
-		winners[i] = *winner
-
-		// TODO(spire): How do we get the tip of the chain to return the correct parent slot?
-		// in the context of an api call?
-		// set at zero for now
-		// Maybe we can just make this api call return an array of addresses or something?
-		winners[i].ParentSlot = 0
-	}
-	return winners, nil
+func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	return s.election.GetElectionWinners(ctx, epoch)
 }
 
 // the eventLoop responds to L1 changes and internal timers to produce L2 blocks.

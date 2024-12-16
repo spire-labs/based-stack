@@ -13,6 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+type ElectionWinners struct {
+	winners []*eth.ElectionWinner
+	epoch   uint64
+}
+
 type ElectionDeriver struct {
 	client   BeaconClient
 	election *Election
@@ -25,8 +30,16 @@ type ElectionDeriver struct {
 	l2Unsafe eth.L2BlockRef
 	l1Unsafe eth.L1BlockRef
 
+	electionWinners []ElectionWinners
+
+	// The timestamp of last slot in current epoch
+	lastSlotTime uint64
+
 	mu sync.Mutex
 }
+
+// TODO(spire): add this to network config or remove entirely.
+const L1BlockTime = 12
 
 func NewElectionDeriver(ctx context.Context, client BeaconClient, election *Election, log log.Logger) *ElectionDeriver {
 	nextEpochToUse := uint64(0)
@@ -45,14 +58,16 @@ func (ed *ElectionDeriver) AttachEmitter(emitter event.Emitter) {
 }
 
 func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
+	ed.mu.Lock()
+	defer ed.mu.Unlock()
+
 	switch x := ev.(type) {
 	case status.L1UnsafeEvent:
 		ed.l1Unsafe = x.L1Unsafe
-		log.Info("L1 Unsafe is at block", "block", x.L1Unsafe.Number, "time", x.L1Unsafe.Time)
-		ed.ProcessNewL1Block(x.L1Unsafe)
+		ed.ProcessNewBlock()
 	case engine.PendingSafeUpdateEvent:
 		ed.l2Unsafe = x.Unsafe
-
+		ed.ProcessNewBlock()
 	default:
 		return false
 	}
@@ -60,35 +75,99 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	return true
 }
 
-func (ed *ElectionDeriver) ProcessNewL1Block(l1Head eth.L1BlockRef) {
-	epoch, err := ed.client.GetEpochNumber(ed.ctx, l1Head.Time)
+func (ed *ElectionDeriver) ProcessNewBlock() {
+	if ed.l2Unsafe == (eth.L2BlockRef{}) {
+		ed.log.Debug("Empty L2 block")
+		return
+	}
 
+	if ed.l1Unsafe == (eth.L1BlockRef{}) {
+		ed.log.Debug("Empty L1 block")
+		return
+	}
+
+	// If epoch hasn't changed do nothing
+	if ed.l1Unsafe.Time < ed.lastSlotTime {
+		ed.log.Debug("Waiting for the last slot of the epoch", "current_time", ed.l1Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
+		return
+	}
+
+	if ed.lastSlotTime != 0 && ed.l2Unsafe.Time < ed.lastSlotTime {
+		ed.log.Debug("L2 slot times mismatch", "l2Unsafe", ed.l2Unsafe, "time", ed.l2Unsafe.Time, "l1Unsafe", ed.l1Unsafe, "time", ed.l2Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
+		return
+	}
+
+	// Sanity check
+	if ed.lastSlotTime != 0 && ed.l2Unsafe.Time != ed.lastSlotTime {
+		ed.log.Error("l2Unsafe slot timestamp mismatch", "l2Unsafe", ed.l2Unsafe, "time", ed.l2Unsafe.Time, "l1Unsafe", ed.l1Unsafe, "time", ed.l1Unsafe.Time)
+		return
+	}
+
+	ed.log.Debug("Processing", "l1Unsafe", ed.l1Unsafe.Number, "time", ed.l1Unsafe.Time, "l2Unsafe", ed.l2Unsafe.Number, "time", ed.l2Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
+
+	lastBlockNumberInEpoch := ed.l1Unsafe.Number
+	nextEpochTime := ed.l1Unsafe.Time + L1BlockTime
+	if ed.lastSlotTime != 0 && ed.l1Unsafe.Time != ed.lastSlotTime {
+		ed.log.Warn("Slot times mismatch, L1 missed slot detected", "ed.l1Unsafe", ed.l1Unsafe, "time", ed.l1Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
+		lastBlockNumberInEpoch = ed.l1Unsafe.Number - 1
+		nextEpochTime = ed.l1Unsafe.Time
+	}
+
+	newEpoch, err := ed.client.GetEpochNumber(ed.ctx, nextEpochTime)
 	if err != nil {
-		log.Warn("Failed to get epoch number", "err", err)
+		ed.log.Warn("Failed to get epoch number", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 		return
 	}
 
-	// If epoch hasnt changed, do nothing
-	if epoch != ed.nextEpochToUse {
-		// This is not an error or worth a log so we just return
-		return
-	}
-
-	// We use unsafe because even if there is a reorg, the time should still be the same
-	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, epoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time, fmt.Sprintf("0x%x", ed.l1Unsafe.Number))
+	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, newEpoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time, fmt.Sprintf("0x%x", lastBlockNumberInEpoch))
 
 	if err != nil {
-		log.Error("Failed to get election winner", "err", err)
+		ed.log.Error("Failed to get election winner", "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
-		ed.mu.Lock()
-		defer ed.mu.Unlock()
-
-		log.Info("Election winners", "epoch", epoch, "electionWinners", electionWinners)
+		ed.log.Info("Election winners", "epoch", newEpoch, "electionWinners", electionWinners)
 		ed.emitter.Emit(rollup.ElectionWinnerEvent{ElectionWinners: electionWinners})
 
-		// Update the next epoch to use
-		ed.nextEpochToUse = epoch + 1
+		ed.electionWinners = append(ed.electionWinners, ElectionWinners{winners: electionWinners, epoch: newEpoch})
+
+		// Clear old election winners
+		start := 0
+		for i, electionWinners := range ed.electionWinners {
+			if electionWinners.epoch < newEpoch {
+				start = i + 1
+			}
+		}
+		if start > 0 {
+			ed.electionWinners = ed.electionWinners[start:]
+		}
+
+		// Update last slot in this epoch
+		ed.lastSlotTime = electionWinners[len(electionWinners)-1].Time
 	}
+}
+
+func (ed *ElectionDeriver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
+	ed.mu.Lock()
+	defer ed.mu.Unlock()
+
+	var winners []*eth.ElectionWinner
+	storedEpochs := make([]uint64, len(ed.electionWinners))
+	for i, stored := range ed.electionWinners {
+		storedEpochs[i] = stored.epoch
+		if stored.epoch == epoch {
+			winners = stored.winners
+		}
+	}
+
+	if winners == nil {
+		return []eth.ElectionWinner{}, fmt.Errorf("no stored election winners for requested epoch, requested epoch: %d, stored_epochs: %v", epoch, storedEpochs)
+	}
+
+	out := make([]eth.ElectionWinner, len(winners))
+	for i, winner := range winners {
+		out[i] = *winner
+	}
+
+	return out, nil
 }

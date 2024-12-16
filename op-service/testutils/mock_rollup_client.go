@@ -31,7 +31,7 @@ func (m *MockRollupClient) ExpectSyncStatus(status *eth.SyncStatus, err error) {
 	m.Mock.On("SyncStatus").Once().Return(status, err)
 }
 
-func (m *MockRollupClient) GetElectionWinners(ctx context.Context, epoch, blockNum uint64) ([]eth.ElectionWinner, error) {
+func (m *MockRollupClient) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
 	out := m.Mock.Called()
 	return out.Get(0).([]eth.ElectionWinner), out.Error(1)
 }

@@ -14,7 +14,7 @@ type RollupClientInterface interface {
 	SyncStatusProvider
 	OutputAtBlock(ctx context.Context, blockNum uint64) (*eth.OutputResponse, error)
 	RollupConfig(ctx context.Context) (*rollup.Config, error)
-	GetElectionWinners(ctx context.Context, epoch, blockNum uint64) ([]eth.ElectionWinner, error)
+	GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error)
 	StartSequencer(ctx context.Context, unsafeHead common.Hash) error
 	SequencerActive(ctx context.Context) (bool, error)
 	Close()

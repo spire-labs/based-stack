@@ -870,7 +870,7 @@ func (l *BatchSubmitter) generateTargetTimesamps(epoch uint64) ([]uint64, error)
 		return out, err
 	}
 
-	electionWinners, err := rollupClient.GetElectionWinners(ctx, epoch, l.lastL1Tip.Number)
+	electionWinners, err := rollupClient.GetElectionWinners(ctx, epoch)
 	if err != nil {
 		return out, err
 	}
