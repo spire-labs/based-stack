@@ -179,6 +179,5 @@ func (n *nodeAPI) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.E
 	recordDur := n.m.RecordRPCServerRequest("optimism_getElectionWinners")
 	defer recordDur()
 
-	// This could simply be eleciton deriver
 	return n.dr.GetElectionWinners(ctx, epoch)
 }
