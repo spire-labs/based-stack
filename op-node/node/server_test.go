@@ -206,7 +206,6 @@ func TestGetElectionWinners(t *testing.T) {
 	drClient := &mockDriverClient{}
 	safeReader := &mockSafeDBReader{}
 	epoch := uint64(123)
-	blockNumber := "latest"
 	expected := []eth.ElectionWinner{
 		{
 			Address: common.Address{0x1},
@@ -217,7 +216,7 @@ func TestGetElectionWinners(t *testing.T) {
 			Time:    1235,
 		},
 	}
-	drClient.On("GetElectionWinners", epoch, blockNumber).Return(expected, nil)
+	drClient.On("GetElectionWinners", epoch).Return(expected, nil)
 
 	rpcCfg := &RPCConfig{
 		ListenAddr: "localhost",
@@ -237,7 +236,7 @@ func TestGetElectionWinners(t *testing.T) {
 	require.NoError(t, err)
 
 	var out []eth.ElectionWinner
-	err = client.CallContext(context.Background(), &out, "optimism_getElectionWinners", epoch, blockNumber)
+	err = client.CallContext(context.Background(), &out, "optimism_getElectionWinners", epoch)
 	require.NoError(t, err)
 	require.Equal(t, expected, out)
 	l2Client.Mock.AssertExpectations(t)
