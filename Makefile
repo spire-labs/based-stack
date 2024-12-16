@@ -226,6 +226,7 @@ test-unit: ## Runs unit tests for all components
 	make -C ./op-batcher test
 	make -C ./op-e2e test
 	(cd packages/contracts-bedrock && just test)
+	(cd op-node/batch-contracts && forge test)
 .PHONY: test-unit
 
 # Remove the baseline-commit to generate a base reading & show all issues

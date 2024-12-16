@@ -2,7 +2,9 @@
 pragma solidity 0.8.25;
 
 interface IElectionTickets {
-  function balanceOf(address _target) external view returns (uint256);
+  function balanceOf(
+    address _target
+  ) external view returns (uint256);
 }
 
 /// @title BatchTicketAccounting
@@ -12,7 +14,9 @@ contract BatchTicketAccounting {
   /// @notice Fetches the ticket accounting for the given addresses
   ///
   /// @param addresses The addresses to fetch the ticket accounting for
-  constructor(address[] memory addresses) {
+  constructor(
+    address[] memory addresses
+  ) {
     IElectionTickets tickets = IElectionTickets(0x4200000000000000000000000000000000000028);
     uint256[] memory ticketCountPerValidator = new uint256[](addresses.length);
 
