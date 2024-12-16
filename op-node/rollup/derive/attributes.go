@@ -159,7 +159,6 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		}
 		txs = append(txs, burnTx)
 	}
-	println(len(txs))
 
 	txs = append(txs, depositTxs...)
 	txs = append(txs, afterForceIncludeTxs...)
