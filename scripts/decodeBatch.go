@@ -64,6 +64,7 @@ type BatchWithDelay struct {
 type L1Tx struct {
 	Sender      common.Address
 	BlockNumber int
+	Blocks      int
 }
 
 const (
@@ -133,15 +134,12 @@ func decodeBatch(start, end int) {
 			frameBlock := data.Frames[0].InclusionBlock
 			batcher := data.Frames[0].Sender
 
-			l1Txs = append(l1Txs, L1Tx{
-				BlockNumber: frameBlock,
-				Sender:      batcher,
-			})
-
+			l2BlocksInTx := 0
 			fmt.Printf("Number of Batches: %d\n", len(data.Batches))
 			for i, batch := range data.Batches {
 				fmt.Printf(" Batch %d\n", i)
 				fmt.Printf(" Number of Span Batch Elements: %d\n", len(batch.SpanBatchElements))
+				l2BlocksInTx += len(batch.SpanBatchElements)
 				for i, elem := range batch.SpanBatchElements {
 					batches = append(batches, BatchWithDelay{
 						inner:          elem,
@@ -155,6 +153,12 @@ func decodeBatch(start, end int) {
 				}
 			}
 			fmt.Println("----------------------------")
+
+			l1Txs = append(l1Txs, L1Tx{
+				BlockNumber: frameBlock,
+				Sender:      batcher,
+				Blocks:      l2BlocksInTx,
+			})
 		}
 	}
 

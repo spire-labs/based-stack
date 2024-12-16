@@ -22,7 +22,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"golang.org/x/exp/rand"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -118,9 +117,11 @@ type BatchSubmitter struct {
 	lastStoredBlock eth.BlockID
 	lastL1Tip       eth.L1BlockRef
 
-	lastCheckedEpoch    uint64
-	targetTimestamps    []uint64
-	targetL1BlockNumber uint64 // (POC ONLY)
+	// L1 tip during last submit
+	lastSubmit eth.L1BlockRef
+
+	nextEpochToCheck uint64
+	targetTimestamps []uint64
 
 	state *channelManager
 }
@@ -128,9 +129,8 @@ type BatchSubmitter struct {
 // NewBatchSubmitter initializes the BatchSubmitter driver from a preconfigured DriverSetup
 func NewBatchSubmitter(setup DriverSetup) *BatchSubmitter {
 	return &BatchSubmitter{
-		DriverSetup:         setup,
-		state:               NewChannelManager(setup.Log, setup.Metr, setup.ChannelConfig, setup.RollupConfig),
-		targetL1BlockNumber: 0, //initialize to zero for POC testing (POC ONLY)
+		DriverSetup: setup,
+		state:       NewChannelManager(setup.Log, setup.Metr, setup.ChannelConfig, setup.RollupConfig),
 	}
 }
 
@@ -405,14 +405,10 @@ func (l *BatchSubmitter) loop() {
 			}
 			// By waiting until the L1 tip == target block number - 1, we can ensure that the batcher
 			// doesn't read blocks from the safe head too early, preventing overlapping txs from being sent.
-			shouldPublish := l.shouldPublishPOC()
-
-			// Run the should publish function but ignore the output for now (POC ONLY).
-			// TODO(spire): use the output here
-			l.shouldPublish()
+			shouldPublish := l.shouldPublish()
 
 			if !shouldPublish {
-				l.Log.Info("Target block number is not reached yet, don't fetch blocks from L2.")
+				l.Log.Info("Target slot not reached yet, don't fetch blocks from L2.")
 				continue
 			}
 
@@ -499,6 +495,7 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 			l.Log.Info("txpool state is not good, aborting state publishing")
 			return
 		}
+		// TODO(spire): we should skip this check, we should ensure that a tx is actually submitted in a correct slot.
 		if err := l.updateL1Tip(); err != nil {
 			l.Log.Error("Failed to query L1 tip", "err", err)
 			return
@@ -511,6 +508,7 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 			}
 			return
 		}
+		l.lastSubmit = l.lastL1Tip
 	}
 }
 
@@ -560,7 +558,7 @@ func (l *BatchSubmitter) publishTxToL1(queue *txmgr.Queue[txRef], receiptsCh cha
 	txdata, err := l.state.TxData(l.lastL1Tip.ID())
 
 	if err == io.EOF {
-		l.Log.Trace("No transaction data available")
+		l.Log.Debug("No transaction data available")
 		return err
 	} else if err != nil {
 		l.Log.Error("Unable to get tx data", "err", err)
@@ -836,42 +834,18 @@ func (l *BatchSubmitter) updateL1Tip() error {
 	return nil
 }
 
-// This method is POC only
-func (l *BatchSubmitter) generateTargetBlockPOC() uint64 {
-	// pick a random block in the future to target
-	randomOffset := uint64(rand.Intn(10) + 1)
-
-	currentL1TipNumber := l.lastL1Tip.Number
-
-	candidateTarget := currentL1TipNumber + randomOffset
-	// Adjust candidateTarget to be even or odd depending on l.Config.EvenBlocks
-	if l.Config.EvenBlocks {
-		if candidateTarget%2 != 0 {
-			candidateTarget += 1
-		}
-	} else {
-		if candidateTarget%2 == 0 {
-			candidateTarget += 1
-		}
-	}
-	l.Log.Debug("Picked new target L1 block", "target", candidateTarget)
-	return candidateTarget
-}
-
-var (
-	errNoTargetTimestamp = errors.New("no target timestamp")
-)
-
 func (l *BatchSubmitter) generateTargetTimesamps(epoch uint64) ([]uint64, error) {
 	out := []uint64{}
 	ctx := l.shutdownCtx
 	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
 	if err != nil {
+		l.Log.Error("Error getting rollup client", "error", err)
 		return out, err
 	}
 
 	electionWinners, err := rollupClient.GetElectionWinners(ctx, epoch)
 	if err != nil {
+		l.Log.Error("Error getting election winners", "error", err, "epoch", epoch, "last tip", l.lastL1Tip.Number)
 		return out, err
 	}
 
@@ -887,6 +861,16 @@ func (l *BatchSubmitter) generateTargetTimesamps(epoch uint64) ([]uint64, error)
 }
 
 func (l *BatchSubmitter) shouldPublish() bool {
+	if err := l.updateL1Tip(); err != nil {
+		l.Log.Warn("Error updating l1 tip", "err", err)
+		return false
+	}
+
+	if l.lastL1Tip == l.lastSubmit {
+		l.Log.Info("Already submitted in this slot")
+		return false
+	}
+
 	// Check if the Sequencer has processed the most recent L1 block. If so, we can
 	// begin reading unsafe L2 blocks starting at the safe L2 head.
 	ctx := l.shutdownCtx
@@ -905,84 +889,42 @@ func (l *BatchSubmitter) shouldPublish() bool {
 		l.Log.Warn("Sequencer has not prosessed the most recent L1 block.")
 		return false
 	}
-	// TODO(spire): should we check the currentL1? What does it represent?
-	epoch, err := l.BeaconClient.GetEpochNumber(ctx, syncStatus.CurrentL1.Time)
+
+	// TODO(Spire): use config here
+	nextL1SlotTimestamp := syncStatus.HeadL1.Time + 12
+
+	epoch, err := l.BeaconClient.GetEpochNumber(ctx, nextL1SlotTimestamp)
 	if err != nil {
 		l.Log.Warn("Error fetching epoch number", "error", err)
 		return false
 	}
 
-	// TODO(spire): should we check for this or the following epoch?
-	// we should check for the following epoch only on the last block of the current epoch
-	// (that's when the election is fixed for the following epoch)
-	if epoch > l.lastCheckedEpoch {
+	if epoch >= l.nextEpochToCheck {
 		targetTimestamps, err := l.generateTargetTimesamps(epoch)
-		if err != nil && err == errNoTargetTimestamp {
-			l.Log.Info("No target timestamp in next epoch")
-			l.lastCheckedEpoch = epoch
-			return false
-		} else if err != nil {
-			l.Log.Warn("Error while generating target timestamp", "error", err)
+		if err != nil {
+			l.Log.Warn("Error while generating target timestamps", "error", err)
 			return false
 		}
 
 		l.targetTimestamps = targetTimestamps
-		l.lastCheckedEpoch = epoch
-		l.Log.Info("Picked new target timestamps", "target", l.targetTimestamps)
+		l.nextEpochToCheck = epoch + 1
+		l.Log.Info("Picked new target timestamps", "target", l.targetTimestamps, "nextL1SlotTimestamp", nextL1SlotTimestamp)
 	}
 
-	return false
-}
+	// Pop all missed slots
+	for len(l.targetTimestamps) > 0 && nextL1SlotTimestamp > l.targetTimestamps[0] {
+		l.targetTimestamps = l.targetTimestamps[1:]
+	}
 
-// This method's logic is currently POC only
-func (l *BatchSubmitter) shouldPublishPOC() bool {
-	// Check if the Sequencer has processed the most recent L1 block. If so, we can
-	// begin reading unsafe L2 blocks starting at the safe L2 head.
-	ctx := l.shutdownCtx
-	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
-	if err != nil {
+	if len(l.targetTimestamps) == 0 {
 		return false
 	}
 
-	cCtx, cancel := context.WithTimeout(ctx, l.Config.NetworkTimeout)
-	defer cancel()
-
-	syncStatus, err := rollupClient.SyncStatus(cCtx)
-	// Ensure that we have the sync status
-	if err != nil {
-		return false
-	}
-	if syncStatus.HeadL1 == (eth.L1BlockRef{}) {
-		return false
-	}
-	syncL1BlockNumber := syncStatus.CurrentL1.Number
-	l.Log.Info("Checking if should publish", "sequencerCurrentL1", syncL1BlockNumber, "tergetL1BlockNumber", l.targetL1BlockNumber)
-
-	// If targetL1BlockNumber is unitilized, pick a new target block
-	// TODO(spire): This is POC logic only - this will be removed once reading election winners
-	if l.targetL1BlockNumber == 0 {
-		candidateTarget := l.generateTargetBlockPOC()
-		l.targetL1BlockNumber = candidateTarget
-		l.Log.Info("Picked new target L1 block", "target", l.targetL1BlockNumber)
-	}
-
-	// Check if current L1 tip is targetL1BlockNumber -1
-	// This is set to be last L1 finanlized/processed by sequencer, so that we can be sure
-	// it has had a chance to update its safeL2head.
-	if syncL1BlockNumber == l.targetL1BlockNumber-1 {
-		l.Log.Debug("At target block", "current", syncL1BlockNumber, "target", l.targetL1BlockNumber)
+	if nextL1SlotTimestamp == l.targetTimestamps[0] {
+		l.Log.Info("Should publish in the next slot", "timestamp", nextL1SlotTimestamp, "number", l.lastL1Tip.Number+1)
 		return true
 	}
 
-	// if block was missed or already submitted, zero out target block
-	// TODO: This is POC logic only - this will be removed once reading election winners
-	if syncL1BlockNumber > l.targetL1BlockNumber-1 {
-		fmt.Println("Missed target block", "current", syncL1BlockNumber, "target", l.targetL1BlockNumber)
-		l.targetL1BlockNumber = 0
-		return false
-	}
-
-	l.Log.Debug("Not yet at target block", "current", syncL1BlockNumber, "target", l.targetL1BlockNumber)
 	return false
 }
 

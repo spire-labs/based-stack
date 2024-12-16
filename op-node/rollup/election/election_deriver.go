@@ -25,8 +25,6 @@ type ElectionDeriver struct {
 	emitter  event.Emitter
 	ctx      context.Context
 
-	nextEpochToUse uint64
-
 	l2Unsafe eth.L2BlockRef
 	l1Unsafe eth.L1BlockRef
 
@@ -42,14 +40,12 @@ type ElectionDeriver struct {
 const L1BlockTime = 12
 
 func NewElectionDeriver(ctx context.Context, client BeaconClient, election *Election, log log.Logger) *ElectionDeriver {
-	nextEpochToUse := uint64(0)
 
 	return &ElectionDeriver{
-		client:         client,
-		election:       election,
-		log:            log,
-		ctx:            ctx,
-		nextEpochToUse: nextEpochToUse,
+		client:   client,
+		election: election,
+		log:      log,
+		ctx:      ctx,
 	}
 }
 
