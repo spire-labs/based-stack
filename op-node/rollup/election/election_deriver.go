@@ -2,7 +2,6 @@ package election
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -89,12 +88,18 @@ func (ed *ElectionDeriver) ProcessNewBlock() {
 
 	// If epoch hasn't changed do nothing
 	if ed.l1Unsafe.Time < ed.lastSlotTime {
-		ed.log.Debug("Waiting for the last slot of the epoch")
+		ed.log.Debug("Waiting for the last slot of the epoch", "current_time", ed.l1Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
 		return
 	}
 
 	if ed.lastSlotTime != 0 && ed.l2Unsafe.Time < ed.lastSlotTime {
 		ed.log.Debug("L2 slot times mismatch", "l2Unsafe", ed.l2Unsafe, "time", ed.l2Unsafe.Time, "l1Unsafe", ed.l1Unsafe, "time", ed.l2Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
+		return
+	}
+
+	// Sanity check
+	if ed.lastSlotTime != 0 && ed.l2Unsafe.Time != ed.lastSlotTime {
+		ed.log.Error("l2Unsafe slot timestamp mismatch", "l2Unsafe", ed.l2Unsafe, "time", ed.l2Unsafe.Time, "l1Unsafe", ed.l1Unsafe, "time", ed.l1Unsafe.Time)
 		return
 	}
 
@@ -147,14 +152,16 @@ func (ed *ElectionDeriver) GetElectionWinners(ctx context.Context, epoch uint64)
 	defer ed.mu.Unlock()
 
 	var winners []*eth.ElectionWinner
-	for _, stored := range ed.electionWinners {
+	storedEpochs := make([]uint64, len(ed.electionWinners))
+	for i, stored := range ed.electionWinners {
+		storedEpochs[i] = stored.epoch
 		if stored.epoch == epoch {
 			winners = stored.winners
 		}
 	}
 
 	if winners == nil {
-		return []eth.ElectionWinner{}, errors.New("invalid epoch")
+		return []eth.ElectionWinner{}, fmt.Errorf("no stored election winners for requested epoch, requested epoch: %d, stored_epochs: %v", epoch, storedEpochs)
 	}
 
 	out := make([]eth.ElectionWinner, len(winners))

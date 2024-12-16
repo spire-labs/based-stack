@@ -148,8 +148,6 @@ func (s *Driver) OnUnsafeL2Payload(ctx context.Context, envelope *eth.ExecutionP
 	}
 }
 
-// TODO(spire): This API is broken and needs adjusting, it should not take in a blockNumber, it should get the L1 and L2 blocks
-// Dynamically based on what epoch it was run in.
 func (s *Driver) GetElectionWinners(ctx context.Context, epoch uint64) ([]eth.ElectionWinner, error) {
 	return s.election.GetElectionWinners(ctx, epoch)
 }
