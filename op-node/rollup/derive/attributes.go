@@ -139,18 +139,29 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		afterForceIncludeTxs = append(afterForceIncludeTxs, depositsCompleteTx)
 	}
 
-	// TODO(spire): if winner is zero address, no one won the slot and we should not burn
-	// burn the winners ticket at top of the block
-	burnTx, err := BurnTxBytes(winner)
+	txsStartLength := 1
 
-	if err != nil {
-		return nil, NewCriticalError(fmt.Errorf("failed to create burnTx: %w", err))
+	// If there is a winner make room for the burn tx
+	zeroAddress := common.Address{}
+	if winner != zeroAddress {
+		txsStartLength += 1
 	}
 
-	txs := make([]hexutil.Bytes, 0, 1+len(depositTxs)+len(afterForceIncludeTxs)+len(upgradeTxs))
+	txs := make([]hexutil.Bytes, 0, txsStartLength+len(depositTxs)+len(afterForceIncludeTxs)+len(upgradeTxs))
 	txs = append(txs, l1InfoTx)
+
+	// We need to put burn right after l1InfoTx incase any deposits rely on this state change
+	if winner != zeroAddress {
+		burnTx, err := BurnTxBytes(winner)
+		println("burnTx")
+		if err != nil {
+			return nil, NewCriticalError(fmt.Errorf("failed to create burnTx: %w", err))
+		}
+		txs = append(txs, burnTx)
+	}
+	println(len(txs))
+
 	txs = append(txs, depositTxs...)
-	txs = append(txs, burnTx)
 	txs = append(txs, afterForceIncludeTxs...)
 	txs = append(txs, upgradeTxs...)
 

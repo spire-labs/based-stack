@@ -123,7 +123,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.Equal(t, l2Parent.Time+cfg.BlockTime, uint64(attrs.Timestamp))
 		require.Equal(t, eth.Bytes32(l1Info.InfoMixDigest), attrs.PrevRandao)
 		require.Equal(t, predeploys.SequencerFeeVaultAddr, attrs.SuggestedFeeRecipient)
-		require.Equal(t, 2, len(attrs.Transactions))
+		require.Equal(t, 1, len(attrs.Transactions))
 		require.Equal(t, l1InfoTx, []byte(attrs.Transactions[0]))
 		require.True(t, attrs.NoTxPool)
 	})
@@ -152,11 +152,9 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		epoch := l1Info.ID()
 		l1InfoTx, err := L1InfoDepositBytes(cfg, testSysCfg, 0, l1Info, 0, common.Address{})
 		require.NoError(t, err)
-		burnTx, err := BurnTxBytes(common.Address{})
 		require.NoError(t, err)
 
 		l2Txs := append(append(make([]eth.Data, 0), l1InfoTx), usedDepositTxs...)
-		l2Txs = append(l2Txs, burnTx)
 
 		l1Fetcher.ExpectFetchReceipts(epoch.Hash, l1Info, receipts, nil)
 		attrBuilder := NewFetchingAttributesBuilder(cfg, l1Fetcher, l1CfgFetcher)
@@ -194,7 +192,7 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.Equal(t, l2Parent.Time+cfg.BlockTime, uint64(attrs.Timestamp))
 		require.Equal(t, eth.Bytes32(l1Info.InfoMixDigest), attrs.PrevRandao)
 		require.Equal(t, predeploys.SequencerFeeVaultAddr, attrs.SuggestedFeeRecipient)
-		require.Equal(t, 2, len(attrs.Transactions))
+		require.Equal(t, 1, len(attrs.Transactions))
 		require.Equal(t, l1InfoTx, []byte(attrs.Transactions[0]))
 		require.True(t, attrs.NoTxPool)
 	})
@@ -230,13 +228,11 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.NoError(t, err)
 		depositsComplete, err := DepositsCompleteBytes(seqNumber, l1Info)
 		require.NoError(t, err)
-		burnTx, err := BurnTxBytes(common.Address{})
 		require.NoError(t, err)
 
 		var l2Txs []eth.Data
 		l2Txs = append(l2Txs, l1InfoTx)
 		l2Txs = append(l2Txs, userDepositTxs...)
-		l2Txs = append(l2Txs, burnTx)
 		l2Txs = append(l2Txs, depositsComplete)
 
 		l1Fetcher.ExpectFetchReceipts(epoch.Hash, l1Info, receipts, nil)
@@ -274,12 +270,10 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.NoError(t, err)
 		depositsComplete, err := DepositsCompleteBytes(seqNumber, l1Info)
 		require.NoError(t, err)
-		burnTx, err := BurnTxBytes(common.Address{})
 		require.NoError(t, err)
 
 		var l2Txs []eth.Data
 		l2Txs = append(l2Txs, l1InfoTx)
-		l2Txs = append(l2Txs, burnTx)
 		l2Txs = append(l2Txs, depositsComplete)
 
 		l1Fetcher.ExpectInfoByHash(epoch.Hash, l1Info, nil)
@@ -292,6 +286,58 @@ func TestPreparePayloadAttributes(t *testing.T) {
 		require.Equal(t, predeploys.SequencerFeeVaultAddr, attrs.SuggestedFeeRecipient)
 		require.Equal(t, len(l2Txs), len(attrs.Transactions), "Expected txs to equal l1 info tx + user deposit txs + DepositsComplete")
 		require.Equal(t, eth.Data(depositsComplete).String(), attrs.Transactions[len(l2Txs)-1].String())
+		require.Equal(t, l2Txs, attrs.Transactions)
+		require.True(t, attrs.NoTxPool)
+	})
+
+	t.Run("burn tx with deposits complete", func(t *testing.T) {
+		rng := rand.New(rand.NewSource(1234))
+		l1Fetcher := &testutils.MockL1Source{}
+		defer l1Fetcher.AssertExpectations(t)
+		l2Parent := testutils.RandomL2BlockRef(rng)
+		l1CfgFetcher := &testutils.MockL2Client{}
+		l1CfgFetcher.ExpectSystemConfigByL2Hash(l2Parent.Hash, testSysCfg, nil)
+		defer l1CfgFetcher.AssertExpectations(t)
+		l1Info := testutils.RandomBlockInfo(rng)
+		l1Info.InfoParentHash = l2Parent.L1Origin.Hash
+		l1Info.InfoNum = l2Parent.L1Origin.Number + 1
+
+		receipts, depositTxs, err := makeReceipts(rng, l1Info.InfoHash, cfg.DepositContractAddress, []receiptData{
+			{goodReceipt: true, DepositLogs: []bool{true, false}},
+			{goodReceipt: true, DepositLogs: []bool{true}},
+			{goodReceipt: false, DepositLogs: []bool{true}},
+			{goodReceipt: false, DepositLogs: []bool{false}},
+		})
+		require.NoError(t, err)
+		usedDepositTxs, err := encodeDeposits(depositTxs)
+		require.NoError(t, err)
+
+		winner := testutils.RandomAddress(rng)
+
+		electionWinners := []*eth.ElectionWinner{
+			{Address: winner, ParentSlot: l2Parent.Time, Time: l2Parent.Time + 12},
+		}
+
+		burnTx, _ := BurnTxBytes(winner)
+
+		epoch := l1Info.ID()
+		l1InfoTx, err := L1InfoDepositBytes(cfg, testSysCfg, 0, l1Info, 0, winner)
+		require.NoError(t, err)
+		require.NoError(t, err)
+
+		l2Txs := append(make([]eth.Data, 0), l1InfoTx)
+		l2Txs = append(l2Txs, burnTx)
+		l2Txs = append(l2Txs, usedDepositTxs...)
+
+		l1Fetcher.ExpectFetchReceipts(epoch.Hash, l1Info, receipts, nil)
+		attrBuilder := NewFetchingAttributesBuilder(cfg, l1Fetcher, l1CfgFetcher)
+		attrs, err := attrBuilder.PreparePayloadAttributes(context.Background(), l2Parent, epoch, electionWinners)
+		require.NoError(t, err)
+		require.NotNil(t, attrs)
+		require.Equal(t, l2Parent.Time+cfg.BlockTime, uint64(attrs.Timestamp))
+		require.Equal(t, eth.Bytes32(l1Info.InfoMixDigest), attrs.PrevRandao)
+		require.Equal(t, predeploys.SequencerFeeVaultAddr, attrs.SuggestedFeeRecipient)
+		require.Equal(t, len(l2Txs), len(attrs.Transactions), "Expected txs to equal l1 info tx + burn tx + user deposit txs")
 		require.Equal(t, l2Txs, attrs.Transactions)
 		require.True(t, attrs.NoTxPool)
 	})
