@@ -142,8 +142,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	txsStartLength := 1
 
 	// If there is a winner make room for the burn tx
-	zeroAddress := common.Address{}
-	if winner != zeroAddress {
+	if winner != (common.Address{}) {
 		txsStartLength += 1
 	}
 
@@ -151,9 +150,8 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	txs = append(txs, l1InfoTx)
 
 	// We need to put burn right after l1InfoTx incase any deposits rely on this state change
-	if winner != zeroAddress {
+	if winner != (common.Address{}) {
 		burnTx, err := BurnTxBytes(winner)
-		println("burnTx")
 		if err != nil {
 			return nil, NewCriticalError(fmt.Errorf("failed to create burnTx: %w", err))
 		}
