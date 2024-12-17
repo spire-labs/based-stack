@@ -39,21 +39,22 @@ type AltDAInputFetcher interface {
 }
 
 type ElectionWinnersProvider interface {
-	GetElectionWinners() []*eth.ElectionWinner
+	GetElectionWinner(timestamp uint64) eth.ElectionWinner
 }
 
 // DataSourceFactory reads raw transactions from a given block & then filters for
 // batch submitter transactions.
 // This is not a stage in the pipeline, but a wrapper for another stage in the pipeline
 type DataSourceFactory struct {
-	log             log.Logger
-	dsCfg           DataSourceConfig
-	fetcher         L1Fetcher
-	blobsFetcher    L1BlobsFetcher
-	altDAFetcher    AltDAInputFetcher
-	ecotoneTime     *uint64
-	emitter         event.Emitter
-	electionWinners []*eth.ElectionWinner
+	log                  log.Logger
+	dsCfg                DataSourceConfig
+	fetcher              L1Fetcher
+	blobsFetcher         L1BlobsFetcher
+	altDAFetcher         AltDAInputFetcher
+	ecotoneTime          *uint64
+	emitter              event.Emitter
+	electionWinners      []*eth.ElectionWinner
+	electionWinnersQueue [][]*eth.ElectionWinner
 }
 
 func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
@@ -63,14 +64,15 @@ func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher,
 		altDAEnabled:      cfg.AltDAEnabled(),
 	}
 	return &DataSourceFactory{
-		log:             log,
-		dsCfg:           config,
-		fetcher:         fetcher,
-		blobsFetcher:    blobsFetcher,
-		altDAFetcher:    altDAFetcher,
-		ecotoneTime:     cfg.EcotoneTime,
-		emitter:         nil,
-		electionWinners: []*eth.ElectionWinner{},
+		log:                  log,
+		dsCfg:                config,
+		fetcher:              fetcher,
+		blobsFetcher:         blobsFetcher,
+		altDAFetcher:         altDAFetcher,
+		ecotoneTime:          cfg.EcotoneTime,
+		emitter:              nil,
+		electionWinners:      []*eth.ElectionWinner{},
+		electionWinnersQueue: [][]*eth.ElectionWinner{},
 	}
 }
 
@@ -104,7 +106,7 @@ type DataSourceConfig struct {
 func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, cfg *DataSourceConfig, logger log.Logger) bool {
 	if receipt.Type != types.BlobTxType {
 		// TODO(spire): enable other DA sources
-		logger.Warn("not a blob tx")
+		logger.Debug("Not a blob tx", "tx", receipt.TxHash)
 		return false
 	}
 
@@ -112,9 +114,11 @@ func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, c
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
 	for _, log := range receipt.Logs {
 		if log.Address != cfg.batchInboxAddress {
+			logger.Debug("Invalid batchInbox", "tx", receipt.TxHash)
 			continue
 		}
 		if log.Topics[0] != topic0 {
+			logger.Debug("Topic0 mismatch", "tx", receipt.TxHash, "block", receipt.BlockNumber)
 			continue
 		}
 		senderAddr := addressFromTopic(log.Topics[1])
@@ -122,10 +126,12 @@ func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, c
 			logger.Warn("Invalid batch sender", "expected", electionWinnerAddr, "got", senderAddr)
 			continue
 		}
+
+		logger.Debug("Valid tx in inbox", "tx", receipt.TxHash)
 		return true
 	}
 
-	logger.Warn("Invalid tx in inbox", "tx", receipt.TxHash)
+	logger.Warn("Invalid tx in inbox", "tx", receipt.TxHash, "block", receipt.BlockNumber)
 
 	return false
 }
@@ -134,8 +140,21 @@ func addressFromTopic(topic common.Hash) common.Address {
 	return common.Address(topic.Bytes()[12:])
 }
 
-func (ds *DataSourceFactory) GetElectionWinners() []*eth.ElectionWinner {
-	return ds.electionWinners
+func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
+
+	if len(ds.electionWinners) > 0 && len(ds.electionWinnersQueue) > 0 && ds.electionWinners[len(ds.electionWinners)-1].Time < timestamp {
+		ds.electionWinners = ds.electionWinnersQueue[0]
+		ds.electionWinnersQueue = ds.electionWinnersQueue[1:]
+	}
+
+	var out eth.ElectionWinner
+	for _, winner := range ds.electionWinners {
+		if winner.Time == timestamp {
+			out = *winner
+		}
+	}
+
+	return out
 }
 
 func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
@@ -145,7 +164,12 @@ func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
 func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
 	switch x := ev.(type) {
 	case rollup.ElectionWinnerEvent:
-		ds.electionWinners = x.ElectionWinners
+		if len(ds.electionWinners) == 0 {
+			ds.electionWinners = x.ElectionWinners
+			return true
+		}
+
+		ds.electionWinnersQueue = append(ds.electionWinnersQueue, x.ElectionWinners)
 	default:
 		return false
 	}
