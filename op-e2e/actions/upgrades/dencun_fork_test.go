@@ -239,5 +239,5 @@ func TestDencunBlobTxInclusion(gt *testing.T) {
 
 	sequencer.ActL2StartBlock(t)
 	err := engine.EngineApi.IncludeTx(tx, dp.Addresses.Alice)
-	require.ErrorContains(t, err, "invalid L2 block (tx 2): failed to apply transaction to L2 block (tx 2): transaction type not supported")
+	require.ErrorContains(t, err, "invalid L2 block (tx 1): failed to apply transaction to L2 block (tx 1): transaction type not supported")
 }
