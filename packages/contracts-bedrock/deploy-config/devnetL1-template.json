@@ -1,6 +1,6 @@
 {
-  "l1ChainID": 900,
-  "l2ChainID": 901,
+  "l1ChainID": 17000,
+  "l2ChainID": 7259,
   "l2BlockTime": 12,
   "maxSequencerDrift": 300,
   "sequencerWindowSize": 200,

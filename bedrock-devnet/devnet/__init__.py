@@ -60,7 +60,7 @@ def main():
     devnet_dir = pjoin(monorepo_dir, '.devnet')
     contracts_bedrock_dir = pjoin(monorepo_dir, 'packages', 'contracts-bedrock')
     deployment_dir = pjoin(contracts_bedrock_dir, 'deployments', 'devnetL1')
-    forge_l1_dump_path = pjoin(contracts_bedrock_dir, 'state-dump-900.json')
+    forge_l1_dump_path = pjoin(contracts_bedrock_dir, 'state-dump-17000.json')
     op_node_dir = pjoin(args.monorepo_dir, 'op-node')
     ops_bedrock_dir = pjoin(monorepo_dir, 'ops-bedrock')
     deploy_config_dir = pjoin(contracts_bedrock_dir, 'deploy-config')
@@ -171,7 +171,7 @@ def devnet_l2_allocs(paths):
     # For the previous forks, and the latest fork (default, thus empty prefix),
     # move the forge-dumps into place as .devnet allocs.
     for fork in FORKS:
-        input_path = pjoin(paths.contracts_bedrock_dir, f"state-dump-901-{fork}.json")
+        input_path = pjoin(paths.contracts_bedrock_dir, f"state-dump-7259-{fork}.json")
         output_path = pjoin(paths.devnet_dir, f'allocs-l2-{fork}.json')
         shutil.move(src=input_path, dst=output_path)
         log.info("Generated L2 allocs: "+output_path)
