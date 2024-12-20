@@ -290,7 +290,7 @@ func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) 
 	// TODO(spire): Dont hardcode the "/ 8" here
 	// For some reason on the devnets the lookahead has 8 validators, which means an epoch is 8 slots
 	// Where as on mainnet it is 32, we need to look into this as well
-	return slot / 8, nil
+	return slot / 32, nil
 }
 
 func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error) {
