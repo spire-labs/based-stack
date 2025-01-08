@@ -67,7 +67,7 @@ contract SystemConfigInterop is SystemConfig {
             _config: _config,
             _batchInbox: _batchInbox,
             _addresses: _addresses,
-            _electionConfig: _electionConfig
+            _eConfig: _electionConfig
         });
         Storage.setAddress(DEPENDENCY_MANAGER_SLOT, _dependencyManager);
     }
