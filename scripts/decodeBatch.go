@@ -78,7 +78,7 @@ const (
 
 // decodeBatch uses batch_decoder as a command.
 // This could be improved by just reading it in golang, but that's enough right now.
-func decodeBatch(start, end int) {
+func decodeBatch(start, end int, l1Url, l1Beacon string) {
 	// clear cache
 	_, err := os.Stat(cacheDir)
 	if err != nil && !os.IsNotExist(err) {
@@ -97,7 +97,7 @@ func decodeBatch(start, end int) {
 		log.Fatal(err)
 	}
 
-	sanityCheck()
+	sanityCheck(l1Url)
 
 	runCommand("go", "run", ".", "fetch", "--start", fmt.Sprintf("%d", start), "--end", fmt.Sprintf("%d", end), "--inbox", batchInbox, "--l1", l1Url, "--l1.beacon", l1Beacon, "--out", txCache)
 	runCommand("go", "run", ".", "reassemble-devnet", "--in", txCache, "--out", channelCache)
@@ -182,7 +182,7 @@ func decodeBatch(start, end int) {
 	}
 }
 
-func sanityCheck() {
+func sanityCheck(l1Url string) {
 	l1Client, err := ethclient.Dial(l1Url)
 	if err != nil {
 		log.Fatal(err)
