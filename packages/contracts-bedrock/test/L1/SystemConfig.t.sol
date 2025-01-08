@@ -152,7 +152,7 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _electionConfig: ElectionSystemConfig.ElectionConfig({
+            _eConfig: ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
                 precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
@@ -186,7 +186,7 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _electionConfig: ElectionSystemConfig.ElectionConfig({
+            _eConfig: ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
                 precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
@@ -221,7 +221,7 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _electionConfig: ElectionSystemConfig.ElectionConfig({
+            _eConfig: ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
                 precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
@@ -320,7 +320,7 @@ contract SystemConfig_Init_ResourceConfig is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _electionConfig: ElectionSystemConfig.ElectionConfig({
+            _eConfig: ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
                 precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
@@ -362,7 +362,7 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _gasPayingToken
             }),
-            _electionConfig: ElectionSystemConfig.ElectionConfig({
+            _eConfig: ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
                 precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
