@@ -533,40 +533,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         _electionConfig = _config;
     }
 
-    /// @notice Sanitzes a fallback list before it is set
-    ///
-    /// @param _fallbackListAsBytes The fallback list to sanitze
-    /// @return bool Whether the list is valid or not
-    function _sanitzeFallbackList(bytes32 _fallbackListAsBytes) internal pure returns (bool) {
-        // The list is intended to be a right padded hexadecimal string
-        // Each byte represents an ElectionFallback enum value
-        bytes memory _listAsBytes = abi.encode(_fallbackListAsBytes);
-
-        uint256 _val;
-        uint256 _byte;
-        bool _didLoop;
-
-        // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
-        while (uint256(uint8(_listAsBytes[_byte])) != uint256(ElectionFallback.NO_FALLBACK)) {
-            if (!_didLoop) _didLoop = true;
-
-            _val = uint256(uint8(_listAsBytes[_byte]));
-
-            // The list contains an invalid enum
-            if (_val > uint256(ElectionFallback.PERMISSIONLESS)) return false;
-
-            unchecked {
-                ++_byte;
-            }
-        }
-
-        // If we did not loop and the list is not empty, this means the list is not right padded
-        // Meaning its an invalid format
-        if (!_didLoop && uint256(_fallbackListAsBytes) != 0) return false;
-
-        return true;
-    }
-
     /// @notice A getter for the resource config.
     ///         Ensures that the struct is returned instead of a tuple.
     /// @return ResourceConfig
