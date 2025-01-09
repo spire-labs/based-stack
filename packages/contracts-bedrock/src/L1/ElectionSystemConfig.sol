@@ -29,6 +29,47 @@ abstract contract ElectionSystemConfig {
 
     }
 
+    /// @notice Enum for appchain assertion types used for the configuration for different calldata
+    ///
+    /// @custom:value NULL, used for sanity, should never be returned
+    /// @custom:value GT, greater than
+    /// @custom:value LT, less than
+    /// @custom:value EQ, equal to
+    /// @custom:value GTE, greater than or equal to
+    /// @custom:value LTE, less than or equal to
+    /// @custom:value NEQ, not equal to
+    /// @custom:value REVERT, when we are expecting a revert
+    /// @custom:value SUCCESS, when we are expecting the call to strictly not revert
+    enum SequencerAssertion {
+        NULL, // 0x00, used for sanity, should never be returned
+        GT, // 0x01, greater than
+        LT, // 0x02, less than
+        EQ, // 0x03, equal to
+        GTE, // 0x04, greater than or equal to
+        LTE, // 0x05, less than or equal to
+        NEQ, // 0x06, not equal to
+        REVERT, // 0x07
+        SUCCESS // 0x08
+    }
+
+    /// @notice Struct for appchain configuration
+    ///
+    /// @param assertionType The assertion type used for the configuration
+    /// @param desiredRetdata The desired return data for the configuration
+    /// @param configCalldata The calldata to check the result of
+    /// @param target The target contract to call
+    struct SequencerRule {
+        SequencerAssertion assertionType;
+        bytes32  desiredRetdata;
+        bytes  configCalldata;
+        address target;
+    }
+
+    struct SequencerConfig {
+        uint256 size;
+        mapping(uint256 => SequencerRule) rules;
+    }
+
     // NOTE: The following structs are single values
     // but are defined as structs because we will likely add more to them in future iterations
 
@@ -41,20 +82,12 @@ abstract contract ElectionSystemConfig {
         bytes32 electionFallbackList;
     }
 
-    /// @notice The available rules to enforce on the elected sequencers
-    /// @dev This is a lower level struct meant to be used in sync with ElectionPrecedence
-    ///
-    /// @param minimumPreconfirmationCollateral The minimum amount of collateral required
-    struct ElectionConfigRules {
-        uint256 minimumPreconfirmationCollateral;
-    }
-
     /// @notice The configuration for the election
     ///
-    /// @param rules The defined election rules
+    /// @param config The defined sequencer config
     /// @param precedence The defined order of precedence
     struct ElectionConfig {
-        ElectionConfigRules rules;
+        SequencerConfig config;
         ElectionPrecedence precedence;
     }
 

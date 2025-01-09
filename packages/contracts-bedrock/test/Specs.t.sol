@@ -466,7 +466,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setBatcherHash.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasLimit.selector, _auth: Role.SYSTEMCONFIGOWNER });
-        _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setElectionConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
+        _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setElectionFallbackList.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("minimumPreconfirmationCollateral()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("electionFallbackList()") });
         _addSpec({
@@ -547,7 +547,7 @@ contract Specification_Test is CommonTest {
         });
         _addSpec({
             _name: "SystemConfigInterop",
-            _sel: ISystemConfig.setElectionConfig.selector,
+            _sel: ISystemConfig.setElectionFallbackList.selector,
             _auth: Role.SYSTEMCONFIGOWNER
         });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionConfig()") });

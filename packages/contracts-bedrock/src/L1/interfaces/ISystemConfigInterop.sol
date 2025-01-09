@@ -18,7 +18,7 @@ interface ISystemConfigInterop is ISystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         Addresses memory _addresses,
-        ElectionSystemConfig.ElectionConfig memory _electionConfig,
+        bytes32 _fallbackList,
         address _dependencyManager
     )
         external;

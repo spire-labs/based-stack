@@ -27,6 +27,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Throws when a fallback list fails the sanity check
     error InvalidFallbackList();
 
+    /// @notice Throws when a call is not an eth call
+    error NotEthCall();
+
     /// @notice Enum representing different types of updates.
     /// @custom:value BATCHER              Represents an update to the batcher hash.
     /// @custom:value GAS_CONFIG           Represents an update to txn fee config on L2.
@@ -180,10 +183,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
     }
 
@@ -199,7 +199,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @param _batchInbox        Batch inbox address. An identifier for the op-node to find
     ///                           canonical data.
     /// @param _addresses         Set of L1 contract addresses. These should be the proxies.
-    /// @param _eConfig    The defined system configuration for the election
+    /// @param _fallbackList      The defined election fallbacklist
     function initialize(
         address _owner,
         uint32 _basefeeScalar,
@@ -210,7 +210,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         SystemConfig.Addresses memory _addresses,
-        ElectionConfig memory _eConfig
+        bytes32 _fallbackList
     )
         public
         initializer
@@ -234,8 +234,8 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
 
         _setStartBlock();
         _setGasPayingToken(_addresses.gasPayingToken);
-        _sanitzeFallbackList(_eConfig.precedence.electionFallbackList);
-        _setElectionConfig(_eConfig);
+        _sanitzeFallbackList(_fallbackList);
+        _setElectionFallbackList(_fallbackList);
 
         _setResourceConfig(_config);
         require(_gasLimit >= minimumGasLimit(), "SystemConfig: gas limit too low");
@@ -292,11 +292,45 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         addr_ = Storage.getAddress(OPTIMISM_PORTAL_SLOT);
     }
 
-    /// @notice Fetches the minimum preconfirmation collateral that is set
+    /// @notice Checks the sequencer rules
     ///
-    /// @return minimumPreconfirmationCollateral_ The minimum preconfirmation collateral
-    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_) {
-        minimumPreconfirmationCollateral_ = _electionConfig.rules.minimumPreconfirmationCollateral;
+    /// @dev This function is not marked as view because it might can used as simulations
+    ///      Due to this we restrict to only be callable through the context of an eth_call
+    function checkSequencerRules() external returns (bool) {
+        // eth_call from field needs to be address(0)
+        if (msg.sender != address(0)) revert NotEthCall();
+
+       uint256 _len = _electionConfig.config.size;
+        SequencerRule memory _rule;
+        bool _success;
+        bytes memory _returnData;
+
+        for (uint256 i; i < _len; i++) {
+            _rule = _electionConfig.config.rules[i];
+
+            (_success, _returnData) = _rule.target.call(_rule.configCalldata);
+
+            // Check the desired assertion type
+            if (_rule.assertionType == SequencerAssertion.SUCCESS) {
+                if (!_success) return false;
+            } else if (_rule.assertionType == SequencerAssertion.REVERT) {
+                if (_success) return false;
+            } else if (_rule.assertionType == SequencerAssertion.LT) {
+                if (bytes32(_returnData) >= _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.GT) {
+                if (bytes32(_returnData) <= _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.LTE) {
+                if (bytes32(_returnData) > _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.GTE) {
+                if (bytes32(_returnData) < _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.EQ) {
+                if (bytes32(_returnData) != _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.NEQ) {
+                if (bytes32(_returnData) == _rule.desiredRetdata) return false;
+            }
+        }
+
+        return true;
     }
 
     /// @notice Fetches the election fallback list that is set
@@ -342,12 +376,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         }
     }
 
-    /// @notice Fetches the election config that is set
-    ///
-    /// @return electionConfig_ The election config
-    function electionConfig() external view returns (ElectionConfig memory electionConfig_) {
-        electionConfig_ = _electionConfig;
-    }
 
     /// @notice Getter for the OptimismMintableERC20Factory address.
     function optimismMintableERC20Factory() external view returns (address addr_) {
@@ -411,15 +439,15 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     }
 
     /// @notice Updates the election queried by the offchain node for computing the election
-    /// @param _config The config to update to
-    function setElectionConfig(ElectionConfig memory _config) external onlyOwner {
-        bool _success = _sanitzeFallbackList(_config.precedence.electionFallbackList);
+    /// @param _fallbackList The config to update to
+    function setElectionFallbackList(bytes32 _fallbackList) external onlyOwner {
+        bool _success = _sanitzeFallbackList(_fallbackList);
 
         if (!_success) revert InvalidFallbackList();
 
-        _setElectionConfig(_config);
+        _setElectionFallbackList(_fallbackList);
 
-        bytes memory data = abi.encode(_config);
+        bytes memory data = abi.encode(_fallbackList);
         emit ConfigUpdate(VERSION, UpdateType.ELECTION_CONFIG, data);
     }
 
@@ -526,11 +554,11 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         }
     }
 
-    /// @notice Updates the election queried by the offchain node for computing the election
+    /// @notice Updates the election fallback list queried by the offchain node for computing the election
     ///
-    /// @param _config The config to update to
-    function _setElectionConfig(ElectionConfig memory _config) internal {
-        _electionConfig = _config;
+    /// @param _fallbackList The config to update to
+    function _setElectionFallbackList(bytes32 _fallbackList) internal {
+        _electionConfig.precedence.electionFallbackList = _fallbackList;
     }
 
     /// @notice A getter for the resource config.

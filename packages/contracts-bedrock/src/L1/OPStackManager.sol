@@ -54,7 +54,7 @@ contract OPStackManager is ISemver, Initializable {
     /// @notice The full set of inputs to deploy a new OP Stack chain.
     struct DeployInput {
         Roles roles;
-        ElectionSystemConfig.ElectionConfig electionConfig;
+        bytes32 electionFallbackList;
         uint32 basefeeScalar;
         uint32 blobBasefeeScalar;
         uint256 l2ChainId;
@@ -410,7 +410,7 @@ contract OPStackManager is ISemver, Initializable {
             referenceResourceConfig,
             chainIdToBatchInboxAddress(_input.l2ChainId),
             opChainAddrs,
-            _input.electionConfig
+            _input.electionFallbackList
         );
     }
 

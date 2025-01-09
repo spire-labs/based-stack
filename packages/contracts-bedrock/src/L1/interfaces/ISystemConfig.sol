@@ -68,7 +68,7 @@ interface ISystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         Addresses memory _addresses,
-        ElectionSystemConfig.ElectionConfig memory _eConfig
+        bytes32 _fallbackList
     )
         external;
     function isCustomGasToken() external view returns (bool);
@@ -95,11 +95,10 @@ interface ISystemConfig {
     function version() external pure returns (string memory);
 
     // ElectionSystemConfig
-    function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external;
+    function setElectionFallbackList(bytes32 _fallbackList) external;
     function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
     function electionFallbackList()
         external
         view
         returns (ElectionSystemConfig.ElectionFallback[] memory electionFallbackList_);
-    function electionConfig() external view returns (ElectionSystemConfig.ElectionConfig memory electionConfig_);
 }

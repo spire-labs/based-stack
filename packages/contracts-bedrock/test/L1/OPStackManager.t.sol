@@ -64,12 +64,7 @@ contract OPStackManager_Deploy_Test is DeployOPChain_TestBase {
                 proposer: _doi.proposer(),
                 challenger: _doi.challenger()
             }),
-            electionConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({
-                    minimumPreconfirmationCollateral: _doi.minimumPreconfirmationCollateral()
-                }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
-            }),
+            electionFallbackList: _doi.electionFallbackList(),
             basefeeScalar: _doi.basefeeScalar(),
             blobBasefeeScalar: _doi.blobBaseFeeScalar(),
             l2ChainId: _doi.l2ChainId()

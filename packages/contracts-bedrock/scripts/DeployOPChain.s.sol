@@ -448,16 +448,10 @@ contract DeployOPChain is Script {
             challenger: _doi.challenger()
         });
 
-        ElectionSystemConfig.ElectionConfig memory electionConfig = ElectionSystemConfig.ElectionConfig({
-            rules: ElectionSystemConfig.ElectionConfigRules({
-                minimumPreconfirmationCollateral: _doi.minimumPreconfirmationCollateral()
-            }),
-            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _doi.electionFallbackList() })
-        });
 
         OPStackManager.DeployInput memory deployInput = OPStackManager.DeployInput({
             roles: roles,
-            electionConfig: electionConfig,
+            electionFallbackList: _doi.electionFallbackList(),
             basefeeScalar: _doi.basefeeScalar(),
             blobBasefeeScalar: _doi.blobBaseFeeScalar(),
             l2ChainId: _doi.l2ChainId()
