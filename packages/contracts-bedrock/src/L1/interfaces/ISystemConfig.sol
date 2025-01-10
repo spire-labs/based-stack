@@ -68,7 +68,7 @@ interface ISystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         Addresses memory _addresses,
-        ElectionSystemConfig.ElectionConfig memory _electionConfig
+        ElectionSystemConfig.ElectionConfig memory _eConfig
     )
         external;
     function isCustomGasToken() external view returns (bool);

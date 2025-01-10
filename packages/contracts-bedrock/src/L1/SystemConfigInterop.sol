@@ -67,14 +67,14 @@ contract SystemConfigInterop is SystemConfig {
             _config: _config,
             _batchInbox: _batchInbox,
             _addresses: _addresses,
-            _electionConfig: _electionConfig
+            _eConfig: _electionConfig
         });
         Storage.setAddress(DEPENDENCY_MANAGER_SLOT, _dependencyManager);
     }
 
-    /// @custom:semver +interop-1
+    /// @custom:semver +interop-2
     function version() public pure override returns (string memory) {
-        return string.concat(super.version(), "+interop-1");
+        return string.concat(super.version(), "+interop-2");
     }
 
     /// @notice Internal setter for the gas paying token address, includes validation.

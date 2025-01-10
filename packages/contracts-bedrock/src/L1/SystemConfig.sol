@@ -131,6 +131,11 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     ///         Set as internal with a getter so that the struct is returned instead of a tuple.
     IResourceMetering.ResourceConfig internal _resourceConfig;
 
+    /// @notice The storage slot that the election config is stored at
+    ///
+    /// @dev Set as internal and exposes a getter function to make it return a struct instead of tuple
+    ElectionConfig internal _electionConfig;
+
     /// @notice Emitted when configuration is updated.
     /// @param version    SystemConfig version.
     /// @param updateType Type of update.
@@ -138,9 +143,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.3
+    /// @custom:semver 2.3.1-beta.4
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.3";
+        return "2.3.1-beta.4";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -175,7 +180,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _electionConfig: ElectionSystemConfig.ElectionConfig({
+            _eConfig: ElectionSystemConfig.ElectionConfig({
                 rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
                 precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
             })
@@ -194,7 +199,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @param _batchInbox        Batch inbox address. An identifier for the op-node to find
     ///                           canonical data.
     /// @param _addresses         Set of L1 contract addresses. These should be the proxies.
-    /// @param _electionConfig    The defined system configuration for the election
+    /// @param _eConfig    The defined system configuration for the election
     function initialize(
         address _owner,
         uint32 _basefeeScalar,
@@ -205,7 +210,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         SystemConfig.Addresses memory _addresses,
-        ElectionConfig memory _electionConfig
+        ElectionConfig memory _eConfig
     )
         public
         initializer
@@ -229,7 +234,8 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
 
         _setStartBlock();
         _setGasPayingToken(_addresses.gasPayingToken);
-        _setElectionConfig(_electionConfig);
+        _sanitzeFallbackList(_eConfig.precedence.electionFallbackList);
+        _setElectionConfig(_eConfig);
 
         _setResourceConfig(_config);
         require(_gasLimit >= minimumGasLimit(), "SystemConfig: gas limit too low");
@@ -284,6 +290,63 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Getter for the OptimismPortal address.
     function optimismPortal() public view returns (address addr_) {
         addr_ = Storage.getAddress(OPTIMISM_PORTAL_SLOT);
+    }
+
+    /// @notice Fetches the minimum preconfirmation collateral that is set
+    ///
+    /// @return minimumPreconfirmationCollateral_ The minimum preconfirmation collateral
+    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_) {
+        minimumPreconfirmationCollateral_ = _electionConfig.rules.minimumPreconfirmationCollateral;
+    }
+
+    /// @notice Fetches the election fallback list that is set
+    ///
+    /// @return electionFallbackList_ The election fallback list
+    function electionFallbackList() external view returns (ElectionFallback[] memory electionFallbackList_) {
+        // The list is intended to be a right padded hexadecimal string
+        // Each byte represents an ElectionFallback enum value
+        bytes32 _fallbackList = _electionConfig.precedence.electionFallbackList;
+
+        if (_fallbackList == bytes32(0)) return electionFallbackList_;
+
+        bytes memory _listAsBytes = abi.encode(_fallbackList);
+
+        uint256 _byte;
+        uint256 _val;
+
+        assembly {
+            // Allocate memory for the array
+            electionFallbackList_ := mload(0x40)
+        }
+
+        // If we encounter byte 00 (NO_FALLBACK) we know we've reached the end of the list
+        while (uint256(uint8(_listAsBytes[_byte])) != uint256(ElectionFallback.NO_FALLBACK)) {
+            _val = uint256(uint8(_listAsBytes[_byte]));
+
+            unchecked {
+                ++_byte;
+            }
+
+            // Dynamically resize the array
+            assembly {
+                // Store the length of the array
+                mstore(electionFallbackList_, _byte)
+
+                // Get the location to store the value in and store it
+                let _dataLocation := add(electionFallbackList_, mul(_byte, 0x20))
+                mstore(_dataLocation, _val)
+
+                // Update the free memory pointer
+                mstore(0x40, add(_dataLocation, 0x20))
+            }
+        }
+    }
+
+    /// @notice Fetches the election config that is set
+    ///
+    /// @return electionConfig_ The election config
+    function electionConfig() external view returns (ElectionConfig memory electionConfig_) {
+        electionConfig_ = _electionConfig;
     }
 
     /// @notice Getter for the OptimismMintableERC20Factory address.
@@ -461,6 +524,13 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         if (Storage.getUint(START_BLOCK_SLOT) == 0) {
             Storage.setUint(START_BLOCK_SLOT, block.number);
         }
+    }
+
+    /// @notice Updates the election queried by the offchain node for computing the election
+    ///
+    /// @param _config The config to update to
+    function _setElectionConfig(ElectionConfig memory _config) internal {
+        _electionConfig = _config;
     }
 
     /// @notice A getter for the resource config.

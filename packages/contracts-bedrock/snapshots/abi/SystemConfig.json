@@ -452,7 +452,7 @@
           }
         ],
         "internalType": "struct ElectionSystemConfig.ElectionConfig",
-        "name": "_electionConfig",
+        "name": "_eConfig",
         "type": "tuple"
       }
     ],

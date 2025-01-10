@@ -35,66 +35,59 @@
     "type": "uint256[49]"
   },
   {
-    "bytes": "64",
-    "label": "_electionConfig",
-    "offset": 0,
-    "slot": "101",
-    "type": "struct ElectionSystemConfig.ElectionConfig"
-  },
-  {
-    "bytes": "1600",
-    "label": "__gap",
-    "offset": 0,
-    "slot": "103",
-    "type": "uint256[50]"
-  },
-  {
     "bytes": "32",
     "label": "overhead",
     "offset": 0,
-    "slot": "153",
+    "slot": "101",
     "type": "uint256"
   },
   {
     "bytes": "32",
     "label": "scalar",
     "offset": 0,
-    "slot": "154",
+    "slot": "102",
     "type": "uint256"
   },
   {
     "bytes": "32",
     "label": "batcherHash",
     "offset": 0,
-    "slot": "155",
+    "slot": "103",
     "type": "bytes32"
   },
   {
     "bytes": "8",
     "label": "gasLimit",
     "offset": 0,
-    "slot": "156",
+    "slot": "104",
     "type": "uint64"
   },
   {
     "bytes": "4",
     "label": "basefeeScalar",
     "offset": 8,
-    "slot": "156",
+    "slot": "104",
     "type": "uint32"
   },
   {
     "bytes": "4",
     "label": "blobbasefeeScalar",
     "offset": 12,
-    "slot": "156",
+    "slot": "104",
     "type": "uint32"
   },
   {
     "bytes": "32",
     "label": "_resourceConfig",
     "offset": 0,
-    "slot": "157",
+    "slot": "105",
     "type": "struct IResourceMetering.ResourceConfig"
+  },
+  {
+    "bytes": "64",
+    "label": "_electionConfig",
+    "offset": 0,
+    "slot": "106",
+    "type": "struct ElectionSystemConfig.ElectionConfig"
   }
 ]
