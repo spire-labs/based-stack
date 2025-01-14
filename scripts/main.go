@@ -38,16 +38,41 @@ func main() {
 		{
 			Name:  "l2-tx",
 			Usage: "Sends a simple L2 Transaction",
-			Action: func(_ *cli.Context) error {
-				sendL2Tx()
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "l2",
+					Required: false,
+					Value:    l2Url,
+					Usage:    "Rpc endpoint to l2 node",
+				},
+			},
+			Action: func(clx *cli.Context) error {
+				l2 := clx.String("l2")
+				sendL2Tx(l2)
 				return nil
 			},
 		},
 		{
 			Name:  "deposit",
 			Usage: "Deposits a transaction to OptimismPortal",
-			Action: func(_ *cli.Context) error {
-				deposit()
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "l1",
+					Required: false,
+					Value:    l1Url,
+					Usage:    "Rpc endpoint to l1 node",
+				},
+				&cli.StringFlag{
+					Name:     "l2",
+					Required: false,
+					Value:    l2Url,
+					Usage:    "Rpc endpoint to l2 node",
+				},
+			},
+			Action: func(clx *cli.Context) error {
+				l1 := clx.String("l1")
+				l2 := clx.String("l2")
+				deposit(l1, l2)
 				return nil
 			},
 		},
@@ -65,11 +90,25 @@ func main() {
 					Required: true,
 					Usage:    "Last block (exclusive) to fetch",
 				},
+				&cli.StringFlag{
+					Name:     "l1",
+					Required: false,
+					Value:    l1Url,
+					Usage:    "Rpc endpoint to l1 node",
+				},
+				&cli.StringFlag{
+					Name:     "l1.beacon",
+					Required: false,
+					Value:    l1Beacon,
+					Usage:    "Beacon url to l1 node",
+				},
 			},
 			Action: func(clx *cli.Context) error {
 				start := clx.Int("start")
 				end := clx.Int("end")
-				decodeBatch(start, end)
+				l1 := clx.String("l1")
+				l1Beacon := clx.String("l1.beacon")
+				decodeBatch(start, end, l1, l1Beacon)
 				return nil
 			},
 		},
@@ -81,7 +120,7 @@ func main() {
 	}
 }
 
-func deposit() {
+func deposit(l1Url, l2Url string) {
 	privateKey, err := crypto.HexToECDSA(deployerPrivKey[2:])
 	deployerAddr := crypto.PubkeyToAddress(privateKey.PublicKey)
 	if err != nil {
@@ -181,7 +220,7 @@ func waitForBlock(blockNumber uint64, client *ethclient.Client) {
 	log.Printf("Block %v included", blockNumber)
 }
 
-func sendL2Tx() {
+func sendL2Tx(l2Url string) {
 	l2Client, err := ethclient.Dial(l2Url)
 	if err != nil {
 		log.Fatalf("Error dialing ethereum client: %v", err)
