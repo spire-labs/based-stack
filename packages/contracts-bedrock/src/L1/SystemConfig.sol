@@ -234,7 +234,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
 
         _setStartBlock();
         _setGasPayingToken(_addresses.gasPayingToken);
-        _sanitzeFallbackList(_fallbackList);
+        if (!_sanitizeFallbackList(_fallbackList)) revert InvalidFallbackList();
         _setElectionFallbackList(_fallbackList);
 
         _setResourceConfig(_config);
@@ -300,7 +300,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         // eth_call from field needs to be address(0)
         if (msg.sender != address(0)) revert NotEthCall();
 
-       uint256 _len = _electionConfig.config.size;
+        uint256 _len = _electionConfig.config.size;
         SequencerRule memory _rule;
         bool _success;
         bytes memory _returnData;
@@ -376,7 +376,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         }
     }
 
-
     /// @notice Getter for the OptimismMintableERC20Factory address.
     function optimismMintableERC20Factory() external view returns (address addr_) {
         addr_ = Storage.getAddress(OPTIMISM_MINTABLE_ERC20_FACTORY_SLOT);
@@ -441,7 +440,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Updates the election queried by the offchain node for computing the election
     /// @param _fallbackList The config to update to
     function setElectionFallbackList(bytes32 _fallbackList) external onlyOwner {
-        bool _success = _sanitzeFallbackList(_fallbackList);
+        bool _success = _sanitizeFallbackList(_fallbackList);
 
         if (!_success) revert InvalidFallbackList();
 

@@ -78,7 +78,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(token, Constants.ETHER);
         assertEq(decimals, 18);
         // Check election config
-        assertEq(impl.minimumPreconfirmationCollateral(), 0);
         assertEq(impl.electionFallbackList().length, 0);
     }
 
@@ -117,7 +116,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(token, Constants.ETHER);
         assertEq(decimals, 18);
         // Check election config
-        assertEq(systemConfig.minimumPreconfirmationCollateral(), 0);
         assertEq(systemConfig.electionFallbackList().length, 0);
     }
 }
@@ -519,9 +517,7 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
     /// @dev Tests that `setElectionFallbackList` reverts if the caller is not the owner.
     function test_setElectionFallbackList_notOwner_reverts() external {
         vm.expectRevert("Ownable: caller is not the owner");
-        systemConfig.setElectionFallbackList(
-            bytes32(0)
-        );
+        systemConfig.setElectionFallbackList(bytes32(0));
     }
 
     /// @dev Tests that the `setElectionFallbackList` reverts if the input contains an invalid enum
@@ -533,9 +529,7 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
 
         vm.prank(systemConfig.owner());
         vm.expectRevert(ISystemConfig.InvalidFallbackList.selector);
-        systemConfig.setElectionFallbackList(
-            _electionFallbackList
-        );
+        systemConfig.setElectionFallbackList(_electionFallbackList);
     }
 
     /// @dev Tests that the `setElectionFallbackList` reverts if the input is not right
@@ -544,9 +538,7 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
 
         vm.prank(systemConfig.owner());
         vm.expectRevert(ISystemConfig.InvalidFallbackList.selector);
-        systemConfig.setElectionFallbackList(
-            _electionFallbackList
-        );
+        systemConfig.setElectionFallbackList(_electionFallbackList);
     }
 
     /// @dev Tests that `setUnsafeBlockSigner` reverts if the caller is not the owner.

@@ -34,6 +34,7 @@ interface ISystemConfig {
     }
 
     error InvalidFallbackList();
+    error NotEthCall();
 
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
@@ -93,10 +94,7 @@ interface ISystemConfig {
     function transferOwnership(address newOwner) external;
     function unsafeBlockSigner() external view returns (address addr_);
     function version() external pure returns (string memory);
-
-    // ElectionSystemConfig
     function setElectionFallbackList(bytes32 _fallbackList) external;
-    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
     function electionFallbackList()
         external
         view

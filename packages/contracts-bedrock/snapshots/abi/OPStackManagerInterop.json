@@ -121,35 +121,9 @@
             "type": "tuple"
           },
           {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "minimumPreconfirmationCollateral",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
-                "name": "rules",
-                "type": "tuple"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "bytes32",
-                    "name": "electionFallbackList",
-                    "type": "bytes32"
-                  }
-                ],
-                "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
-                "name": "precedence",
-                "type": "tuple"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionConfig",
-            "name": "electionConfig",
-            "type": "tuple"
+            "internalType": "bytes32",
+            "name": "electionFallbackList",
+            "type": "bytes32"
           },
           {
             "internalType": "uint32",

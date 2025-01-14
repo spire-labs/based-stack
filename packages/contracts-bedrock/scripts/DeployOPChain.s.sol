@@ -448,7 +448,6 @@ contract DeployOPChain is Script {
             challenger: _doi.challenger()
         });
 
-
         OPStackManager.DeployInput memory deployInput = OPStackManager.DeployInput({
             roles: roles,
             electionFallbackList: _doi.electionFallbackList(),

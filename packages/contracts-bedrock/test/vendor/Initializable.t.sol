@@ -212,7 +212,7 @@ contract Initializer_Test is Bridge_Initializer {
                             optimismMintableERC20Factory: address(0),
                             gasPayingToken: Constants.ETHER
                         }),
-                     bytes32(0)
+                        bytes32(0)
                     )
                 )
             })

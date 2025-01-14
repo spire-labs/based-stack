@@ -50,6 +50,7 @@ abstract contract ElectionSystemConfig {
         NEQ, // 0x06, not equal to
         REVERT, // 0x07
         SUCCESS // 0x08
+
     }
 
     /// @notice Struct for appchain configuration
@@ -60,8 +61,8 @@ abstract contract ElectionSystemConfig {
     /// @param target The target contract to call
     struct SequencerRule {
         SequencerAssertion assertionType;
-        bytes32  desiredRetdata;
-        bytes  configCalldata;
+        bytes32 desiredRetdata;
+        bytes configCalldata;
         address target;
     }
 
@@ -95,7 +96,7 @@ abstract contract ElectionSystemConfig {
     ///
     /// @param _fallbackListAsBytes The fallback list to sanitze
     /// @return bool Whether the list is valid or not
-    function _sanitzeFallbackList(bytes32 _fallbackListAsBytes) internal pure returns (bool) {
+    function _sanitizeFallbackList(bytes32 _fallbackListAsBytes) internal pure returns (bool) {
         // The list is intended to be a right padded hexadecimal string
         // Each byte represents an ElectionFallback enum value
         bytes memory _listAsBytes = abi.encode(_fallbackListAsBytes);
