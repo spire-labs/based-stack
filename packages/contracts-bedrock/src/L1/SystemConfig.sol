@@ -146,9 +146,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.4
+    /// @custom:semver 2.3.1-beta.5
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.4";
+        return "2.3.1-beta.5";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
