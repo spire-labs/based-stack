@@ -297,6 +297,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @dev This function is not marked as view because it might can used as simulations
     ///      Due to this we restrict to only be callable through the context of an eth_call
     function checkSequencerRules() external returns (bool) {
+        // TODO(spire): Add tests for this function when the logic is more flushed out in future PRs
         // eth_call from field needs to be address(0)
         if (msg.sender != address(0)) revert NotEthCall();
 

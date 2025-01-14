@@ -99,4 +99,5 @@ interface ISystemConfig {
         external
         view
         returns (ElectionSystemConfig.ElectionFallback[] memory electionFallbackList_);
+    function checkSequencerRules() external returns (bool);
 }

@@ -471,7 +471,6 @@ contract Specification_Test is CommonTest {
             _sel: ISystemConfig.setElectionFallbackList.selector,
             _auth: Role.SYSTEMCONFIGOWNER
         });
-        _addSpec({ _name: "SystemConfig", _sel: _getSel("minimumPreconfirmationCollateral()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("electionFallbackList()") });
         _addSpec({
             _name: "SystemConfig",
@@ -508,7 +507,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: _getSel("basefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("blobbasefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("maximumGasLimit()") });
-        _addSpec({ _name: "SystemConfig", _sel: _getSel("electionConfig()") });
+        _addSpec({ _name: "SystemConfig", _sel: _getSel("checkSequencerRules()") });
 
         // SystemConfigInterop
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
@@ -554,8 +553,6 @@ contract Specification_Test is CommonTest {
             _sel: ISystemConfig.setElectionFallbackList.selector,
             _auth: Role.SYSTEMCONFIGOWNER
         });
-        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionConfig()") });
-        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("minimumPreconfirmationCollateral()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("electionFallbackList()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.unsafeBlockSigner.selector });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("version()") });
@@ -593,6 +590,7 @@ contract Specification_Test is CommonTest {
             _auth: Role.DEPENDENCYMANAGER
         });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("dependencyManager()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("checkSequencerRules()") });
 
         // ProxyAdmin
         _addSpec({ _name: "ProxyAdmin", _sel: _getSel("addressManager()") });
