@@ -34,6 +34,7 @@ interface ISystemConfig {
     }
 
     error InvalidFallbackList();
+    error NotEthCall();
 
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
@@ -68,7 +69,7 @@ interface ISystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         Addresses memory _addresses,
-        ElectionSystemConfig.ElectionConfig memory _eConfig
+        bytes32 _fallbackList
     )
         external;
     function isCustomGasToken() external view returns (bool);
@@ -93,13 +94,10 @@ interface ISystemConfig {
     function transferOwnership(address newOwner) external;
     function unsafeBlockSigner() external view returns (address addr_);
     function version() external pure returns (string memory);
-
-    // ElectionSystemConfig
-    function setElectionConfig(ElectionSystemConfig.ElectionConfig memory _config) external;
-    function minimumPreconfirmationCollateral() external view returns (uint256 minimumPreconfirmationCollateral_);
+    function setElectionFallbackList(bytes32 _fallbackList) external;
     function electionFallbackList()
         external
         view
         returns (ElectionSystemConfig.ElectionFallback[] memory electionFallbackList_);
-    function electionConfig() external view returns (ElectionSystemConfig.ElectionConfig memory electionConfig_);
+    function checkSequencerRules() external returns (bool);
 }

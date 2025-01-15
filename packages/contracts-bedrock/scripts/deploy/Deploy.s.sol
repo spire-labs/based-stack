@@ -1135,14 +1135,7 @@ contract Deploy is Deployer {
                         optimismMintableERC20Factory: mustGetAddress("OptimismMintableERC20FactoryProxy"),
                         gasPayingToken: customGasTokenAddress
                     }),
-                    ElectionSystemConfig.ElectionConfig({
-                        rules: ElectionSystemConfig.ElectionConfigRules({
-                            minimumPreconfirmationCollateral: uint256(cfg.minimumPreconfirmationCollateral())
-                        }),
-                        precedence: ElectionSystemConfig.ElectionPrecedence({
-                            electionFallbackList: bytes32(cfg.electionFallbackList())
-                        })
-                    })
+                    bytes32(cfg.electionFallbackList())
                 )
             )
         });

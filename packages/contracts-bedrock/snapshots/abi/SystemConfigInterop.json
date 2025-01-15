@@ -196,6 +196,19 @@
   },
   {
     "inputs": [],
+    "name": "checkSequencerRules",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "dependencyManager",
     "outputs": [
       {
@@ -215,45 +228,6 @@
         "internalType": "address",
         "name": "addr_",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "electionConfig",
-    "outputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "minimumPreconfirmationCollateral",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
-            "name": "rules",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "bytes32",
-                "name": "electionFallbackList",
-                "type": "bytes32"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
-            "name": "precedence",
-            "type": "tuple"
-          }
-        ],
-        "internalType": "struct ElectionSystemConfig.ElectionConfig",
-        "name": "electionConfig_",
-        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -446,40 +420,9 @@
         "type": "tuple"
       },
       {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "minimumPreconfirmationCollateral",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
-            "name": "rules",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "bytes32",
-                "name": "electionFallbackList",
-                "type": "bytes32"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
-            "name": "precedence",
-            "type": "tuple"
-          }
-        ],
-        "internalType": "struct ElectionSystemConfig.ElectionConfig",
-        "name": "_electionConfig",
-        "type": "tuple"
-      },
-      {
-        "internalType": "address",
-        "name": "_dependencyManager",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "_fallbackList",
+        "type": "bytes32"
       }
     ],
     "name": "initialize",
@@ -604,35 +547,14 @@
         "type": "tuple"
       },
       {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "minimumPreconfirmationCollateral",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
-            "name": "rules",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "bytes32",
-                "name": "electionFallbackList",
-                "type": "bytes32"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
-            "name": "precedence",
-            "type": "tuple"
-          }
-        ],
-        "internalType": "struct ElectionSystemConfig.ElectionConfig",
-        "name": "_eConfig",
-        "type": "tuple"
+        "internalType": "bytes32",
+        "name": "_fallbackList",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_dependencyManager",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -713,19 +635,6 @@
         "internalType": "uint64",
         "name": "",
         "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minimumPreconfirmationCollateral",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "minimumPreconfirmationCollateral_",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -877,38 +786,12 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "minimumPreconfirmationCollateral",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionConfigRules",
-            "name": "rules",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "bytes32",
-                "name": "electionFallbackList",
-                "type": "bytes32"
-              }
-            ],
-            "internalType": "struct ElectionSystemConfig.ElectionPrecedence",
-            "name": "precedence",
-            "type": "tuple"
-          }
-        ],
-        "internalType": "struct ElectionSystemConfig.ElectionConfig",
-        "name": "_config",
-        "type": "tuple"
+        "internalType": "bytes32",
+        "name": "_fallbackList",
+        "type": "bytes32"
       }
     ],
-    "name": "setElectionConfig",
+    "name": "setElectionFallbackList",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1087,6 +970,11 @@
   {
     "inputs": [],
     "name": "InvalidFallbackList",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotEthCall",
     "type": "error"
   }
 ]

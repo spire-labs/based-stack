@@ -84,7 +84,7 @@
     "type": "struct IResourceMetering.ResourceConfig"
   },
   {
-    "bytes": "64",
+    "bytes": "96",
     "label": "_electionConfig",
     "offset": 0,
     "slot": "106",

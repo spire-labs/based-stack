@@ -51,7 +51,7 @@ contract OPStackManagerInterop is OPStackManager {
             referenceResourceConfig,
             chainIdToBatchInboxAddress(_input.l2ChainId),
             opChainAddrs,
-            _input.electionConfig,
+            _input.electionFallbackList,
             dependencyManager
         );
     }

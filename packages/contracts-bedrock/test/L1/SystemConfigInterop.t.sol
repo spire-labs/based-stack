@@ -131,10 +131,7 @@ contract SystemConfigInterop_Test is CommonTest {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _token
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
     }
 

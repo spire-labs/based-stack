@@ -78,7 +78,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(token, Constants.ETHER);
         assertEq(decimals, 18);
         // Check election config
-        assertEq(impl.minimumPreconfirmationCollateral(), 0);
         assertEq(impl.electionFallbackList().length, 0);
     }
 
@@ -117,7 +116,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(token, Constants.ETHER);
         assertEq(decimals, 18);
         // Check election config
-        assertEq(systemConfig.minimumPreconfirmationCollateral(), 0);
         assertEq(systemConfig.electionFallbackList().length, 0);
     }
 }
@@ -152,10 +150,7 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
     }
 
@@ -186,10 +181,7 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
         assertEq(systemConfig.startBlock(), block.number);
     }
@@ -221,10 +213,7 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
         assertEq(systemConfig.startBlock(), 1);
     }
@@ -320,10 +309,7 @@ contract SystemConfig_Init_ResourceConfig is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
     }
 }
@@ -362,10 +348,7 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _gasPayingToken
             }),
-            _eConfig: ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
+            _fallbackList: bytes32(0)
         });
     }
 
@@ -531,19 +514,14 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
         systemConfig.setGasLimit(0);
     }
 
-    /// @dev Tests that `setElectionConfig` reverts if the caller is not the owner.
-    function test_setElectionConfig_notOwner_reverts() external {
+    /// @dev Tests that `setElectionFallbackList` reverts if the caller is not the owner.
+    function test_setElectionFallbackList_notOwner_reverts() external {
         vm.expectRevert("Ownable: caller is not the owner");
-        systemConfig.setElectionConfig(
-            ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-            })
-        );
+        systemConfig.setElectionFallbackList(bytes32(0));
     }
 
-    /// @dev Tests that the `setElectionConfig` reverts if the input contains an invalid enum
-    function test_setElectionConfig_InvalidEnumValue_reverts() external {
+    /// @dev Tests that the `setElectionFallbackList` reverts if the input contains an invalid enum
+    function test_setElectionFallbackList_InvalidEnumValue_reverts() external {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0xff))));
 
         // Shift the bytes so its right padded
@@ -551,26 +529,16 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
 
         vm.prank(systemConfig.owner());
         vm.expectRevert(ISystemConfig.InvalidFallbackList.selector);
-        systemConfig.setElectionConfig(
-            ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
-            })
-        );
+        systemConfig.setElectionFallbackList(_electionFallbackList);
     }
 
-    /// @dev Tests that the `setElectionConfig` reverts if the input is not right
-    function test_setElectionConfig_NotRightPadded_reverts() external {
+    /// @dev Tests that the `setElectionFallbackList` reverts if the input is not right
+    function test_setElectionFallbackList_NotRightPadded_reverts() external {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0xff))));
 
         vm.prank(systemConfig.owner());
         vm.expectRevert(ISystemConfig.InvalidFallbackList.selector);
-        systemConfig.setElectionConfig(
-            ElectionSystemConfig.ElectionConfig({
-                rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: 0 }),
-                precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
-            })
-        );
+        systemConfig.setElectionFallbackList(_electionFallbackList);
     }
 
     /// @dev Tests that `setUnsafeBlockSigner` reverts if the caller is not the owner.
@@ -607,41 +575,17 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
         assertEq(systemConfig.batcherHash(), newBatcherHash);
     }
 
-    /// @dev Tests that the `setElectionConfig` updates the config successfully.
-    function testFuzz_setElectionConfig_succeeds(uint256 _minPreconfCollateral) external {
-        // TODO: Find a good way to fuzz the fallback list value
-        ElectionSystemConfig.ElectionConfig memory _electionConfig = ElectionSystemConfig.ElectionConfig({
-            rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
-            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: bytes32(0) })
-        });
-
-        bytes memory _data = abi.encode(_electionConfig);
-
-        vm.expectEmit(address(systemConfig));
-        emit ConfigUpdate(0, ISystemConfig.UpdateType.ELECTION_CONFIG, _data);
-
-        vm.prank(systemConfig.owner());
-        systemConfig.setElectionConfig(_electionConfig);
-
-        assertEq(systemConfig.minimumPreconfirmationCollateral(), _minPreconfCollateral);
-    }
-
-    function testFuzz_setElectionConfig_withElectionFallbackList_succeeds(uint256 _minPreconfCollateral) external {
+    function test_setElectionFallbackList_withElectionFallbackList_succeeds() external {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0x02040506))));
 
         // Shift the bytes so its right padded
         _electionFallbackList = bytes32(uint256(_electionFallbackList) << (28 * 8));
 
-        ElectionSystemConfig.ElectionConfig memory _electionConfig = ElectionSystemConfig.ElectionConfig({
-            rules: ElectionSystemConfig.ElectionConfigRules({ minimumPreconfirmationCollateral: _minPreconfCollateral }),
-            precedence: ElectionSystemConfig.ElectionPrecedence({ electionFallbackList: _electionFallbackList })
-        });
-
         vm.expectEmit(address(systemConfig));
-        emit ConfigUpdate(0, ISystemConfig.UpdateType.ELECTION_CONFIG, abi.encode(_electionConfig));
+        emit ConfigUpdate(0, ISystemConfig.UpdateType.ELECTION_CONFIG, abi.encode(_electionFallbackList));
 
         vm.prank(systemConfig.owner());
-        systemConfig.setElectionConfig(_electionConfig);
+        systemConfig.setElectionFallbackList(_electionFallbackList);
 
         ElectionSystemConfig.ElectionFallback[] memory _fallbackList = systemConfig.electionFallbackList();
 
