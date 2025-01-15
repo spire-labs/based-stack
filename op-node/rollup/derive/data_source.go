@@ -141,10 +141,13 @@ func addressFromTopic(topic common.Hash) common.Address {
 }
 
 func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
-
-	if len(ds.electionWinners) > 0 && len(ds.electionWinnersQueue) > 0 && ds.electionWinners[len(ds.electionWinners)-1].Time < timestamp {
-		ds.electionWinners = ds.electionWinnersQueue[0]
-		ds.electionWinnersQueue = ds.electionWinnersQueue[1:]
+	if len(ds.electionWinners) > 0 && len(ds.electionWinnersQueue) > 0 {
+		lastWinner := ds.electionWinners[len(ds.electionWinners)-1]
+		if lastWinner.Time < timestamp {
+			ds.log.Info("Updating election winners in data source factory", "lastWinnerTime", lastWinner.Time, "timestamp", timestamp)
+			ds.electionWinners = ds.electionWinnersQueue[0]
+			ds.electionWinnersQueue = ds.electionWinnersQueue[1:]
+		}
 	}
 
 	var out eth.ElectionWinner
@@ -152,6 +155,9 @@ func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) eth.ElectionWin
 		if winner.Time == timestamp {
 			out = *winner
 		}
+	}
+	if out == (eth.ElectionWinner{}) {
+		ds.log.Warn("No election winner found for timestamp", "timestamp", timestamp, "stored", ds.electionWinners, "queue", ds.electionWinnersQueue)
 	}
 
 	return out
