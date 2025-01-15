@@ -89,7 +89,7 @@ func (ed *ElectionDeriver) ProcessNewBlock() {
 	}
 
 	if ed.lastSlotTime != 0 && ed.l2Unsafe.Time < ed.lastSlotTime {
-		ed.log.Debug("L2 slot times mismatch", "l2Unsafe", ed.l2Unsafe, "time", ed.l2Unsafe.Time, "l1Unsafe", ed.l1Unsafe, "time", ed.l2Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
+		ed.log.Debug("L2 slot times mismatch", "l2Unsafe", ed.l2Unsafe, "time", ed.l2Unsafe.Time, "l1Unsafe", ed.l1Unsafe, "time", ed.l1Unsafe.Time, "lastSlotTime", ed.lastSlotTime)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (ed *ElectionDeriver) ProcessNewBlock() {
 	electionWinners, err := ed.election.GetWinnersAtEpoch(ed.ctx, newEpoch, fmt.Sprintf("0x%x", ed.l2Unsafe.Number), ed.l2Unsafe.Time, fmt.Sprintf("0x%x", lastBlockNumberInEpoch))
 
 	if err != nil {
-		ed.log.Error("Failed to get election winner", "err", err)
+		ed.log.Error("Failed to get election winner", "epoch", newEpoch, "err", err)
 		ed.emitter.Emit(rollup.ElectionErrorEvent{Err: err})
 	} else {
 		ed.log.Info("Election winners", "epoch", newEpoch, "electionWinners", electionWinners)

@@ -98,9 +98,13 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
-		if len(d.electionWinners) > 0 && len(d.electionWinnersQueue) > 0 && d.electionWinners[len(d.electionWinners)-1].ParentSlot < x.PendingSafe.Time {
-			d.electionWinners = d.electionWinnersQueue[0]
-			d.electionWinnersQueue = d.electionWinnersQueue[1:]
+		if len(d.electionWinners) > 0 && len(d.electionWinnersQueue) > 0 {
+			lastWinner := d.electionWinners[len(d.electionWinners)-1]
+			if lastWinner.ParentSlot < x.PendingSafe.Time {
+				d.pipeline.log.Info("Updating election winners in deriver", "pendingSafe", x.PendingSafe.Time, "parentSlot", lastWinner.ParentSlot, "winners", d.electionWinners, "queue", d.electionWinnersQueue)
+				d.electionWinners = d.electionWinnersQueue[0]
+				d.electionWinnersQueue = d.electionWinnersQueue[1:]
+			}
 		}
 
 		preOrigin := d.pipeline.Origin()
