@@ -100,7 +100,8 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 
 		if len(d.electionWinners) > 0 && len(d.electionWinnersQueue) > 0 {
 			lastWinner := d.electionWinners[len(d.electionWinners)-1]
-			if lastWinner.ParentSlot != 0 && lastWinner.ParentSlot < x.PendingSafe.Time {
+			if lastWinner.ParentSlot < x.PendingSafe.Time {
+				d.pipeline.log.Info("Updating election winners in deriver", "pendingSafe", x.PendingSafe.Time, "parentSlot", lastWinner.ParentSlot, "winners", d.electionWinners, "queue", d.electionWinnersQueue)
 				d.electionWinners = d.electionWinnersQueue[0]
 				d.electionWinnersQueue = d.electionWinnersQueue[1:]
 			}

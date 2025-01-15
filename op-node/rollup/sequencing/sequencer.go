@@ -377,21 +377,17 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 				DerivedFrom:  eth.L1BlockRef{},
 			})
 		} else if d.latest == (BuildingState{}) {
-			if len(d.electionWinners) > 0 {
-				lastWinner := d.electionWinners[len(d.electionWinners)-1]
-				if lastWinner.ParentSlot < d.latestHead.Time {
-					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot",
-						lastWinner.ParentSlot)
+			if len(d.electionWinners) > 0 && d.electionWinners[len(d.electionWinners)-1].ParentSlot < d.latestHead.Time {
+				d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", d.electionWinners[len(d.electionWinners)-1].ParentSlot)
+				// We need to try retrying the build action when this check passes
+				// TODO(spire): This might be too aggressive of a delay time wise, we are getting a lot of logs
+				// but there are no reorgs and it seems to build correctly.
+				// This also might break when we eventually remove the l1BlockTime == l2BlockTime invariant
+				d.nextActionOK = true
+				d.nextAction = time.Now().Add(time.Second / 2)
 
-					// We need to try retrying the build action when this check passes
-					// TODO(spire): This might be too aggressive of a delay time wise, we are getting a lot of logs
-					// but there are no reorgs and it seems to build correctly.
-					// This also might break when we eventually remove the l1BlockTime == l2BlockTime invariant
-					d.nextActionOK = true
-					d.nextAction = time.Now().Add(time.Second / 2)
-				} else {
-					d.startBuildingBlock()
-				}
+			} else {
+				d.startBuildingBlock()
 			}
 		}
 	}
