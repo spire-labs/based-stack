@@ -508,6 +508,7 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: _getSel("blobbasefeeScalar()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("maximumGasLimit()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("checkSequencerRules()") });
+        _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.injectAddressIntoCalldata.selector });
 
         // SystemConfigInterop
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
@@ -591,6 +592,7 @@ contract Specification_Test is CommonTest {
         });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("dependencyManager()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("checkSequencerRules()") });
+        _addSpec({ _name: "SystemConfigInterop", _sel: ISystemConfig.injectAddressIntoCalldata.selector });
 
         // ProxyAdmin
         _addSpec({ _name: "ProxyAdmin", _sel: _getSel("addressManager()") });
