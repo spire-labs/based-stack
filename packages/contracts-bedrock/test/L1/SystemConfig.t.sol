@@ -665,7 +665,7 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
     }
 
     /// @dev Tests that `injectAddressIntoCalldata` modifies the calldata correctly.
-    function testFuzz_injectAddressIntoCalldata_succeeds(address _injectee) external {
+    function testFuzz_injectAddressIntoCalldata_succeeds(address _injectee) external view {
         vm.assume(_injectee != address(0));
         bytes memory _expectedBalanceOfCalldata = abi.encodeWithSelector(ERC20.balanceOf.selector, _injectee);
         bytes memory _emptyCalldata = abi.encodeWithSelector(ERC20.balanceOf.selector, address(0));
