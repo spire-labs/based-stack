@@ -59,11 +59,13 @@ abstract contract ElectionSystemConfig {
     /// @param desiredRetdata The desired return data for the configuration
     /// @param configCalldata The calldata to check the result of
     /// @param target The target contract to call
+    /// @param addressOffsets The offsets of the addresses to be dynamically injected inside the configCalldata
     struct SequencerRule {
         SequencerAssertion assertionType;
         bytes32 desiredRetdata;
         bytes configCalldata;
         address target;
+        uint256[] addressOffsets;
     }
 
     struct SequencerConfig {

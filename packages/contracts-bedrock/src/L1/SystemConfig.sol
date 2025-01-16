@@ -30,6 +30,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Throws when a call is not an eth call
     error NotEthCall();
 
+    /// @notice Throws when a given offset is out of bounds
+    error OffsetOOB();
+
     /// @notice Enum representing different types of updates.
     /// @custom:value BATCHER              Represents an update to the batcher hash.
     /// @custom:value GAS_CONFIG           Represents an update to txn fee config on L2.
@@ -146,9 +149,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.5
+    /// @custom:semver 2.3.1-beta.6
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.5";
+        return "2.3.1-beta.6";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -239,6 +242,20 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
 
         _setResourceConfig(_config);
         require(_gasLimit >= minimumGasLimit(), "SystemConfig: gas limit too low");
+    }
+
+    /// @notice Updates the election queried by the offchain node for computing the election
+    ///
+    /// @param _fallbackList The config to update to
+    function setElectionFallbackList(bytes32 _fallbackList) external onlyOwner {
+        bool _success = _sanitizeFallbackList(_fallbackList);
+
+        if (!_success) revert InvalidFallbackList();
+
+        _setElectionFallbackList(_fallbackList);
+
+        bytes memory data = abi.encode(_fallbackList);
+        emit ConfigUpdate(VERSION, UpdateType.ELECTION_CONFIG, data);
     }
 
     /// @notice Returns the minimum L2 gas limit that can be safely set for the system to
@@ -414,6 +431,53 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         symbol_ = GasPayingToken.getSymbol();
     }
 
+    /// @notice Returns the modified calldata with the injected address
+    /// TODO(spire): Made public for now to make testing easier and might be used offchain, if not needed refactor to
+    /// internal
+    ///
+    /// @param _calldata The calldata to inject the address into
+    /// @param _offsets The offsets of the addresses to be dynamically injected inside the calldata
+    /// @param _injectee The address to inject into the calldata
+    ///
+    /// @dev The offsets should be inputed to insert the padded address so for example the balanceOf selector
+    ///      Would have an offset of 4
+    function injectAddressIntoCalldata(
+        bytes memory _calldata,
+        uint256[] memory _offsets,
+        address _injectee
+    )
+        public
+        pure
+        returns (bytes memory _newCalldata)
+    {
+        uint256 len = _offsets.length;
+        _newCalldata = _calldata; // Initialize with original calldata
+
+        // Convert the address to a 32-byte word (right-padded as Solidity handles addresses)
+        uint256 injecteeWord = uint256(uint160(_injectee));
+
+        for (uint256 i; i < len; i++) {
+            uint256 offset = _offsets[i];
+
+            if (offset + 20 > _calldata.length) revert OffsetOOB();
+
+            // Inject the 20-byte address into calldata at the specified offset
+            assembly {
+                // Calculate the memory position
+                let dataPtr := add(add(_newCalldata, 0x20), offset)
+
+                // Load the existing word at the offset
+                let existingWord := mload(dataPtr)
+
+                // Mask the word to clear the bytes where the address will be injected
+                let clearedWord := and(existingWord, not(0xffffffffffffffffffffffffffffffffffffffff))
+
+                // Combine the cleared word with the address (injecteeWord) and store it back
+                mstore(dataPtr, or(clearedWord, injecteeWord))
+            }
+        }
+    }
+
     /// @notice Internal setter for the gas paying token address, includes validation.
     ///         The token must not already be set and must be non zero and not the ether address
     ///         to set the token address. This prevents the token address from being changed
@@ -436,19 +500,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
                 _symbol: symbol
             });
         }
-    }
-
-    /// @notice Updates the election queried by the offchain node for computing the election
-    /// @param _fallbackList The config to update to
-    function setElectionFallbackList(bytes32 _fallbackList) external onlyOwner {
-        bool _success = _sanitizeFallbackList(_fallbackList);
-
-        if (!_success) revert InvalidFallbackList();
-
-        _setElectionFallbackList(_fallbackList);
-
-        bytes memory data = abi.encode(_fallbackList);
-        emit ConfigUpdate(VERSION, UpdateType.ELECTION_CONFIG, data);
     }
 
     /// @notice Updates the unsafe block signer address. Can only be called by the owner.

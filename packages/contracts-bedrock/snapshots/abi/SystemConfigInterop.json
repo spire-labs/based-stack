@@ -563,6 +563,35 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "_calldata",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_offsets",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "address",
+        "name": "_injectee",
+        "type": "address"
+      }
+    ],
+    "name": "injectAddressIntoCalldata",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "_newCalldata",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "isCustomGasToken",
     "outputs": [
@@ -975,6 +1004,11 @@
   {
     "inputs": [],
     "name": "NotEthCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OffsetOOB",
     "type": "error"
   }
 ]

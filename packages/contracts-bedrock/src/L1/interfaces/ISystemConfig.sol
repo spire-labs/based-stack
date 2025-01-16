@@ -35,6 +35,7 @@ interface ISystemConfig {
 
     error InvalidFallbackList();
     error NotEthCall();
+    error OffsetOOB();
 
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
@@ -100,4 +101,12 @@ interface ISystemConfig {
         view
         returns (ElectionSystemConfig.ElectionFallback[] memory electionFallbackList_);
     function checkSequencerRules() external returns (bool);
+    function injectAddressIntoCalldata(
+        bytes memory _calldata,
+        uint256[] memory _offsets,
+        address _injectee
+    )
+        external
+        pure
+        returns (bytes memory _newCalldata);
 }

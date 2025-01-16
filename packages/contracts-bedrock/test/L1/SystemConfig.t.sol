@@ -651,3 +651,30 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
         assertEq(systemConfig.unsafeBlockSigner(), newUnsafeSigner);
     }
 }
+
+contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
+    /// @dev Tests that `injectAddressIntoCalldata` reverts if the offset is out of bounds.
+    function test_injectAddressIntoCalldata_OffsetOOB_reverts() external {
+        bytes memory _calldata = abi.encodeWithSelector(ERC20.balanceOf.selector, address(0));
+        uint256[] memory _offsets = new uint256[](1);
+        _offsets[0] = 20;
+        address _injectee = address(0);
+
+        vm.expectRevert(ISystemConfig.OffsetOOB.selector);
+        systemConfig.injectAddressIntoCalldata(_calldata, _offsets, _injectee);
+    }
+
+    /// @dev Tests that `injectAddressIntoCalldata` modifies the calldata correctly.
+    function testFuzz_injectAddressIntoCalldata_succeeds(address _injectee) external {
+        vm.assume(_injectee != address(0));
+        bytes memory _expectedBalanceOfCalldata = abi.encodeWithSelector(ERC20.balanceOf.selector, _injectee);
+        bytes memory _emptyCalldata = abi.encodeWithSelector(ERC20.balanceOf.selector, address(0));
+
+        uint256[] memory _offsets = new uint256[](1);
+        _offsets[0] = 4;
+
+        bytes memory _injectedCalldata = systemConfig.injectAddressIntoCalldata(_emptyCalldata, _offsets, _injectee);
+
+        assertEq(keccak256(_injectedCalldata), keccak256(_expectedBalanceOfCalldata));
+    }
+}
