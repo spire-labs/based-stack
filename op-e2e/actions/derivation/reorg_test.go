@@ -32,10 +32,10 @@ func TestReorgBatchType(t *testing.T) {
 	}{
 		{"ReorgOrphanBlock", ReorgOrphanBlock},
 		// {"ReorgFlipFlop", ReorgFlipFlop},
-		// {"DeepReorg", DeepReorg},
-		// {"RestartOpGeth", RestartOpGeth},
-		// {"ConflictingL2Blocks", ConflictingL2Blocks},
-		// {"SyncAfterReorg", SyncAfterReorg},
+		{"DeepReorg", DeepReorg},
+		{"RestartOpGeth", RestartOpGeth},
+		{"ConflictingL2Blocks", ConflictingL2Blocks},
+		{"SyncAfterReorg", SyncAfterReorg},
 	}
 	// for _, test := range tests {
 	// 	test := test
@@ -345,11 +345,11 @@ func DeepReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 
 	// Create actor and verification engine client
-	sd, dp, miner, sequencer, seqEngine, verifier, verifierEng, batcher := actionsHelpers.SetupReorgTest(t, &e2eutils.TestParams{
+	sd, dp, miner, sequencer, seqEngine, verifier, verifierEng, batcher := actionsHelpers.SetupReorgTestBlob(t, &e2eutils.TestParams{
 		MaxSequencerDrift:   40,
 		SequencerWindowSize: 20,
 		ChannelTimeout:      120,
-		L1BlockTime:         4,
+		L1BlockTime:         12,
 	}, deltaTimeOffset)
 	minerCl := miner.L1Client(t, sd.RollupCfg)
 	l2Client := seqEngine.EthClient()
@@ -393,7 +393,7 @@ func DeepReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 			batcher.ActSubmitAll(t)
 
 			miner.ActL1StartBlock(12)(t)
-			miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+			miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 			miner.ActL1EndBlock(t)
 		} else {
 			miner.ActEmptyBlock(t)
@@ -460,7 +460,7 @@ func DeepReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// between [51, 60]
 	miner.ActL1SetFeeRecipient(common.Address{0x0A, 0x01})
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 	miner.ActL1EndBlock(t)
 
 	// Handle the new head block on both the verifier and the sequencer
@@ -601,7 +601,7 @@ func RestartOpGeth(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	require.NoError(t, err)
 	sequencer := actionsHelpers.NewL2Sequencer(t, log, l1F, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, l2Cl, l1F.EthClient, sd.RollupCfg, 0, nil)
 
-	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),
+	batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.BlobBatcherCfg(dp),
 		sequencer.RollupClient(), miner.EthClient(), seqEng.EthClient(), seqEng.EngineClient(t, sd.RollupCfg))
 
 	// start
@@ -616,7 +616,7 @@ func RestartOpGeth(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 		// submit the blocks, confirm on L1
 		batcher.ActSubmitAll(t)
 		miner.ActL1StartBlock(12)(t)
-		miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+		miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 		miner.ActL1EndBlock(t)
 		sequencer.ActL2PipelineFull(t)
 	}
@@ -678,7 +678,7 @@ func ConflictingL2Blocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
 
-	sd, _, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
+	sd, _, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActorsBlob(t, dp, sd, log)
 
 	// Extra setup: a full alternative sequencer, sequencer engine, and batcher
 	jwtPath := e2eutils.WriteDefaultJWT(t)
@@ -688,7 +688,7 @@ func ConflictingL2Blocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	l1F, err := sources.NewL1Client(miner.RPCClient(), log, nil, sources.L1ClientDefaultConfig(sd.RollupCfg, false, sources.RPCKindStandard))
 	require.NoError(t, err)
 	altSequencer := actionsHelpers.NewL2Sequencer(t, log, l1F, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, altSeqEngCl, l1F.EthClient, sd.RollupCfg, 0, nil)
-	altBatcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.DefaultBatcherCfg(dp),
+	altBatcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, actionsHelpers.BlobBatcherCfg(dp),
 		altSequencer.RollupClient(), miner.EthClient(), altSeqEng.EthClient(), altSeqEng.EngineClient(t, sd.RollupCfg))
 
 	// And set up user Alice, using the alternative sequencer endpoint
@@ -719,7 +719,7 @@ func ConflictingL2Blocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 
 	// new L1 block with L2 batch
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 	miner.ActL1EndBlock(t)
 
 	// verifier picks up the L2 chain that was submitted
@@ -760,7 +760,7 @@ func ConflictingL2Blocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	altBatcher.ActSubmitAll(t)
 	// include it in L1
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTxByHash(altBatcher.LastSubmitted.Hash())(t)
 	miner.ActL1EndBlock(t)
 	l1Number := miner.L1Chain().CurrentHeader().Number.Uint64()
 
@@ -786,7 +786,7 @@ func SyncAfterReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 		ChannelTimeout:      2,
 		L1BlockTime:         12,
 	}
-	sd, dp, miner, sequencer, seqEngine, verifier, _, batcher := actionsHelpers.SetupReorgTest(t, &testingParams, deltaTimeOffset)
+	sd, dp, miner, sequencer, seqEngine, verifier, _, batcher := actionsHelpers.SetupReorgTestBlob(t, &testingParams, deltaTimeOffset)
 	l2Client := seqEngine.EthClient()
 	log := testlog.Logger(t, log.LevelDebug)
 	addresses := e2eutils.CollectAddresses(sd, dp)
@@ -826,7 +826,7 @@ func SyncAfterReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// build an L1 block included batch TX: A1
 	miner.ActL1SetFeeRecipient(common.Address{'A', 1})
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 	miner.ActL1EndBlock(t)
 
 	for i := 2; i < 6; i++ {
@@ -839,7 +839,7 @@ func SyncAfterReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 		// build an L1 block included batch TX: A2 ~ A5
 		miner.ActL1SetFeeRecipient(common.Address{'A', byte(i)})
 		miner.ActL1StartBlock(12)(t)
-		miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+		miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 		miner.ActL1EndBlock(t)
 	}
 
@@ -855,7 +855,7 @@ func SyncAfterReorg(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// build an L1 block included batch TX: A6
 	miner.ActL1SetFeeRecipient(common.Address{'A', 6})
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTxByHash(batcher.LastSubmitted.Hash())(t)
 	miner.ActL1EndBlock(t)
 
 	sequencer.ActL1HeadSignal(t)
