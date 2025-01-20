@@ -282,6 +282,13 @@ func (cl *L1BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.A
 }
 
 func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error) {
+	if cl.cfg.ValidatorsPerEpoch == 0 {
+		_, err := cl.GetLookahead(ctx, 0)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	var err error
 
 	cl.timeToSlotFn, err = cl.GetTimeToSlotFn(ctx)
