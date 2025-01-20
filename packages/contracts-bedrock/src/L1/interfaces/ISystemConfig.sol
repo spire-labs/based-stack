@@ -22,6 +22,17 @@ interface ISystemConfig {
         RANDOM_TICKET_HOLDER,
         PERMISSIONLESS
     }
+    enum SequencerAssertion {
+        NULL,
+        GT,
+        LT,
+        EQ,
+        GTE,
+        LTE,
+        NEQ,
+        REVERT,
+        SUCCESS
+    }
 
     struct Addresses {
         address l1CrossDomainMessenger;
@@ -33,9 +44,23 @@ interface ISystemConfig {
         address gasPayingToken;
     }
 
+    struct SequencerRule {
+        SequencerAssertion assertionType;
+        bytes32 desiredRetdata;
+        bytes configCalldata;
+        address target;
+        uint256[] addressOffsets;
+    }
+
+    struct SequencerConfig {
+        bytes32 sequencerRulesLayout;
+        mapping(uint256 => SequencerRule) rules;
+    }
+
     error InvalidFallbackList();
     error NotEthCall();
     error OffsetOOB();
+    error RuleOOB();
 
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
@@ -109,4 +134,7 @@ interface ISystemConfig {
         external
         pure
         returns (bytes memory _newCalldata);
+    function setSequencerConfigRule(SequencerRule memory _rule) external;
+    function getSequencerRuleAtIndex(uint256 _index) external view returns (SequencerRule memory);
+    function sequencerRulesLayout() external view returns (bytes32);
 }

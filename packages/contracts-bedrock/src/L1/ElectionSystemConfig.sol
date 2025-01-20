@@ -68,8 +68,13 @@ abstract contract ElectionSystemConfig {
         uint256[] addressOffsets;
     }
 
+    /// @notice The sequencer config
+    ///
+    /// @param sequencerRulesLayout A bytes32 layout of the sequencer rules to allow for single cold storage read
+    /// insertion and deletion
+    /// @param rules The sequencer rules
     struct SequencerConfig {
-        uint256 size;
+        bytes32 sequencerRulesLayout;
         mapping(uint256 => SequencerRule) rules;
     }
 

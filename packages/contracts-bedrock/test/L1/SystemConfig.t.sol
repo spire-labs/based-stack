@@ -677,4 +677,77 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
 
         assertEq(keccak256(_injectedCalldata), keccak256(_expectedBalanceOfCalldata));
     }
+
+    /// @dev Tests that `setSequencerRule` only allows the owner to set the rule.
+    function test_setSequencerRule_onlyOwner_reverts() external {
+        ISystemConfig.SequencerRule memory _rule = ISystemConfig.SequencerRule({
+            assertionType: ISystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setSequencerConfigRule(_rule);
+    }
+
+    /// @dev Tests that `setSequencerRule` correctly sets the rule.
+    function testFuzz_setSequencerRule_injections_succeeds(uint256 _len) external {
+        vm.assume(_len < 32);
+
+        ISystemConfig.SequencerRule memory _rule = ISystemConfig.SequencerRule({
+            assertionType: ISystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        for (uint256 i; i < _len; i++) {
+            vm.prank(systemConfig.owner());
+            systemConfig.setSequencerConfigRule(_rule);
+        }
+
+        bytes32 _layout = systemConfig.sequencerRulesLayout();
+
+        for (uint256 i; i < _len; i++) {
+            ISystemConfig.SequencerRule memory _expectedRule = systemConfig.getSequencerRuleAtIndex(i);
+
+            assertEq(uint8(_layout[i]), uint8(1));
+            assertEq(uint256(_expectedRule.assertionType), uint256(_rule.assertionType));
+            assertEq(_expectedRule.desiredRetdata, _rule.desiredRetdata);
+            assertEq(keccak256(_expectedRule.configCalldata), keccak256(_rule.configCalldata));
+            assertEq(_expectedRule.target, _rule.target);
+            assertEq(_expectedRule.addressOffsets.length, 0);
+        }
+    }
+
+    /// @dev Tests that `setSequencerRule` reverts if its full
+    function test_setSequencerRule_RuleOOB_reverts() external {
+        ISystemConfig.SequencerRule memory _rule = ISystemConfig.SequencerRule({
+            assertionType: ISystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        address _owner = systemConfig.owner();
+
+        for (uint256 i; i < 32; i++) {
+            vm.prank(_owner);
+            systemConfig.setSequencerConfigRule(_rule);
+        }
+
+        vm.expectRevert(ISystemConfig.RuleOOB.selector);
+        vm.prank(_owner);
+        systemConfig.setSequencerConfigRule(_rule);
+
+        // Double check that the layout is full
+        bytes32 _layout = systemConfig.sequencerRulesLayout();
+        for (uint256 i; i < 32; i++) {
+            assertEq(uint8(_layout[i]), uint8(1));
+        }
+    }
 }
