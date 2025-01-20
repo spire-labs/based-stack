@@ -800,9 +800,8 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
     }
 
     /// @dev Tests that `removeSequencerConfigRule` removes a rule at a random index.
-    function testFuzz_removeSequencerConfigRule_randomIndex(uint256 _len, uint256 _index) external {
-        vm.assume(_len < 32);
-        vm.assume(_index < _len);
+    function testFuzz_removeSequencerConfigRule_randomIndex(uint256 _index) external {
+        vm.assume(_index < 32);
 
         ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
             assertionType: ElectionSystemConfig.SequencerAssertion.GT,
@@ -812,7 +811,7 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
             addressOffsets: new uint256[](0)
         });
 
-        for (uint256 i; i < _len; i++) {
+        for (uint256 i; i < 32; i++) {
             vm.prank(systemConfig.owner());
             systemConfig.setSequencerConfigRule(_rule);
         }
@@ -822,7 +821,7 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
 
         bytes32 _layout = systemConfig.sequencerRulesLayout();
 
-        for (uint256 i; i < _len; i++) {
+        for (uint256 i; i < 32; i++) {
             if (i == _index) {
                 assertEq(uint8(_layout[i]), uint8(0));
             } else {
@@ -832,9 +831,8 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
     }
 
     /// @dev Test `removeSequencerConfigRule` reverts when config rule not found.
-    function testFuzz_removeSequencerConfigRule_configRuleNotFound_reverts(uint256 _len, uint256 _index) external {
-        vm.assume(_len < 32);
-        vm.assume(_index < _len);
+    function testFuzz_removeSequencerConfigRule_configRuleNotFound_reverts(uint256 _index) external {
+        vm.assume(_index < 32);
 
         ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
             assertionType: ElectionSystemConfig.SequencerAssertion.GT,
@@ -846,7 +844,7 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
 
         address _owner = systemConfig.owner();
 
-        for (uint256 i; i < _len; i++) {
+        for (uint256 i; i < 32; i++) {
             vm.prank(_owner);
             systemConfig.setSequencerConfigRule(_rule);
         }
