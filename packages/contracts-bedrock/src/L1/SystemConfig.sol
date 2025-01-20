@@ -36,19 +36,26 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Throws when a given rule has exceeded the maximum number of rules
     error RuleOOB();
 
+    /// @notice Throws when a given rule is not found
+    error ConfigRuleNotFound();
+
     /// @notice Enum representing different types of updates.
-    /// @custom:value BATCHER              Represents an update to the batcher hash.
-    /// @custom:value GAS_CONFIG           Represents an update to txn fee config on L2.
-    /// @custom:value GAS_LIMIT            Represents an update to gas limit on L2.
-    /// @custom:value UNSAFE_BLOCK_SIGNER  Represents an update to the signer key for unsafe
-    ///                                    block distrubution.
-    /// @custom:value ELECTION_CONFIG      Represents an update to the election system config
+    /// @custom:value BATCHER               Represents an update to the batcher hash.
+    /// @custom:value GAS_CONFIG            Represents an update to txn fee config on L2.
+    /// @custom:value GAS_LIMIT             Represents an update to gas limit on L2.
+    /// @custom:value UNSAFE_BLOCK_SIGNER   Represents an update to the signer key for unsafe
+    ///                                     block distrubution.
+    /// @custom:value ELECTION_CONFIG       Represents an update to the election system config
+    /// @custom:value DELETE_SEQUENCER_RULE Represents an update to delete a sequencer rule
+    /// @custom:value INSERT_SEQUENCER_RULE Represents an update to insert a sequencer rule
     enum UpdateType {
         BATCHER,
         GAS_CONFIG,
         GAS_LIMIT,
         UNSAFE_BLOCK_SIGNER,
-        ELECTION_CONFIG
+        ELECTION_CONFIG,
+        DELETE_SEQUENCER_RULE,
+        INSERT_SEQUENCER_RULE
     }
 
     /// @notice Struct representing the addresses of L1 system contracts. These should be the
@@ -155,9 +162,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.6
+    /// @custom:semver 2.3.1-beta.7
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.6";
+        return "2.3.1-beta.7";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -268,7 +275,31 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     ///
     /// @param _rule The rule to be set
     function setSequencerConfigRule(SequencerRule memory _rule) external onlyOwner {
-        _setSequencerRule(_rule);
+        _setSequencerConfigRule(_rule);
+
+        emit ConfigUpdate(VERSION, UpdateType.INSERT_SEQUENCER_RULE, abi.encode(_rule));
+    }
+
+    /// @notice Removes a sequencer rule from the config
+    ///
+    /// @param _index The index of the rule to remove
+    function removeSequencerConfigRule(uint256 _index) external onlyOwner {
+        bytes32 _layout = _electionConfig.config.sequencerRulesLayout;
+
+        // Extract the target byte
+        bytes32 _shifted = _layout >> ((31 - _index) * 8);
+        uint8 _targetByte = uint8(uint256(_shifted) & 0xFF);
+        if (_targetByte == 0) revert ConfigRuleNotFound();
+
+        // Clear the index
+        bytes32 _mask = ~(bytes32(uint256(0xFF)) << ((31 - _index) * 8));
+        _layout = _layout & _mask;
+
+        // Update the state
+        _electionConfig.config.sequencerRulesLayout = _layout;
+        delete _electionConfig.config.rules[_index];
+
+        emit ConfigUpdate(VERSION, UpdateType.DELETE_SEQUENCER_RULE, abi.encode(_index));
     }
 
     /// @notice Returns the sequencer rule at the given index
@@ -277,6 +308,11 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     ///
     /// @return SequencerRule The sequencer rule at the given index
     function getSequencerRuleAtIndex(uint256 _index) external view returns (SequencerRule memory) {
+        bytes32 _layout = _electionConfig.config.sequencerRulesLayout;
+        bytes32 _shifted = _layout >> ((31 - _index) * 8);
+        uint8 _targetByte = uint8(uint256(_shifted) & 0xFF);
+        if (_targetByte == 0) revert ConfigRuleNotFound();
+
         return _electionConfig.config.rules[_index];
     }
 
@@ -511,7 +547,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Sets a sequencer rule in the config
     ///
     /// @param _rule The rule to be set
-    function _setSequencerRule(SequencerRule memory _rule) internal {
+    function _setSequencerConfigRule(SequencerRule memory _rule) internal {
         uint256 _i;
         bytes32 _layout = _electionConfig.config.sequencerRulesLayout;
 
@@ -519,11 +555,13 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         if (_layout != bytes32(0)) {
             // We still need to start at zero incase of a deletion at zero
             for (_i; _i < MAX_SEQUENCER_RULES; _i++) {
+                // Unoccupied slot was found
                 if (_layout[_i] == bytes1(0)) {
                     break;
                 }
             }
 
+            // If we reach the max amount, not slots are available to be set into
             if (_i == MAX_SEQUENCER_RULES) revert RuleOOB();
         }
 
