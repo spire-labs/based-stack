@@ -28,12 +28,6 @@ const (
 	headerMethodPrefix    = "eth/v1/beacon/headers/"
 )
 
-const (
-	DevnetValidatorsPerEpoch  = 8
-	HoleskyValidatorsPerEpoch = 32
-	MainnetValidatorsPerEpoch = 32
-)
-
 type L1BeaconClientConfig struct {
 	FetchAllSidecars   bool
 	ValidatorsPerEpoch uint64
@@ -277,7 +271,14 @@ func (cl *L1BeaconClient) GetSlotToTimeFn(ctx context.Context) (SlotToTimeFn, er
 }
 
 func (cl *L1BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
-	return cl.cl.GetLookahead(ctx, epoch)
+	lookahead, err := cl.cl.GetLookahead(ctx, epoch)
+	if err != nil {
+		return eth.APIGetLookaheadResponse{}, err
+	}
+	validatorsPerEpoch := uint64(len(lookahead.Data))
+	cl.cfg.ValidatorsPerEpoch = validatorsPerEpoch
+
+	return lookahead, nil
 }
 
 func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error) {
@@ -294,12 +295,7 @@ func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) 
 		return 0, err
 	}
 
-	validatorsPerEpoch := cl.cfg.ValidatorsPerEpoch
-	if validatorsPerEpoch == 0 {
-		validatorsPerEpoch = MainnetValidatorsPerEpoch // Default to mainnet
-	}
-
-	return slot / validatorsPerEpoch, nil
+	return slot / cl.cfg.ValidatorsPerEpoch, nil
 }
 
 func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error) {
