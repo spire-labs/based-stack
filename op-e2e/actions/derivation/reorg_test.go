@@ -26,24 +26,23 @@ import (
 
 // TestReorgBatchType run each reorg-related test case in singular batch mode and span batch mode.
 func TestReorgBatchType(t *testing.T) {
-	t.Skip("TODO(spire): Reenable these tests")
 	tests := []struct {
 		name string
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)
 	}{
 		{"ReorgOrphanBlock", ReorgOrphanBlock},
-		{"ReorgFlipFlop", ReorgFlipFlop},
-		{"DeepReorg", DeepReorg},
-		{"RestartOpGeth", RestartOpGeth},
-		{"ConflictingL2Blocks", ConflictingL2Blocks},
-		{"SyncAfterReorg", SyncAfterReorg},
+		// {"ReorgFlipFlop", ReorgFlipFlop},
+		// {"DeepReorg", DeepReorg},
+		// {"RestartOpGeth", RestartOpGeth},
+		// {"ConflictingL2Blocks", ConflictingL2Blocks},
+		// {"SyncAfterReorg", SyncAfterReorg},
 	}
-	for _, test := range tests {
-		test := test
-		t.Run(test.name+"_SingularBatch", func(t *testing.T) {
-			test.f(t, nil)
-		})
-	}
+	// for _, test := range tests {
+	// 	test := test
+	// 	t.Run(test.name+"_SingularBatch", func(t *testing.T) {
+	// 		test.f(t, nil)
+	// 	})
+	// }
 
 	deltaTimeOffset := hexutil.Uint64(0)
 	for _, test := range tests {
@@ -56,7 +55,7 @@ func TestReorgBatchType(t *testing.T) {
 
 func ReorgOrphanBlock(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	t := actionsHelpers.NewDefaultTesting(gt)
-	sd, _, miner, sequencer, _, verifier, verifierEng, batcher := actionsHelpers.SetupReorgTest(t, actionsHelpers.DefaultRollupTestParams, deltaTimeOffset)
+	sd, _, miner, sequencer, _, verifier, verifierEng, batcher := actionsHelpers.SetupReorgTestBlob(t, actionsHelpers.DefaultRollupTestParams, deltaTimeOffset)
 	verifEngClient := verifierEng.EngineClient(t, sd.RollupCfg)
 
 	sequencer.ActL2PipelineFull(t)
@@ -71,11 +70,11 @@ func ReorgOrphanBlock(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 
 	// submit all new L2 blocks
 	batcher.ActSubmitAll(t)
+	batchTx := batcher.LastSubmitted
 
 	// new L1 block with L2 batch
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
-	batchTx := miner.L1Transactions[0]
+	miner.ActL1IncludeTxByHash(batchTx.Hash())(t)
 	miner.ActL1EndBlock(t)
 
 	// verifier picks up the L2 chain that was submitted
@@ -99,6 +98,9 @@ func ReorgOrphanBlock(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	require.NoError(t, err)
 	require.Equal(t, verifier.L2Safe(), ref, "verifier engine matches rollup client")
 
+	miner.ActL1RewindToParent(t) // we need to rewind to block 0 as the batchTx need to land at fixed block
+	miner.ActL1RewindToParent(t)
+
 	// Now replay the batch tx in a new L1 block
 	miner.ActL1StartBlock(12)(t)
 	miner.ActL1SetFeeRecipient(common.Address{'C'})
@@ -106,8 +108,11 @@ func ReorgOrphanBlock(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// and there's no way to manually trigger runReorg, so we re-insert it ourselves.
 	require.NoError(t, miner.Eth.TxPool().Add([]*types.Transaction{batchTx}, true, true)[0])
 	// need to re-insert previously included tx into the block
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTxByHash(batchTx.Hash())(t)
 	miner.ActL1EndBlock(t)
+
+	miner.ActEmptyBlock(t)
+	miner.ActEmptyBlock(t) // needs to be a longer chain for reorg to be applied.
 
 	// sync the verifier again: now it should be safe again
 	verifier.ActL1HeadSignal(t)
