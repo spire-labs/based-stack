@@ -28,8 +28,15 @@ const (
 	headerMethodPrefix    = "eth/v1/beacon/headers/"
 )
 
+const (
+	DevnetValidatorsPerEpoch  = 8
+	HoleskyValidatorsPerEpoch = 32
+	MainnetValidatorsPerEpoch = 32
+)
+
 type L1BeaconClientConfig struct {
-	FetchAllSidecars bool
+	FetchAllSidecars   bool
+	ValidatorsPerEpoch uint64
 }
 
 // L1BeaconClient is a high level golang client for the Beacon API.
@@ -287,10 +294,12 @@ func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) 
 		return 0, err
 	}
 
-	// TODO(spire): Dont hardcode the "/ 8" here
-	// For some reason on the devnets the lookahead has 8 validators, which means an epoch is 8 slots
-	// Where as on mainnet it is 32, we need to look into this as well
-	return slot / 8, nil
+	validatorsPerEpoch := cl.cfg.ValidatorsPerEpoch
+	if validatorsPerEpoch == 0 {
+		validatorsPerEpoch = MainnetValidatorsPerEpoch // Default to mainnet
+	}
+
+	return slot / validatorsPerEpoch, nil
 }
 
 func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error) {
