@@ -297,7 +297,6 @@ func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) 
 	}
 
 	slot, err := cl.timeToSlotFn(timestamp)
-
 	if err != nil {
 		return 0, err
 	}
