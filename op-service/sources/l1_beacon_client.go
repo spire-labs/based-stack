@@ -29,7 +29,8 @@ const (
 )
 
 type L1BeaconClientConfig struct {
-	FetchAllSidecars bool
+	FetchAllSidecars   bool
+	ValidatorsPerEpoch uint64
 }
 
 // L1BeaconClient is a high level golang client for the Beacon API.
@@ -270,10 +271,24 @@ func (cl *L1BeaconClient) GetSlotToTimeFn(ctx context.Context) (SlotToTimeFn, er
 }
 
 func (cl *L1BeaconClient) GetLookahead(ctx context.Context, epoch uint64) (eth.APIGetLookaheadResponse, error) {
-	return cl.cl.GetLookahead(ctx, epoch)
+	lookahead, err := cl.cl.GetLookahead(ctx, epoch)
+	if err != nil {
+		return eth.APIGetLookaheadResponse{}, err
+	}
+	validatorsPerEpoch := uint64(len(lookahead.Data))
+	cl.cfg.ValidatorsPerEpoch = validatorsPerEpoch
+
+	return lookahead, nil
 }
 
 func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) (uint64, error) {
+	if cl.cfg.ValidatorsPerEpoch == 0 {
+		_, err := cl.GetLookahead(ctx, 0)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	var err error
 
 	cl.timeToSlotFn, err = cl.GetTimeToSlotFn(ctx)
@@ -282,15 +297,11 @@ func (cl *L1BeaconClient) GetEpochNumber(ctx context.Context, timestamp uint64) 
 	}
 
 	slot, err := cl.timeToSlotFn(timestamp)
-
 	if err != nil {
 		return 0, err
 	}
 
-	// TODO(spire): Dont hardcode the "/ 8" here
-	// For some reason on the devnets the lookahead has 8 validators, which means an epoch is 8 slots
-	// Where as on mainnet it is 32, we need to look into this as well
-	return slot / 8, nil
+	return slot / cl.cfg.ValidatorsPerEpoch, nil
 }
 
 func (cl *L1BeaconClient) GetSlotNumber(ctx context.Context, timestamp uint64) (uint64, error) {
