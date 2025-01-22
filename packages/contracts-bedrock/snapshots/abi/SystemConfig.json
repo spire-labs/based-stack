@@ -71,6 +71,19 @@
   },
   {
     "inputs": [],
+    "name": "MAX_SEQUENCER_RULES",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "OPTIMISM_MINTABLE_ERC20_FACTORY_SLOT",
     "outputs": [
       {
@@ -277,6 +290,52 @@
         "internalType": "string",
         "name": "symbol_",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getSequencerRuleAtIndex",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum ElectionSystemConfig.SequencerAssertion",
+            "name": "assertionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configCalldata",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.SequencerRule",
+        "name": "",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -569,6 +628,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      }
+    ],
+    "name": "removeSequencerConfigRule",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
@@ -628,6 +700,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sequencerRulesLayout",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -704,6 +789,46 @@
       }
     ],
     "name": "setGasLimit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum ElectionSystemConfig.SequencerAssertion",
+            "name": "assertionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configCalldata",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.SequencerRule",
+        "name": "_rule",
+        "type": "tuple"
+      }
+    ],
+    "name": "setSequencerConfigRule",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -832,6 +957,11 @@
   },
   {
     "inputs": [],
+    "name": "ConfigRuleNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidFallbackList",
     "type": "error"
   },
@@ -843,6 +973,11 @@
   {
     "inputs": [],
     "name": "OffsetOOB",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "RuleOOB",
     "type": "error"
   }
 ]

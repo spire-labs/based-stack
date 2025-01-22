@@ -10,7 +10,9 @@ interface ISystemConfig {
         GAS_CONFIG,
         GAS_LIMIT,
         UNSAFE_BLOCK_SIGNER,
-        ELECTION_CONFIG
+        ELECTION_CONFIG,
+        DELETE_SEQUENCER_RULE,
+        INSERT_SEQUENCER_RULE
     }
 
     enum ElectionFallback {
@@ -36,6 +38,8 @@ interface ISystemConfig {
     error InvalidFallbackList();
     error NotEthCall();
     error OffsetOOB();
+    error RuleOOB();
+    error ConfigRuleNotFound();
 
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
     event Initialized(uint8 version);
@@ -51,6 +55,7 @@ interface ISystemConfig {
     function START_BLOCK_SLOT() external view returns (bytes32);
     function UNSAFE_BLOCK_SIGNER_SLOT() external view returns (bytes32);
     function VERSION() external view returns (uint256);
+    function MAX_SEQUENCER_RULES() external view returns (uint256);
     function basefeeScalar() external view returns (uint32);
     function batchInbox() external view returns (address addr_);
     function batcherHash() external view returns (bytes32);
@@ -109,4 +114,11 @@ interface ISystemConfig {
         external
         pure
         returns (bytes memory _newCalldata);
+    function setSequencerConfigRule(ElectionSystemConfig.SequencerRule memory _rule) external;
+    function getSequencerRuleAtIndex(uint256 _index)
+        external
+        view
+        returns (ElectionSystemConfig.SequencerRule memory);
+    function sequencerRulesLayout() external view returns (bytes32);
+    function removeSequencerConfigRule(uint256 _index) external;
 }

@@ -653,6 +653,12 @@ contract SystemConfig_Setters_Test is SystemConfig_Init {
 }
 
 contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
+    /// @dev Test `getSequencerRuleAtIndex` reverts when rule not set.
+    function test_getSequencerRuleAtIndex_ConfigRuleNotFound_reverts() external {
+        vm.expectRevert(ISystemConfig.ConfigRuleNotFound.selector);
+        systemConfig.getSequencerRuleAtIndex(0);
+    }
+
     /// @dev Tests that `injectAddressIntoCalldata` reverts if the offset is out of bounds.
     function test_injectAddressIntoCalldata_OffsetOOB_reverts() external {
         bytes memory _calldata = abi.encodeWithSelector(ERC20.balanceOf.selector, address(0));
@@ -676,5 +682,179 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
         bytes memory _injectedCalldata = systemConfig.injectAddressIntoCalldata(_emptyCalldata, _offsets, _injectee);
 
         assertEq(keccak256(_injectedCalldata), keccak256(_expectedBalanceOfCalldata));
+    }
+
+    /// @dev Tests that `setSequencerRule` only allows the owner to set the rule.
+    function test_setSequencerRule_onlyOwner_reverts() external {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.setSequencerConfigRule(_rule);
+    }
+
+    /// @dev Tests that `setSequencerRule` correctly sets the rule.
+    function testFuzz_setSequencerRule_injections_succeeds(uint256 _len) external {
+        vm.assume(_len < 32);
+
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        for (uint256 i; i < _len; i++) {
+            vm.prank(systemConfig.owner());
+            systemConfig.setSequencerConfigRule(_rule);
+        }
+
+        bytes32 _layout = systemConfig.sequencerRulesLayout();
+
+        for (uint256 i; i < _len; i++) {
+            ElectionSystemConfig.SequencerRule memory _expectedRule = systemConfig.getSequencerRuleAtIndex(i);
+
+            assertEq(uint8(_layout[i]), uint8(1));
+            assertEq(uint256(_expectedRule.assertionType), uint256(_rule.assertionType));
+            assertEq(_expectedRule.desiredRetdata, _rule.desiredRetdata);
+            assertEq(keccak256(_expectedRule.configCalldata), keccak256(_rule.configCalldata));
+            assertEq(_expectedRule.target, _rule.target);
+            assertEq(_expectedRule.addressOffsets.length, 0);
+        }
+    }
+
+    /// @dev Tests that `setSequencerRule` reverts if its full
+    function test_setSequencerRule_RuleOOB_reverts() external {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        address _owner = systemConfig.owner();
+
+        for (uint256 i; i < 32; i++) {
+            vm.prank(_owner);
+            systemConfig.setSequencerConfigRule(_rule);
+        }
+
+        vm.expectRevert(ISystemConfig.RuleOOB.selector);
+        vm.prank(_owner);
+        systemConfig.setSequencerConfigRule(_rule);
+
+        // Double check that the layout is full
+        bytes32 _layout = systemConfig.sequencerRulesLayout();
+        for (uint256 i; i < 32; i++) {
+            assertEq(uint8(_layout[i]), uint8(1));
+        }
+    }
+
+    /// @dev Tests that `setSequencerRule` emits the correct event.
+    function test_setSequencerRule_emitsEvent() external {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        vm.expectEmit(true, true, true, true);
+        emit ConfigUpdate(0, ISystemConfig.UpdateType.INSERT_SEQUENCER_RULE, abi.encode(_rule));
+        systemConfig.setSequencerConfigRule(_rule);
+    }
+
+    /// @dev Tests that `removeSequencerConfigRule` reverts if the caller is not the owner.
+    function test_removeSequencerConfigRule_notOwner_reverts() external {
+        vm.expectRevert("Ownable: caller is not the owner");
+        systemConfig.removeSequencerConfigRule(0);
+    }
+
+    /// @dev Tests that `removeSequencerConfigRule` removes a rule at index 0.
+    function test_removeSequencerConfigRule_removesRule() external {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        vm.prank(systemConfig.owner());
+        systemConfig.removeSequencerConfigRule(0);
+
+        bytes32 _layout = systemConfig.sequencerRulesLayout();
+        assertEq(_layout, bytes32(0));
+    }
+
+    /// @dev Tests that `removeSequencerConfigRule` removes a rule at a random index.
+    function testFuzz_removeSequencerConfigRule_randomIndex(uint256 _index) external {
+        vm.assume(_index < 32);
+
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        for (uint256 i; i < 32; i++) {
+            vm.prank(systemConfig.owner());
+            systemConfig.setSequencerConfigRule(_rule);
+        }
+
+        vm.prank(systemConfig.owner());
+        systemConfig.removeSequencerConfigRule(_index);
+
+        bytes32 _layout = systemConfig.sequencerRulesLayout();
+
+        for (uint256 i; i < 32; i++) {
+            if (i == _index) {
+                assertEq(uint8(_layout[i]), uint8(0));
+            } else {
+                assertEq(uint8(_layout[i]), uint8(1));
+            }
+        }
+    }
+
+    /// @dev Test `removeSequencerConfigRule` reverts when config rule not found.
+    function testFuzz_removeSequencerConfigRule_configRuleNotFound_reverts(uint256 _index) external {
+        vm.assume(_index < 32);
+
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        address _owner = systemConfig.owner();
+
+        for (uint256 i; i < 32; i++) {
+            vm.prank(_owner);
+            systemConfig.setSequencerConfigRule(_rule);
+        }
+
+        vm.prank(_owner);
+        systemConfig.removeSequencerConfigRule(_index);
+
+        // try to remocve the same index again should revert
+        vm.expectRevert(ISystemConfig.ConfigRuleNotFound.selector);
+        vm.prank(_owner);
+        systemConfig.removeSequencerConfigRule(_index);
     }
 }
