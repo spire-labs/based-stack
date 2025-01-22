@@ -31,12 +31,14 @@ func TestReorgBatchType(t *testing.T) {
 		f    func(gt *testing.T, deltaTimeOffset *hexutil.Uint64)
 	}{
 		{"ReorgOrphanBlock", ReorgOrphanBlock},
+		// TODO(spire): reenable this test
 		// {"ReorgFlipFlop", ReorgFlipFlop},
 		{"DeepReorg", DeepReorg},
 		{"RestartOpGeth", RestartOpGeth},
 		{"ConflictingL2Blocks", ConflictingL2Blocks},
 		{"SyncAfterReorg", SyncAfterReorg},
 	}
+	// TODO(spire): reenable those tests
 	// for _, test := range tests {
 	// 	test := test
 	// 	t.Run(test.name+"_SingularBatch", func(t *testing.T) {
