@@ -858,3 +858,421 @@ contract SystemConfig_SequencerConfig_Test is SystemConfig_Init {
         systemConfig.removeSequencerConfigRule(_index);
     }
 }
+
+contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
+    address public constant CALLER = address(0);
+
+    /// @dev Tests that `checkSequencerRules` reverts if the call context is not `eth_call`.
+    function test_checkSequencerRules_NotEthCall_reverts() public {
+        vm.expectRevert(ISystemConfig.NotEthCall.selector);
+        systemConfig.checkSequencerRules();
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is GT.
+    function test_checkSequencerRules_GT_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(2));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not GT.
+    function test_checkSequencerRules_GT_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(0));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is LT.
+    function test_checkSequencerRules_LT_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.LT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(0));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not LT.
+    function test_checkSequencerRules_LT_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.LT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(2));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is EQ.
+    function test_checkSequencerRules_EQ_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.EQ,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(1));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not EQ.
+    function test_checkSequencerRules_EQ_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.EQ,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(0));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is NEQ.
+    function test_checkSequencerRules_NEQ_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.NEQ,
+            desiredRetdata: bytes32(hex"deadbeef"),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(1));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not NEQ.
+    function test_checkSequencerRules_NEQ_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.NEQ,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(1));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is GTE.
+    function test_checkSequencerRules_GTE_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GTE,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(2));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not GTE.
+    function test_checkSequencerRules_GTE_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GTE,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(0));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is LTE.
+    function test_checkSequencerRules_LTE_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.LTE,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(1));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not LTE.
+    function test_checkSequencerRules_LTE_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.LTE,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(2));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is REVERT.
+    function test_checkSequencerRules_REVERT_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.REVERT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(0));
+        vm.mockCallRevert(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not REVERT.
+    function test_checkSequencerRules_REVERT_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.REVERT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(1));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if return data is SUCCESS.
+    function test_checkSequencerRules_SUCCESS_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.SUCCESS,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(0));
+        vm.mockCall(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.expectCall(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)));
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if return data is not SUCCESS.
+    function test_checkSequencerRules_SUCCESS_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.SUCCESS,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(1));
+        vm.mockCallRevert(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns false if not all rules are met.
+    function test_checkSequencerRules_notAllRulesMet_fails() public {
+        ElectionSystemConfig.SequencerRule memory _rule1 = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        ElectionSystemConfig.SequencerRule memory _rule2 = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.EQ,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule1);
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule2);
+
+        bytes memory returnData = abi.encode(uint256(2));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
+
+        // It should return false because the second rule is not met
+        vm.prank(CALLER);
+        assertFalse(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` returns true if all rules are met.
+    function test_checkSequencerRules_AllRulesMet_succeeds() public {
+        ElectionSystemConfig.SequencerRule memory _rule1 = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(0),
+            addressOffsets: new uint256[](0)
+        });
+
+        ElectionSystemConfig.SequencerRule memory _rule2 = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.EQ,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)),
+            target: address(1),
+            addressOffsets: new uint256[](0)
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule1);
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule2);
+
+        bytes memory returnDataCallOne = abi.encode(uint256(2));
+        bytes memory returnDataCallTwo = abi.encode(uint256(1));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnDataCallOne);
+        _mockAndExpect(address(1), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnDataCallTwo);
+
+        // It should return true because all rules are met
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules());
+    }
+
+    /// @dev Tests that `checkSequencerRules` injects custom calldata when needed.
+    function testFuzz_checkSequencerRules_injectsCustomCalldata_succeeds(address _injectee) public {
+        address _fakeInjectee = address(0);
+
+        vm.assume(_injectee != _fakeInjectee);
+
+        uint256[] memory _offsets = new uint256[](1);
+        _offsets[0] = 4;
+
+        ElectionSystemConfig.SequencerRule memory _rule = ElectionSystemConfig.SequencerRule({
+            assertionType: ElectionSystemConfig.SequencerAssertion.GT,
+            desiredRetdata: bytes32(uint256(1)),
+            configCalldata: abi.encodeWithSelector(ERC20.balanceOf.selector, _fakeInjectee),
+            target: address(0),
+            addressOffsets: _offsets
+        });
+
+        vm.prank(systemConfig.owner());
+        systemConfig.setSequencerConfigRule(_rule);
+
+        bytes memory returnData = abi.encode(uint256(2));
+        _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, _injectee), returnData);
+        vm.prank(CALLER);
+        assertTrue(systemConfig.checkSequencerRules(_injectee));
+    }
+
+    /// @dev Tests that `checkSequencerRules` reverts if the call context is not `eth_call`.
+    function testFuzz_checkSequencerRules_NotEthCall_reverts(address _injectee) public {
+        vm.expectRevert(ISystemConfig.NotEthCall.selector);
+        systemConfig.checkSequencerRules(_injectee);
+    }
+
+    function _mockAndExpect(address _target, bytes memory _calldata, bytes memory _returnData) internal {
+        vm.mockCall(_target, _calldata, _returnData);
+        vm.expectCall(_target, _calldata);
+    }
+}
