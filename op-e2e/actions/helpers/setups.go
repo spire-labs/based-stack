@@ -85,3 +85,26 @@ func SetupReorgTestActors(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.Set
 		rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 	return sd, dp, miner, sequencer, seqEngine, verifier, verifEngine, batcher
 }
+
+func SetupReorgTestBlob(t Testing, config *e2eutils.TestParams, deltaTimeOffset *hexutil.Uint64) (*e2eutils.SetupData, *e2eutils.DeployParams, *L1Miner, *L2Sequencer, *L2Engine, *L2Verifier, *L2Engine, *L2Batcher) {
+	dp := e2eutils.MakeDeployParams(t, config)
+	helpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
+
+	sd := e2eutils.Setup(t, dp, DefaultAlloc)
+	log := testlog.Logger(t, log.LevelDebug)
+
+	return SetupReorgTestActorsBlob(t, dp, sd, log)
+}
+
+func SetupReorgTestActorsBlob(t Testing, dp *e2eutils.DeployParams, sd *e2eutils.SetupData, log log.Logger) (*e2eutils.SetupData, *e2eutils.DeployParams, *L1Miner, *L2Sequencer, *L2Engine, *L2Verifier, *L2Engine, *L2Batcher) {
+	miner, seqEngine, sequencer := SetupSequencerTest(t, sd, dp, log)
+	miner.ActL1SetFeeRecipient(common.Address{'A'})
+	sequencer.ActL2PipelineFull(t)
+	client := miner.L1Client(t, sd.RollupCfg)
+	verifEngine, verifier := SetupVerifier(t, sd, log, client, client.EthClient, miner.BlobStore(), miner.BeaconClient(), &sync.Config{})
+	rollupSeqCl := sequencer.RollupClient()
+
+	batcher := NewL2Batcher(log, sd.RollupCfg, BlobBatcherCfg(dp),
+		rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
+	return sd, dp, miner, sequencer, seqEngine, verifier, verifEngine, batcher
+}

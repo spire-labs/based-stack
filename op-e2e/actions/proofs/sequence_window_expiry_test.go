@@ -14,6 +14,7 @@ import (
 func runSequenceWindowExpireTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	tp := helpers.NewTestParams()
+	tp.L1BlockTime = 15 // TODO(spire): L1BlockTime = 12 breaks this test
 	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
 
 	// Mine an empty block for gas estimation purposes.
