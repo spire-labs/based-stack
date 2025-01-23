@@ -141,7 +141,7 @@ func addressFromTopic(topic common.Hash) common.Address {
 }
 
 func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) *eth.ElectionWinner {
-	return ds.electionWinnersStore.GetElectionWinner(timestamp)
+	return ds.electionWinnersStore.GetElectionWinnerByTime(timestamp)
 }
 
 func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
@@ -154,10 +154,7 @@ func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
 		ds.log.Debug("Adding election winners", "winners", x.ElectionWinners)
 		ds.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
 	case rollup.ElectionWinnerOutdatedEvent:
-		// remove all election winners with a timestamp less than the outdated timestamp
-		ds.log.Debug("Removing outdated election winners", "time", x.Time, "len", ds.electionWinnersStore.WinnersLength())
 		ds.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
-		ds.log.Debug("Removed outdated election winners", "map", ds.electionWinnersStore.WinnersLength())
 	default:
 		return false
 	}

@@ -101,11 +101,11 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
 		// TODO: should this be a different store that stores based on parent slot?
-		electionWinner := d.electionWinnersStore.GetElectionWinner(x.PendingSafe.Time + 12)
+		electionWinner := d.electionWinnersStore.GetElectionWinnerByParentSlot(x.PendingSafe.Time)
 
 		// TODO: what should we do if we don't have an election winner? (shouldn't happen)
 		if electionWinner == nil {
-			d.pipeline.log.Error("No election winner found for time", "time", x.PendingSafe.Time+12)
+			d.pipeline.log.Error("No election winner found by parent slot in deriver", "time", x.PendingSafe.Time)
 			electionWinner = &eth.ElectionWinner{}
 		}
 
@@ -150,10 +150,7 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.log.Debug("Adding election winners in deriver", "winners", x.ElectionWinners)
 		d.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
 	case rollup.ElectionWinnerOutdatedEvent:
-		// remove all election winners with a timestamp less than the outdated timestamp
-		d.pipeline.log.Debug("Removing outdated election winners", "time", x.Time, "len", d.electionWinnersStore.WinnersLength())
 		d.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
-		d.pipeline.log.Debug("Removed outdated election winners", "map", d.electionWinnersStore.WinnersLength())
 	default:
 		return false
 	}

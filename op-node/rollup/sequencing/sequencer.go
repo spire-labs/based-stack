@@ -197,9 +197,7 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 		d.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
 	case rollup.ElectionWinnerOutdatedEvent:
 		// remove all election winners with a timestamp less than the outdated timestamp
-		d.log.Debug("Removing outdated election winners", "time", x.Time, "len", d.electionWinnersStore.WinnersLength())
 		d.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
-		d.log.Debug("Removed outdated election winners", "map", d.electionWinnersStore.WinnersLength())
 	default:
 		return false
 	}
@@ -534,10 +532,10 @@ func (d *Sequencer) startBuildingBlock() {
 
 	log.Info("L2 Head is at block", "block", l2Head.Number, "time", l2Head.Time)
 
-	electionWinner := d.electionWinnersStore.GetElectionWinner(l2Head.Time + 12)
+	electionWinner := d.electionWinnersStore.GetElectionWinnerByParentSlot(l2Head.Time)
 
 	if electionWinner == nil {
-		d.log.Error("No election winner found for time in sequencer", "time", l2Head.Time+12)
+		d.log.Error("No election winner found by parent slot in sequencer", "time", l2Head.Time)
 		// d.emitter.Emit(rollup.ResetEvent{Err: fmt.Errorf("no election winner found for slot %d", l2Head.Time+12)})
 		return
 	}
