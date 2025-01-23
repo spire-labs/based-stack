@@ -46,7 +46,7 @@ func decodeID(data []byte) eth.BlockID {
 }
 
 func (m *FakeAttributesBuilder) PreparePayloadAttributes(ctx context.Context,
-	l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinners []*eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
+	l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinner eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
 	gasLimit := eth.Uint64Quantity(30_000_000)
 	attrs = &eth.PayloadAttributes{
 		Timestamp:             eth.Uint64Quantity(l2Parent.Time + m.cfg.BlockTime),

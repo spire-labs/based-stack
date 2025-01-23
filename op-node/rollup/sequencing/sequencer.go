@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/conductor"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
@@ -111,10 +112,11 @@ type Sequencer struct {
 	nextAction   time.Time
 	nextActionOK bool
 
-	latest          BuildingState
-	latestSealed    eth.L2BlockRef
-	latestHead      eth.L2BlockRef
-	electionWinners []*eth.ElectionWinner
+	latest       BuildingState
+	latestSealed eth.L2BlockRef
+	latestHead   eth.L2BlockRef
+	// electionWinners      []*eth.ElectionWinner
+	electionWinnersStore *election_store.ElectionWinnersStore
 
 	latestHeadSet chan struct{}
 
@@ -132,18 +134,19 @@ func NewSequencer(driverCtx context.Context, log log.Logger, rollupCfg *rollup.C
 	asyncGossip AsyncGossiper,
 	metrics Metrics) *Sequencer {
 	return &Sequencer{
-		ctx:              driverCtx,
-		log:              log,
-		rollupCfg:        rollupCfg,
-		spec:             rollup.NewChainSpec(rollupCfg),
-		listener:         listener,
-		conductor:        conductor,
-		asyncGossip:      asyncGossip,
-		attrBuilder:      attributesBuilder,
-		l1OriginSelector: l1OriginSelector,
-		metrics:          metrics,
-		timeNow:          time.Now,
-		toBlockRef:       derive.PayloadToBlockRef,
+		ctx:                  driverCtx,
+		log:                  log,
+		rollupCfg:            rollupCfg,
+		spec:                 rollup.NewChainSpec(rollupCfg),
+		listener:             listener,
+		conductor:            conductor,
+		asyncGossip:          asyncGossip,
+		attrBuilder:          attributesBuilder,
+		l1OriginSelector:     l1OriginSelector,
+		metrics:              metrics,
+		timeNow:              time.Now,
+		toBlockRef:           derive.PayloadToBlockRef,
+		electionWinnersStore: election_store.NewElectionWinnersStore(log),
 	}
 }
 
@@ -190,7 +193,13 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 	case engine.ForkchoiceUpdateEvent:
 		d.onForkchoiceUpdate(x)
 	case rollup.ElectionWinnerEvent:
-		d.electionWinners = x.ElectionWinners
+		d.log.Debug("Adding election winners in sequencer", "winners", x.ElectionWinners)
+		d.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
+	case rollup.ElectionWinnerOutdatedEvent:
+		// remove all election winners with a timestamp less than the outdated timestamp
+		d.log.Debug("Removing outdated election winners", "time", x.Time, "len", d.electionWinnersStore.WinnersLength())
+		d.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
+		d.log.Debug("Removed outdated election winners", "map", d.electionWinnersStore.WinnersLength())
 	default:
 		return false
 	}
@@ -377,10 +386,10 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 				DerivedFrom:  eth.L1BlockRef{},
 			})
 		} else if d.latest == (BuildingState{}) {
-			if len(d.electionWinners) > 0 {
-				lastWinner := d.electionWinners[len(d.electionWinners)-1]
-				if lastWinner.ParentSlot != 0 && lastWinner.ParentSlot < d.latestHead.Time {
-					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", lastWinner.ParentSlot)
+			latestElectionWinner := d.electionWinnersStore.GetLatestElectionWinner()
+			if latestElectionWinner != nil {
+				if latestElectionWinner.ParentSlot != 0 && latestElectionWinner.ParentSlot < d.latestHead.Time {
+					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", latestElectionWinner.ParentSlot)
 					// We need to try retrying the build action when this check passes
 					// TODO(spire): This might be too aggressive of a delay time wise, we are getting a lot of logs
 					// but there are no reorgs and it seems to build correctly.
@@ -525,7 +534,15 @@ func (d *Sequencer) startBuildingBlock() {
 
 	log.Info("L2 Head is at block", "block", l2Head.Number, "time", l2Head.Time)
 
-	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), d.electionWinners)
+	electionWinner := d.electionWinnersStore.GetElectionWinner(l2Head.Time + 12)
+
+	if electionWinner == nil {
+		d.log.Error("No election winner found for time in sequencer", "time", l2Head.Time+12)
+		// d.emitter.Emit(rollup.ResetEvent{Err: fmt.Errorf("no election winner found for slot %d", l2Head.Time+12)})
+		return
+	}
+
+	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), *electionWinner)
 	if err != nil {
 		if errors.Is(err, derive.ErrTemporary) {
 			d.emitter.Emit(rollup.EngineTemporaryErrorEvent{Err: err})

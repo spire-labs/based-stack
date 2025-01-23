@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 )
@@ -71,14 +72,15 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
-	electionWinners            []*eth.ElectionWinner
-	electionWinnersQueue       [][]*eth.ElectionWinner
+
+	electionWinnersStore *election_store.ElectionWinnersStore
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
 	return &PipelineDeriver{
-		pipeline: pipeline,
-		ctx:      ctx,
+		pipeline:             pipeline,
+		ctx:                  ctx,
+		electionWinnersStore: election_store.NewElectionWinnersStore(pipeline.log),
 	}
 }
 
@@ -98,17 +100,17 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
-		if len(d.electionWinners) > 0 && len(d.electionWinnersQueue) > 0 {
-			lastWinner := d.electionWinners[len(d.electionWinners)-1]
-			if lastWinner.ParentSlot < x.PendingSafe.Time {
-				d.pipeline.log.Info("Updating election winners in deriver", "pendingSafe", x.PendingSafe.Time, "parentSlot", lastWinner.ParentSlot, "winners", d.electionWinners, "queue", d.electionWinnersQueue)
-				d.electionWinners = d.electionWinnersQueue[0]
-				d.electionWinnersQueue = d.electionWinnersQueue[1:]
-			}
+		// TODO: should this be a different store that stores based on parent slot?
+		electionWinner := d.electionWinnersStore.GetElectionWinner(x.PendingSafe.Time + 12)
+
+		// TODO: what should we do if we don't have an election winner? (shouldn't happen)
+		if electionWinner == nil {
+			d.pipeline.log.Error("No election winner found for time", "time", x.PendingSafe.Time+12)
+			electionWinner = &eth.ElectionWinner{}
 		}
 
 		preOrigin := d.pipeline.Origin()
-		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, d.electionWinners)
+		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, *electionWinner)
 		postOrigin := d.pipeline.Origin()
 
 		if preOrigin != postOrigin {
@@ -145,13 +147,13 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
 	case rollup.ElectionWinnerEvent:
-		if len(d.electionWinners) == 0 {
-			d.pipeline.log.Info("Election winners empty, updating right away")
-			d.electionWinners = x.ElectionWinners
-			return true
-		}
-
-		d.electionWinnersQueue = append(d.electionWinnersQueue, x.ElectionWinners)
+		d.pipeline.log.Debug("Adding election winners in deriver", "winners", x.ElectionWinners)
+		d.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
+	case rollup.ElectionWinnerOutdatedEvent:
+		// remove all election winners with a timestamp less than the outdated timestamp
+		d.pipeline.log.Debug("Removing outdated election winners", "time", x.Time, "len", d.electionWinnersStore.WinnersLength())
+		d.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
+		d.pipeline.log.Debug("Removed outdated election winners", "map", d.electionWinnersStore.WinnersLength())
 	default:
 		return false
 	}

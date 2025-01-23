@@ -43,7 +43,7 @@ func NewFetchingAttributesBuilder(rollupCfg *rollup.Config, l1 L1ReceiptsFetcher
 // by setting NoTxPool=false as sequencer, or by appending batch transactions as verifier.
 // The severity of the error is returned; a crit=false error means there was a temporary issue, like a failed RPC or time-out.
 // A crit=true error means the input arguments are inconsistent or invalid.
-func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinners []*eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
+func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinner eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
 	var l1Info eth.BlockInfo
 	var depositTxs []hexutil.Bytes
 	var seqNumber uint64
@@ -93,13 +93,9 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		seqNumber = l2Parent.SequenceNumber + 1
 	}
 
-	var winner common.Address
-
-	for _, electionWinner := range electionWinners {
-		if electionWinner.ParentSlot == l2Parent.Time {
-			winner = electionWinner.Address
-			break
-		}
+	// Sanity check if election winner has a valid timestamp
+	if electionWinner.ParentSlot != l2Parent.Time {
+		return nil, NewResetError(fmt.Errorf("invalid election winner parent slot %d, expected %d", electionWinner.ParentSlot, l2Parent.Time))
 	}
 
 	// Sanity check the L1 origin was correctly selected to maintain the time invariant between L1 and L2
@@ -125,7 +121,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		upgradeTxs = append(upgradeTxs, fjord...)
 	}
 
-	l1InfoTx, err := L1InfoDepositBytes(ba.rollupCfg, sysConfig, seqNumber, l1Info, nextL2Time, winner)
+	l1InfoTx, err := L1InfoDepositBytes(ba.rollupCfg, sysConfig, seqNumber, l1Info, nextL2Time, electionWinner.Address)
 	if err != nil {
 		return nil, NewCriticalError(fmt.Errorf("failed to create l1InfoTx: %w", err))
 	}
@@ -142,7 +138,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	txsStartLength := 1
 
 	// If there is a winner make room for the burn tx
-	if winner != (common.Address{}) {
+	if electionWinner.Address != (common.Address{}) {
 		txsStartLength += 1
 	}
 
@@ -150,8 +146,8 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	txs = append(txs, l1InfoTx)
 
 	// We need to put burn right after l1InfoTx incase any deposits rely on this state change
-	if winner != (common.Address{}) {
-		burnTx, err := BurnTxBytes(winner)
+	if electionWinner.Address != (common.Address{}) {
+		burnTx, err := BurnTxBytes(electionWinner.Address)
 		if err != nil {
 			return nil, NewCriticalError(fmt.Errorf("failed to create burnTx: %w", err))
 		}
