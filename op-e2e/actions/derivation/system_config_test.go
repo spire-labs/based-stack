@@ -55,7 +55,7 @@ func BatcherKeyRotation(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
-	dp.DeployConfig.L2BlockTime = 2
+	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)

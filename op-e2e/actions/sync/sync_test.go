@@ -187,7 +187,7 @@ func TestBackupUnsafe(gt *testing.T) {
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
-	dp.DeployConfig.L2BlockTime = 2
+	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LvlInfo)
 	_, dp, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
@@ -349,7 +349,7 @@ func TestBackupUnsafeReorgForkChoiceInputError(gt *testing.T) {
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
-	dp.DeployConfig.L2BlockTime = 2
+	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LvlInfo)
 	_, dp, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
@@ -483,7 +483,7 @@ func TestBackupUnsafeReorgForkChoiceNotInputError(gt *testing.T) {
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
-	dp.DeployConfig.L2BlockTime = 2
+	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LvlInfo)
 	_, dp, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
@@ -908,7 +908,7 @@ func TestInvalidPayloadInSpanBatch(gt *testing.T) {
 	minTs := hexutil.Uint64(0)
 	// Activate Delta hardfork
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, &minTs)
-	dp.DeployConfig.L2BlockTime = 2
+	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelInfo)
 	_, _, miner, sequencer, seqEng, verifier, _, batcher := actionsHelpers.SetupReorgTestActors(t, dp, sd, log)
