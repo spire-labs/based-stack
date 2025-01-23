@@ -21,8 +21,8 @@ type MockElectionWinnersProvider struct {
 	electionWinner common.Address
 }
 
-func (m *MockElectionWinnersProvider) GetElectionWinner(_timestamp uint64) eth.ElectionWinner {
-	return eth.ElectionWinner{
+func (m *MockElectionWinnersProvider) GetElectionWinner(_timestamp uint64) *eth.ElectionWinner {
+	return &eth.ElectionWinner{
 		Address: m.electionWinner,
 		Time:    0x499602D2,
 	}

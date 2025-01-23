@@ -10,6 +10,7 @@ import (
 
 	altda "github.com/ethereum-optimism/optimism/op-alt-da"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
@@ -39,7 +40,8 @@ type AltDAInputFetcher interface {
 }
 
 type ElectionWinnersProvider interface {
-	GetElectionWinner(timestamp uint64) eth.ElectionWinner
+	// todo: return election winner or error
+	GetElectionWinner(timestamp uint64) *eth.ElectionWinner
 }
 
 // DataSourceFactory reads raw transactions from a given block & then filters for
@@ -53,8 +55,7 @@ type DataSourceFactory struct {
 	altDAFetcher         AltDAInputFetcher
 	ecotoneTime          *uint64
 	emitter              event.Emitter
-	electionWinners      []*eth.ElectionWinner
-	electionWinnersQueue [][]*eth.ElectionWinner
+	electionWinnersStore *election_store.ElectionWinnersStore
 }
 
 func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
@@ -71,8 +72,7 @@ func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher,
 		altDAFetcher:         altDAFetcher,
 		ecotoneTime:          cfg.EcotoneTime,
 		emitter:              nil,
-		electionWinners:      []*eth.ElectionWinner{},
-		electionWinnersQueue: [][]*eth.ElectionWinner{},
+		electionWinnersStore: election_store.NewElectionWinnersStore(log),
 	}
 }
 
@@ -140,27 +140,8 @@ func addressFromTopic(topic common.Hash) common.Address {
 	return common.Address(topic.Bytes()[12:])
 }
 
-func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
-	if len(ds.electionWinners) > 0 && len(ds.electionWinnersQueue) > 0 {
-		lastWinner := ds.electionWinners[len(ds.electionWinners)-1]
-		if lastWinner.Time < timestamp {
-			ds.log.Info("Updating election winners in data source factory", "lastWinnerTime", lastWinner.Time, "timestamp", timestamp)
-			ds.electionWinners = ds.electionWinnersQueue[0]
-			ds.electionWinnersQueue = ds.electionWinnersQueue[1:]
-		}
-	}
-
-	var out eth.ElectionWinner
-	for _, winner := range ds.electionWinners {
-		if winner.Time == timestamp {
-			out = *winner
-		}
-	}
-	if out == (eth.ElectionWinner{}) {
-		ds.log.Warn("No election winner found for timestamp", "timestamp", timestamp, "stored", ds.electionWinners, "queue", ds.electionWinnersQueue)
-	}
-
-	return out
+func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) *eth.ElectionWinner {
+	return ds.electionWinnersStore.GetElectionWinner(timestamp)
 }
 
 func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
@@ -170,12 +151,13 @@ func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
 func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
 	switch x := ev.(type) {
 	case rollup.ElectionWinnerEvent:
-		if len(ds.electionWinners) == 0 {
-			ds.electionWinners = x.ElectionWinners
-			return true
-		}
-
-		ds.electionWinnersQueue = append(ds.electionWinnersQueue, x.ElectionWinners)
+		ds.log.Debug("Adding election winners", "winners", x.ElectionWinners)
+		ds.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
+	case rollup.ElectionWinnerOutdatedEvent:
+		// remove all election winners with a timestamp less than the outdated timestamp
+		ds.log.Debug("Removing outdated election winners", "time", x.Time, "len", ds.electionWinnersStore.WinnersLength())
+		ds.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
+		ds.log.Debug("Removed outdated election winners", "map", ds.electionWinnersStore.WinnersLength())
 	default:
 		return false
 	}
