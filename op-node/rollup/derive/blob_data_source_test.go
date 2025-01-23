@@ -21,7 +21,7 @@ type MockElectionWinnersProvider struct {
 	electionWinner common.Address
 }
 
-func (m *MockElectionWinnersProvider) GetElectionWinner(_timestamp uint64) *eth.ElectionWinner {
+func (m *MockElectionWinnersProvider) GetElectionWinnerByTime(_timestamp uint64) *eth.ElectionWinner {
 	return &eth.ElectionWinner{
 		Address: m.electionWinner,
 		Time:    0x499602D2,
@@ -50,13 +50,13 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 
 	// create an instance of the blob data source for testing w/o calling a function. Just create the struct
 	ds := BlobDataSource{
-		ref:              eth.L1BlockRef{Time: 0x499602D2},
-		dsCfg:            config,
-		fetcher:          nil,
-		log:              logger,
-		batcherAddr:      batchInboxAddr,
-		blobsFetcher:     nil,
-		electionProvider: mockElectionProvider,
+		ref:            eth.L1BlockRef{Time: 0x499602D2},
+		dsCfg:          config,
+		fetcher:        nil,
+		log:            logger,
+		batcherAddr:    batchInboxAddr,
+		blobsFetcher:   nil,
+		electionClient: mockElectionProvider,
 	}
 
 	// TODO(spire): enable other DA sources

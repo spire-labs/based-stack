@@ -47,6 +47,12 @@ type L2Source interface {
 	SystemConfigL2Fetcher
 }
 
+type ElectionClient interface {
+	GetLatestElectionWinner() *eth.ElectionWinner
+	GetElectionWinnerByParentSlot(uint64) *eth.ElectionWinner
+	GetElectionWinnerByTime(uint64) *eth.ElectionWinner
+}
+
 // DerivationPipeline is updated with new L1 data, and the Step() function can be iterated on to generate attributes
 type DerivationPipeline struct {
 	log       log.Logger
@@ -74,15 +80,17 @@ type DerivationPipeline struct {
 
 	metrics Metrics
 	DataSrc *DataSourceFactory
+
+	electionClient ElectionClient
 }
 
 // NewDerivationPipeline creates a DerivationPipeline, to turn L1 data into L2 block-inputs.
 func NewDerivationPipeline(log log.Logger, rollupCfg *rollup.Config, l1Fetcher L1Fetcher, l1Blobs L1BlobsFetcher,
-	altDA AltDAInputFetcher, l2Source L2Source, metrics Metrics) *DerivationPipeline {
+	altDA AltDAInputFetcher, l2Source L2Source, electionClient ElectionClient, metrics Metrics) *DerivationPipeline {
 
 	// Pull stages
 	l1Traversal := NewL1Traversal(log, rollupCfg, l1Fetcher)
-	dataSrc := NewDataSourceFactory(log, rollupCfg, l1Fetcher, l1Blobs, altDA) // auxiliary stage for L1Retrieval
+	dataSrc := NewDataSourceFactory(log, rollupCfg, l1Fetcher, l1Blobs, altDA, electionClient) // auxiliary stage for L1Retrieval
 	l1Src := NewL1Retrieval(log, dataSrc, l1Traversal)
 	frameQueue := NewFrameQueue(log, l1Src)
 	bank := NewChannelBank(log, rollupCfg, frameQueue, l1Fetcher, metrics)
@@ -97,17 +105,18 @@ func NewDerivationPipeline(log log.Logger, rollupCfg *rollup.Config, l1Fetcher L
 	stages := []ResettableStage{l1Traversal, l1Src, altDA, frameQueue, bank, chInReader, batchQueue, attributesQueue}
 
 	return &DerivationPipeline{
-		log:       log,
-		rollupCfg: rollupCfg,
-		l1Fetcher: l1Fetcher,
-		altDA:     altDA,
-		resetting: 0,
-		stages:    stages,
-		metrics:   metrics,
-		traversal: l1Traversal,
-		attrib:    attributesQueue,
-		l2:        l2Source,
-		DataSrc:   dataSrc,
+		log:            log,
+		rollupCfg:      rollupCfg,
+		l1Fetcher:      l1Fetcher,
+		altDA:          altDA,
+		resetting:      0,
+		stages:         stages,
+		metrics:        metrics,
+		traversal:      l1Traversal,
+		attrib:         attributesQueue,
+		l2:             l2Source,
+		DataSrc:        dataSrc,
+		electionClient: electionClient,
 	}
 }
 

@@ -15,7 +15,6 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/conductor"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
-	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
@@ -50,6 +49,11 @@ type AsyncGossiper interface {
 	Clear()
 	Stop()
 	Start()
+}
+
+type ElectionClient interface {
+	GetLatestElectionWinner() *eth.ElectionWinner
+	GetElectionWinnerByParentSlot(uint64) *eth.ElectionWinner
 }
 
 // SequencerActionEvent triggers the sequencer to start/seal a block, if active and ready to act.
@@ -115,8 +119,8 @@ type Sequencer struct {
 	latest       BuildingState
 	latestSealed eth.L2BlockRef
 	latestHead   eth.L2BlockRef
-	// electionWinners      []*eth.ElectionWinner
-	electionWinnersStore *election_store.ElectionWinnersStore
+
+	electionClient ElectionClient
 
 	latestHeadSet chan struct{}
 
@@ -132,21 +136,22 @@ func NewSequencer(driverCtx context.Context, log log.Logger, rollupCfg *rollup.C
 	listener SequencerStateListener,
 	conductor conductor.SequencerConductor,
 	asyncGossip AsyncGossiper,
+	electionClient ElectionClient,
 	metrics Metrics) *Sequencer {
 	return &Sequencer{
-		ctx:                  driverCtx,
-		log:                  log,
-		rollupCfg:            rollupCfg,
-		spec:                 rollup.NewChainSpec(rollupCfg),
-		listener:             listener,
-		conductor:            conductor,
-		asyncGossip:          asyncGossip,
-		attrBuilder:          attributesBuilder,
-		l1OriginSelector:     l1OriginSelector,
-		metrics:              metrics,
-		timeNow:              time.Now,
-		toBlockRef:           derive.PayloadToBlockRef,
-		electionWinnersStore: election_store.NewElectionWinnersStore(log),
+		ctx:              driverCtx,
+		log:              log,
+		rollupCfg:        rollupCfg,
+		spec:             rollup.NewChainSpec(rollupCfg),
+		listener:         listener,
+		conductor:        conductor,
+		asyncGossip:      asyncGossip,
+		attrBuilder:      attributesBuilder,
+		l1OriginSelector: l1OriginSelector,
+		metrics:          metrics,
+		timeNow:          time.Now,
+		toBlockRef:       derive.PayloadToBlockRef,
+		electionClient:   electionClient,
 	}
 }
 
@@ -192,12 +197,6 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 		d.onEngineResetConfirmedEvent(x)
 	case engine.ForkchoiceUpdateEvent:
 		d.onForkchoiceUpdate(x)
-	case rollup.ElectionWinnerEvent:
-		d.log.Debug("Adding election winners in sequencer", "winners", x.ElectionWinners)
-		d.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
-	case rollup.ElectionWinnerOutdatedEvent:
-		// remove all election winners with a timestamp less than the outdated timestamp
-		d.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
 	default:
 		return false
 	}
@@ -384,7 +383,7 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 				DerivedFrom:  eth.L1BlockRef{},
 			})
 		} else if d.latest == (BuildingState{}) {
-			latestElectionWinner := d.electionWinnersStore.GetLatestElectionWinner()
+			latestElectionWinner := d.electionClient.GetLatestElectionWinner()
 			if latestElectionWinner != nil {
 				if latestElectionWinner.ParentSlot != 0 && latestElectionWinner.ParentSlot < d.latestHead.Time {
 					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", latestElectionWinner.ParentSlot)
@@ -532,7 +531,7 @@ func (d *Sequencer) startBuildingBlock() {
 
 	log.Info("L2 Head is at block", "block", l2Head.Number, "time", l2Head.Time)
 
-	electionWinner := d.electionWinnersStore.GetElectionWinnerByParentSlot(l2Head.Time)
+	electionWinner := d.electionClient.GetElectionWinnerByParentSlot(l2Head.Time)
 
 	if electionWinner == nil {
 		d.log.Error("No election winner found by parent slot in sequencer", "time", l2Head.Time)

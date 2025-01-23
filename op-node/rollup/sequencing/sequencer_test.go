@@ -151,6 +151,21 @@ func (f *FakeAsyncGossip) Start() {
 
 var _ AsyncGossiper = (*FakeAsyncGossip)(nil)
 
+type FakeElectionClient struct {
+}
+
+func (e *FakeElectionClient) GetElectionWinnerByTime(timestamp uint64) *eth.ElectionWinner {
+	return &eth.ElectionWinner{}
+}
+
+func (e *FakeElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) *eth.ElectionWinner {
+	return &eth.ElectionWinner{}
+}
+
+func (e *FakeElectionClient) GetLatestElectionWinner() *eth.ElectionWinner {
+	return &eth.ElectionWinner{}
+}
+
 // TestSequencer_StartStop runs through start/stop state back and forth to test state changes.
 func TestSequencer_StartStop(t *testing.T) {
 	logger := testlog.Logger(t, log.LevelError)
@@ -615,6 +630,7 @@ type sequencerTestDeps struct {
 	seqState         *BasicSequencerStateListener
 	conductor        *FakeConductor
 	asyncGossip      *FakeAsyncGossip
+	electionClient   *FakeElectionClient
 }
 
 func createSequencer(log log.Logger) (*Sequencer, *sequencerTestDeps) {
@@ -643,18 +659,21 @@ func createSequencer(log log.Logger) (*Sequencer, *sequencerTestDeps) {
 	deps := &sequencerTestDeps{
 		cfg:           cfg,
 		attribBuilder: &FakeAttributesBuilder{cfg: cfg, rng: rng},
+		// electionClient:
 		l1OriginSelector: &FakeL1OriginSelector{
 			l1OriginFn: func(l2Head eth.L2BlockRef) (eth.L1BlockRef, error) {
 				panic("override this")
 			},
 		},
-		seqState:    &BasicSequencerStateListener{},
-		conductor:   &FakeConductor{},
-		asyncGossip: &FakeAsyncGossip{},
+		seqState:       &BasicSequencerStateListener{},
+		conductor:      &FakeConductor{},
+		asyncGossip:    &FakeAsyncGossip{},
+		electionClient: &FakeElectionClient{},
 	}
 	seq := NewSequencer(context.Background(), log, cfg, deps.attribBuilder,
 		deps.l1OriginSelector, deps.seqState, deps.conductor,
-		deps.asyncGossip, metrics.NoopMetrics)
+		deps.asyncGossip, deps.electionClient,
+		metrics.NoopMetrics)
 	// We create mock payloads, with the epoch-id as tx[0], rather than proper L1Block-info deposit tx.
 	seq.toBlockRef = func(rollupCfg *rollup.Config, payload *eth.ExecutionPayload) (eth.L2BlockRef, error) {
 		return eth.L2BlockRef{

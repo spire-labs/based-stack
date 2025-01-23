@@ -23,26 +23,26 @@ type blobOrCalldata struct {
 // BlobDataSource fetches blobs or calldata as appropriate and transforms them into usable rollup
 // data.
 type BlobDataSource struct {
-	data             []blobOrCalldata
-	ref              eth.L1BlockRef
-	batcherAddr      common.Address
-	dsCfg            DataSourceConfig
-	fetcher          L1TransactionFetcher
-	blobsFetcher     L1BlobsFetcher
-	log              log.Logger
-	electionProvider ElectionWinnersProvider
+	data           []blobOrCalldata
+	ref            eth.L1BlockRef
+	batcherAddr    common.Address
+	dsCfg          DataSourceConfig
+	fetcher        L1TransactionFetcher
+	blobsFetcher   L1BlobsFetcher
+	log            log.Logger
+	electionClient ElectionWinnersProvider
 }
 
 // NewBlobDataSource creates a new blob data source.
-func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address, electionProvider ElectionWinnersProvider) DataIter {
+func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address, electionClient ElectionWinnersProvider) DataIter {
 	return &BlobDataSource{
-		ref:              ref,
-		dsCfg:            dsCfg,
-		fetcher:          fetcher,
-		log:              log.New("origin", ref),
-		batcherAddr:      batcherAddr,
-		blobsFetcher:     blobsFetcher,
-		electionProvider: electionProvider,
+		ref:            ref,
+		dsCfg:          dsCfg,
+		fetcher:        fetcher,
+		log:            log.New("origin", ref),
+		batcherAddr:    batcherAddr,
+		blobsFetcher:   blobsFetcher,
+		electionClient: electionClient,
 	}
 }
 
@@ -135,7 +135,7 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 	var hashes []eth.IndexedBlobHash
 	blobIndex := 0 // index of each blob in the block's blob sidecar
 	blockTime := ds.ref.Time
-	electionWinner := ds.electionProvider.GetElectionWinner(blockTime)
+	electionWinner := ds.electionClient.GetElectionWinnerByTime(blockTime)
 
 	if electionWinner == nil {
 		ds.log.Warn("No election winner found for block", "blockTime", blockTime)

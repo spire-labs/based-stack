@@ -2,35 +2,57 @@ package election_store
 
 import (
 	"fmt"
+	"sync"
 
+	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 	"github.com/ethereum/go-ethereum/log"
 )
 
-type ElectionWinnersStore struct {
+type ElectionStore struct {
 	electionWinnersMapByTime       map[uint64]*eth.ElectionWinner
 	electionWinnersMapByParentSlot map[uint64]*eth.ElectionWinner
 	log                            log.Logger
 	latestWinner                   *eth.ElectionWinner
+
+	mu sync.Mutex
 }
 
-func NewElectionWinnersStore(log log.Logger) *ElectionWinnersStore {
-	return &ElectionWinnersStore{
+func NewElectionStore(log log.Logger) *ElectionStore {
+	return &ElectionStore{
 		electionWinnersMapByTime:       make(map[uint64]*eth.ElectionWinner),
 		electionWinnersMapByParentSlot: make(map[uint64]*eth.ElectionWinner),
 		log:                            log,
 	}
 }
 
-func (e *ElectionWinnersStore) GetElectionWinnerByTime(timestamp uint64) *eth.ElectionWinner {
+func (e *ElectionStore) OnEvent(ev event.Event) bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	switch x := ev.(type) {
+	case rollup.ElectionWinnerEvent:
+		e.StoreElectionWinners(x.ElectionWinners)
+	case rollup.ElectionWinnerOutdatedEvent:
+		// remove all election winners with a timestamp less than the outdated timestamp
+		e.RemoveOutdatedElectionWinners(x.Time)
+	default:
+		return false
+	}
+
+	return true
+}
+
+func (e *ElectionStore) GetElectionWinnerByTime(timestamp uint64) *eth.ElectionWinner {
 	return e.electionWinnersMapByTime[timestamp]
 }
 
-func (e *ElectionWinnersStore) GetElectionWinnerByParentSlot(timestamp uint64) *eth.ElectionWinner {
+func (e *ElectionStore) GetElectionWinnerByParentSlot(timestamp uint64) *eth.ElectionWinner {
 	return e.electionWinnersMapByParentSlot[timestamp]
 }
 
-func (e *ElectionWinnersStore) GetLatestElectionWinner() *eth.ElectionWinner {
+func (e *ElectionStore) GetLatestElectionWinner() *eth.ElectionWinner {
 	return e.latestWinner
 }
 
@@ -38,7 +60,7 @@ func (e *ElectionWinnersStore) GetLatestElectionWinner() *eth.ElectionWinner {
 //
 // Parameters:
 // - winners: election winners to store (sorted by timestamp asc)
-func (e *ElectionWinnersStore) StoreElectionWinners(winners []*eth.ElectionWinner) {
+func (e *ElectionStore) StoreElectionWinners(winners []*eth.ElectionWinner) {
 	if len(winners) == 0 {
 		e.log.Warn("No election winners to store")
 		return
@@ -55,8 +77,8 @@ func (e *ElectionWinnersStore) StoreElectionWinners(winners []*eth.ElectionWinne
 	}
 }
 
-func (e *ElectionWinnersStore) RemoveOutdatedElectionWinners(timestamp uint64) {
-	e.log.Debug("Removing outdated election winners", "time", timestamp, "store", e.WinnersLength())
+func (e *ElectionStore) RemoveOutdatedElectionWinners(timestamp uint64) {
+	e.log.Debug("Removing outdated election winners", "time", timestamp, "store", e.winnersLength())
 
 	for k := range e.electionWinnersMapByTime {
 		if k < timestamp {
@@ -69,9 +91,9 @@ func (e *ElectionWinnersStore) RemoveOutdatedElectionWinners(timestamp uint64) {
 			delete(e.electionWinnersMapByParentSlot, k)
 		}
 	}
-	e.log.Debug("Removed outdated election winners", "map", e.WinnersLength())
+	e.log.Debug("Removed outdated election winners", "map", e.winnersLength())
 }
 
-func (e *ElectionWinnersStore) WinnersLength() string {
+func (e *ElectionStore) winnersLength() string {
 	return fmt.Sprintf("time: %d, parentSlot: %d", len(e.electionWinnersMapByTime), len(e.electionWinnersMapByParentSlot))
 }

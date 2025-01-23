@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
-	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
 )
@@ -72,15 +71,12 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
-
-	electionWinnersStore *election_store.ElectionWinnersStore
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
 	return &PipelineDeriver{
-		pipeline:             pipeline,
-		ctx:                  ctx,
-		electionWinnersStore: election_store.NewElectionWinnersStore(pipeline.log),
+		pipeline: pipeline,
+		ctx:      ctx,
 	}
 }
 
@@ -100,11 +96,11 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
-		// TODO: should this be a different store that stores based on parent slot?
-		electionWinner := d.electionWinnersStore.GetElectionWinnerByParentSlot(x.PendingSafe.Time)
+		electionWinner := d.pipeline.electionClient.GetElectionWinnerByParentSlot(x.PendingSafe.Time)
 
 		// TODO: what should we do if we don't have an election winner? (shouldn't happen)
 		if electionWinner == nil {
+			// TODO: this error is emitted on the first block, not necessary
 			d.pipeline.log.Error("No election winner found by parent slot in deriver", "time", x.PendingSafe.Time)
 			electionWinner = &eth.ElectionWinner{}
 		}
@@ -146,11 +142,6 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.ConfirmEngineReset()
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
-	case rollup.ElectionWinnerEvent:
-		d.pipeline.log.Debug("Adding election winners in deriver", "winners", x.ElectionWinners)
-		d.electionWinnersStore.StoreElectionWinners(x.ElectionWinners)
-	case rollup.ElectionWinnerOutdatedEvent:
-		d.electionWinnersStore.RemoveOutdatedElectionWinners(x.Time)
 	default:
 		return false
 	}
