@@ -161,7 +161,7 @@ func LargeL1Gaps(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	dp.DeployConfig.L1BlockTime = 4
-	dp.DeployConfig.L2BlockTime = 2
+	dp.DeployConfig.L2BlockTime = 4
 	dp.DeployConfig.SequencerWindowSize = 4
 	dp.DeployConfig.MaxSequencerDrift = 32
 	dp.DeployConfig.L2GenesisEcotoneTimeOffset = nil
