@@ -162,9 +162,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.7
+    /// @custom:semver 2.3.1-beta.8
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.7";
+        return "2.3.1-beta.8";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -379,42 +379,17 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @dev This function is not marked as view because it can used as simulations
     ///      Due to this we restrict to only be callable through the context of an eth_call
     function checkSequencerRules() external returns (bool) {
-        // TODO(spire): Add tests for this function when the logic is more flushed out in future PRs
-        // eth_call from field needs to be address(0)
-        if (msg.sender != address(0)) revert NotEthCall();
+        return _checkSequencerRules(address(0));
+    }
 
-        SequencerRule memory _rule;
-        bool _success;
-        bytes memory _returnData;
-        bytes32 _layout = _electionConfig.config.sequencerRulesLayout;
-
-        for (uint256 i; i < MAX_SEQUENCER_RULES; i++) {
-            if (_layout[i] == 0) continue;
-            _rule = _electionConfig.config.rules[i];
-
-            (_success, _returnData) = _rule.target.call(_rule.configCalldata);
-
-            // Check the desired assertion type
-            if (_rule.assertionType == SequencerAssertion.SUCCESS) {
-                if (!_success) return false;
-            } else if (_rule.assertionType == SequencerAssertion.REVERT) {
-                if (_success) return false;
-            } else if (_rule.assertionType == SequencerAssertion.LT) {
-                if (bytes32(_returnData) >= _rule.desiredRetdata) return false;
-            } else if (_rule.assertionType == SequencerAssertion.GT) {
-                if (bytes32(_returnData) <= _rule.desiredRetdata) return false;
-            } else if (_rule.assertionType == SequencerAssertion.LTE) {
-                if (bytes32(_returnData) > _rule.desiredRetdata) return false;
-            } else if (_rule.assertionType == SequencerAssertion.GTE) {
-                if (bytes32(_returnData) < _rule.desiredRetdata) return false;
-            } else if (_rule.assertionType == SequencerAssertion.EQ) {
-                if (bytes32(_returnData) != _rule.desiredRetdata) return false;
-            } else if (_rule.assertionType == SequencerAssertion.NEQ) {
-                if (bytes32(_returnData) == _rule.desiredRetdata) return false;
-            }
-        }
-
-        return true;
+    /// @notice Checks the sequencer
+    ///
+    /// @param _optionalInjectee The address to inject into the calldata
+    ///
+    /// @dev This function is not marked as view because it can used as simulations
+    ///      Due to this we restrict to only be callable through the context of an eth_call
+    function checkSequencerRules(address _optionalInjectee) external returns (bool) {
+        return _checkSequencerRules(_optionalInjectee);
     }
 
     /// @notice Fetches the election fallback list that is set
@@ -542,6 +517,59 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
                 mstore(dataPtr, or(clearedWord, injecteeWord))
             }
         }
+    }
+
+    /// @notice Checks the sequencer rules
+    ///
+    /// @dev This function is not marked as view because it can used as simulations
+    ///      Due to this we restrict to only be callable through the context of an eth_call
+    function _checkSequencerRules(address _optionalInjectee) internal returns (bool) {
+        // eth_call from field needs to be address(0)
+        if (msg.sender != address(0)) revert NotEthCall();
+
+        SequencerRule memory _rule;
+        bool _success;
+        bytes memory _returnData;
+        bytes memory _calldata;
+        address _target;
+        bytes32 _layout = _electionConfig.config.sequencerRulesLayout;
+
+        for (uint256 i; i < MAX_SEQUENCER_RULES; i++) {
+            if (_layout[i] == 0) continue;
+            _rule = _electionConfig.config.rules[i];
+            _target = _rule.target;
+
+            // To avoid an extra storage read we check the injectee address instead
+            // If the injectee is address zero we can assume there is no injectee
+            if (_optionalInjectee != address(0)) {
+                _calldata = injectAddressIntoCalldata(_rule.configCalldata, _rule.addressOffsets, _optionalInjectee);
+            } else {
+                _calldata = _rule.configCalldata;
+            }
+
+            (_success, _returnData) = _target.call(_calldata);
+
+            // Check the desired assertion type
+            if (_rule.assertionType == SequencerAssertion.SUCCESS) {
+                if (!_success) return false;
+            } else if (_rule.assertionType == SequencerAssertion.REVERT) {
+                if (_success) return false;
+            } else if (_rule.assertionType == SequencerAssertion.LT) {
+                if (bytes32(_returnData) >= _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.GT) {
+                if (bytes32(_returnData) <= _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.LTE) {
+                if (bytes32(_returnData) > _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.GTE) {
+                if (bytes32(_returnData) < _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.EQ) {
+                if (bytes32(_returnData) != _rule.desiredRetdata) return false;
+            } else if (_rule.assertionType == SequencerAssertion.NEQ) {
+                if (bytes32(_returnData) == _rule.desiredRetdata) return false;
+            }
+        }
+
+        return true;
     }
 
     /// @notice Sets a sequencer rule in the config

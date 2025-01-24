@@ -106,6 +106,7 @@ interface ISystemConfig {
         view
         returns (ElectionSystemConfig.ElectionFallback[] memory electionFallbackList_);
     function checkSequencerRules() external returns (bool);
+    function checkSequencerRules(address _optionalInjectee) external returns (bool);
     function injectAddressIntoCalldata(
         bytes memory _calldata,
         uint256[] memory _offsets,
