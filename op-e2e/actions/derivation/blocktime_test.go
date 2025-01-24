@@ -51,7 +51,6 @@ func BatchInLastPossibleBlocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
 	upgradesHelpers.ApplyDeltaTimeOffset(dp, deltaTimeOffset)
 	dp.DeployConfig.SequencerWindowSize = 4
-	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)

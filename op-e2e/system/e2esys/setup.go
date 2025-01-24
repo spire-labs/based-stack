@@ -90,6 +90,7 @@ func DefaultSystemConfig(t testing.TB) SystemConfig {
 	require.NoError(t, err)
 	deployConfig := config.DeployConfig.Copy()
 	deployConfig.L1GenesisBlockTimestamp = hexutil.Uint64(time.Now().Unix())
+	deployConfig.L2BlockTime = deployConfig.L1BlockTime
 	e2eutils.ApplyDeployConfigForks(deployConfig)
 	require.NoError(t, deployConfig.Check(testlog.Logger(t, log.LevelInfo)),
 		"Deploy config is invalid, do you need to run make devnet-allocs?")

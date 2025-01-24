@@ -25,7 +25,6 @@ func setupEIP4844Test(t helpers.Testing, log log.Logger) (*e2eutils.SetupData, *
 	dp.DeployConfig.L2GenesisDeltaTimeOffset = &genesisActivation
 	dp.DeployConfig.L2GenesisEcotoneTimeOffset = &genesisActivation
 
-	// TODO(spire): set those for the entire e2e env
 	dp.DeployConfig.L1BlockTime = 12
 	dp.DeployConfig.L2BlockTime = dp.DeployConfig.L1BlockTime
 
