@@ -94,7 +94,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 	}
 
 	// Sanity check if election winner has a valid timestamp
-	if electionWinner.ParentSlot != l2Parent.Time {
+	if electionWinner != (eth.ElectionWinner{}) && electionWinner.ParentSlot != l2Parent.Time {
 		return nil, NewResetError(fmt.Errorf("invalid election winner parent slot %d, expected %d", electionWinner.ParentSlot, l2Parent.Time))
 	}
 

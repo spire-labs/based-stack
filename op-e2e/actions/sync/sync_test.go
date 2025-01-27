@@ -25,6 +25,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	engine2 "github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/sync"
@@ -829,8 +830,9 @@ func TestELSyncTransitionsToCLSyncAfterNodeRestart(gt *testing.T) {
 
 	PrepareELSyncedNode(t, miner, sequencer, seqEng, verifier, verEng, seqEngCl, batcher, dp)
 
+	electionStore := election_store.NewElectionStore(logger)
 	// Create a new verifier which is essentially a new op-node with the sync mode of ELSync and default geth engine kind.
-	verifier = actionsHelpers.NewL2Verifier(t, captureLog, l1Cl, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, verifier.Eng, l1Cl.EthClient, sd.RollupCfg, &sync.Config{SyncMode: sync.ELSync}, actionsHelpers.DefaultVerifierCfg().SafeHeadListener, nil)
+	verifier = actionsHelpers.NewL2Verifier(t, captureLog, l1Cl, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, verifier.Eng, l1Cl.EthClient, sd.RollupCfg, &sync.Config{SyncMode: sync.ELSync}, actionsHelpers.DefaultVerifierCfg().SafeHeadListener, nil, electionStore)
 
 	// Build another 10 L1 blocks on the sequencer
 	for i := 0; i < 10; i++ {
@@ -873,8 +875,9 @@ func TestForcedELSyncCLAfterNodeRestart(gt *testing.T) {
 
 	PrepareELSyncedNode(t, miner, sequencer, seqEng, verifier, verEng, seqEngCl, batcher, dp)
 
+	electionStore := election_store.NewElectionStore(logger)
 	// Create a new verifier which is essentially a new op-node with the sync mode of ELSync and erigon engine kind.
-	verifier2 := actionsHelpers.NewL2Verifier(t, captureLog, l1Cl, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, verifier.Eng, l1Cl.EthClient, sd.RollupCfg, &sync.Config{SyncMode: sync.ELSync, SupportsPostFinalizationELSync: true}, actionsHelpers.DefaultVerifierCfg().SafeHeadListener, nil)
+	verifier2 := actionsHelpers.NewL2Verifier(t, captureLog, l1Cl, miner.BlobStore(), miner.BeaconClient(), altda.Disabled, verifier.Eng, l1Cl.EthClient, sd.RollupCfg, &sync.Config{SyncMode: sync.ELSync, SupportsPostFinalizationELSync: true}, actionsHelpers.DefaultVerifierCfg().SafeHeadListener, nil, electionStore)
 
 	// Build another 10 L1 blocks on the sequencer
 	for i := 0; i < 10; i++ {

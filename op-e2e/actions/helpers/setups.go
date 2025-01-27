@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/sync"
 	"github.com/ethereum-optimism/optimism/op-service/sources"
 	"github.com/ethereum-optimism/optimism/op-service/testlog"
@@ -53,7 +54,8 @@ func SetupVerifier(t Testing, sd *e2eutils.SetupData, log log.Logger,
 	jwtPath := e2eutils.WriteDefaultJWT(t)
 	engine := NewL2Engine(t, log.New("role", "verifier-engine"), sd.L2Cfg, sd.RollupCfg.Genesis.L1, jwtPath, EngineWithP2P())
 	engCl := engine.EngineClient(t, sd.RollupCfg)
-	verifier := NewL2Verifier(t, log.New("role", "verifier"), l1F, blobSrc, beaconClient, altda.Disabled, engCl, l1Client, sd.RollupCfg, syncCfg, cfg.SafeHeadListener, cfg.InteropBackend)
+	electionStore := election_store.NewElectionStore(log)
+	verifier := NewL2Verifier(t, log.New("role", "verifier"), l1F, blobSrc, beaconClient, altda.Disabled, engCl, l1Client, sd.RollupCfg, syncCfg, cfg.SafeHeadListener, cfg.InteropBackend, electionStore)
 	return engine, verifier
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-e2e/e2eutils"
 	"github.com/ethereum-optimism/optimism/op-node/node/safedb"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/sync"
 	"github.com/ethereum-optimism/optimism/op-service/sources"
 	"github.com/ethereum-optimism/optimism/op-service/testlog"
@@ -93,8 +94,9 @@ func TestDeriveChainFromNearL1Genesis(gt *testing.T) {
 	l2Cl, err := sources.NewEngineClient(seqEngine.RPCClient(), logger, nil, sources.EngineClientDefaultConfig(sd.RollupCfg))
 	require.NoError(gt, err)
 	l1Cl := miner.L1Client(t, sd.RollupCfg)
+	electionStore := election_store.NewElectionStore(logger)
 	verifier := helpers.NewL2Verifier(t, logger, l1Cl, miner.BlobStore(), miner.BeaconClient(), altda.Disabled,
-		l2Cl, l1Cl.EthClient, sequencer.RollupCfg, &sync.Config{}, safedb.Disabled, nil)
+		l2Cl, l1Cl.EthClient, sequencer.RollupCfg, &sync.Config{}, safedb.Disabled, nil, electionStore)
 	verifier.ActL2PipelineFull(t) // Should not get stuck in a reset loop forever
 	require.EqualValues(gt, l2BlockNum, seqEngine.L2Chain().CurrentSafeBlock().Number.Uint64())
 	require.EqualValues(gt, l2BlockNum, seqEngine.L2Chain().CurrentFinalBlock().Number.Uint64())
