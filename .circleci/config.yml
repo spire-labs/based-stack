@@ -1623,8 +1623,7 @@ workflows:
           name: op-e2e-action-tests<< matrix.variant >>
           matrix:
             parameters:
-              #variant: ["", "-l2oo", "-altda"]
-              # TODO(spire): Re-enable -l200 and -altda and fix the tests.
+              variant: ["", "-l2oo", "-altda"]
               variant: [""]
           module: op-e2e
           target: test-actions
