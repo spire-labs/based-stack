@@ -60,7 +60,7 @@ func (e *ElectionStore) GetElectionWinnerByParentSlot(timestamp uint64) eth.Elec
 	return *out
 }
 
-func (e *ElectionStore) GetLatestElectionWinner() eth.ElectionWinner {
+func (e *ElectionStore) GetLastWinnerInCurrentEpoch() eth.ElectionWinner {
 	out := e.latestWinner
 	if out == nil {
 		return eth.ElectionWinner{}

@@ -52,7 +52,7 @@ type AsyncGossiper interface {
 }
 
 type ElectionClient interface {
-	GetLatestElectionWinner() eth.ElectionWinner
+	GetLastWinnerInCurrentEpoch() eth.ElectionWinner
 	GetElectionWinnerByParentSlot(uint64) eth.ElectionWinner
 }
 
@@ -383,7 +383,7 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 				DerivedFrom:  eth.L1BlockRef{},
 			})
 		} else if d.latest == (BuildingState{}) {
-			latestElectionWinner := d.electionClient.GetLatestElectionWinner()
+			latestElectionWinner := d.electionClient.GetLastWinnerInCurrentEpoch()
 			if latestElectionWinner != (eth.ElectionWinner{}) {
 				if latestElectionWinner.ParentSlot != 0 && latestElectionWinner.ParentSlot < d.latestHead.Time {
 					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", latestElectionWinner.ParentSlot)

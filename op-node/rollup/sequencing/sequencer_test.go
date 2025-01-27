@@ -162,7 +162,7 @@ func (e *FakeElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) eth
 	return eth.ElectionWinner{}
 }
 
-func (e *FakeElectionClient) GetLatestElectionWinner() eth.ElectionWinner {
+func (e *FakeElectionClient) GetLastWinnerInCurrentEpoch() eth.ElectionWinner {
 	return eth.ElectionWinner{}
 }
 

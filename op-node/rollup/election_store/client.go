@@ -22,6 +22,6 @@ func (e *ElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) eth.Ele
 	return e.store.GetElectionWinnerByParentSlot(timestamp)
 }
 
-func (e *ElectionClient) GetLatestElectionWinner() eth.ElectionWinner {
-	return e.store.GetLatestElectionWinner()
+func (e *ElectionClient) GetLastWinnerInCurrentEpoch() eth.ElectionWinner {
+	return e.store.GetLastWinnerInCurrentEpoch()
 }

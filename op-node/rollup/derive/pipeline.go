@@ -48,7 +48,7 @@ type L2Source interface {
 }
 
 type ElectionClient interface {
-	GetLatestElectionWinner() eth.ElectionWinner
+	GetLastWinnerInCurrentEpoch() eth.ElectionWinner
 	GetElectionWinnerByParentSlot(uint64) eth.ElectionWinner
 	GetElectionWinnerByTime(uint64) eth.ElectionWinner
 }
