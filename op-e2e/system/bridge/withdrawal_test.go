@@ -17,7 +17,7 @@ func TestWithdrawals(t *testing.T) {
 
 	cfg := e2esys.DefaultSystemConfig(t)
 	cfg.DeployConfig.FinalizationPeriodSeconds = 2 // 2s finalization period
-	cfg.L1FinalizedDistance = 2                    // Finalize quick, don't make the proposer wait too long
+	cfg.L1FinalizedDistance = 2                    // Finalize quick don't make the proposer wait too long
 
 	sys, err := cfg.Start(t)
 	require.NoError(t, err, "Error starting up system")
