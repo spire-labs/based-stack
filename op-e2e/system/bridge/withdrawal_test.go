@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestWithdrawalss checks that a deposit and then withdrawal execution succeeds. It verifies the
+// TestWithdrawals checks that a deposit and then withdrawal execution succeeds. It verifies the
 // balance changes on L1 and L2 and has to include gas fees in the balance checks.
 // It does not check that the withdrawal can be executed prior to the end of the finality period.
-func TestWithdrawalss(t *testing.T) {
+func TestWithdrawals(t *testing.T) {
 	op_e2e.InitParallel(t)
 
 	cfg := e2esys.DefaultSystemConfig(t)

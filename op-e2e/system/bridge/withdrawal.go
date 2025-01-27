@@ -29,7 +29,7 @@ type CommonSystem interface {
 	TestAccount(int) *ecdsa.PrivateKey
 }
 
-// TestWithdrawalss checks that a deposit and then withdrawal execution succeeds. It verifies the
+// TestWithdrawals checks that a deposit and then withdrawal execution succeeds. It verifies the
 // balance changes on L1 and L2 and has to include gas fees in the balance checks.
 // It does not check that the withdrawal can be executed prior to the end of the finality period.
 func RunWithdrawalsTest(t *testing.T, sys CommonSystem) {
