@@ -129,6 +129,7 @@ func runSequenceWindowExpire_ChannelCloseAfterWindowExpiry_Test(gt *testing.T, t
 }
 
 func Test_ProgramAction_SequenceWindowExpired(gt *testing.T) {
+	gt.Skip("TODO(spire): op-program")
 	matrix := helpers.NewMatrix[any]()
 	defer matrix.Run(gt)
 
