@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/confdepth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
-	"github.com/ethereum-optimism/optimism/op-node/rollup/election_store"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_client"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/finality"
@@ -205,7 +205,7 @@ func NewDriver(
 	electionDeriver := election.NewElectionDeriver(driverCtx, beaconClient, elec, log)
 	sys.Register("election", electionDeriver, opts)
 
-	electionStore := election_store.NewElectionStore(log)
+	electionStore := election_client.NewElectionStore(log)
 	sys.Register("election-store", electionStore, opts)
 
 	ec := engine.NewEngineController(l2, log, metrics, cfg, syncCfg,
@@ -228,7 +228,7 @@ func NewDriver(
 	sys.Register("attributes-handler",
 		attributes.NewAttributesHandler(log, cfg, driverCtx, l2), opts)
 
-	electionClient := election_store.NewElectionClient(electionStore)
+	electionClient := election_client.NewElectionClient(electionStore)
 	derivationPipeline := derive.NewDerivationPipeline(log, cfg, verifConfDepth, l1Blobs, altDA, l2, electionClient, metrics)
 
 	sys.Register("pipeline",

@@ -1,4 +1,4 @@
-package election_store
+package election_client
 
 import (
 	"fmt"
