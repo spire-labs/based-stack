@@ -1624,7 +1624,6 @@ workflows:
           matrix:
             parameters:
               variant: ["", "-l2oo", "-altda"]
-              variant: [""]
           module: op-e2e
           target: test-actions
           parallelism: 1
