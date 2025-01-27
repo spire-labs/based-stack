@@ -62,6 +62,14 @@ func (ev ElectionWinnerEvent) String() string {
 	return "election-winner"
 }
 
+type ElectionWinnerOutdatedEvent struct {
+	Time uint64
+}
+
+func (ev ElectionWinnerOutdatedEvent) String() string {
+	return "election-winner-outdated"
+}
+
 type ElectionErrorEvent struct {
 	Err error
 }

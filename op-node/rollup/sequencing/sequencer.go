@@ -51,6 +51,11 @@ type AsyncGossiper interface {
 	Start()
 }
 
+type ElectionClient interface {
+	GetLastWinnerInCurrentEpoch() eth.ElectionWinner
+	GetElectionWinnerByParentSlot(uint64) eth.ElectionWinner
+}
+
 // SequencerActionEvent triggers the sequencer to start/seal a block, if active and ready to act.
 // This event is used to prioritize sequencer work over derivation work,
 // by emitting it before e.g. a derivation-pipeline step.
@@ -111,10 +116,11 @@ type Sequencer struct {
 	nextAction   time.Time
 	nextActionOK bool
 
-	latest          BuildingState
-	latestSealed    eth.L2BlockRef
-	latestHead      eth.L2BlockRef
-	electionWinners []*eth.ElectionWinner
+	latest       BuildingState
+	latestSealed eth.L2BlockRef
+	latestHead   eth.L2BlockRef
+
+	electionClient ElectionClient
 
 	latestHeadSet chan struct{}
 
@@ -130,6 +136,7 @@ func NewSequencer(driverCtx context.Context, log log.Logger, rollupCfg *rollup.C
 	listener SequencerStateListener,
 	conductor conductor.SequencerConductor,
 	asyncGossip AsyncGossiper,
+	electionClient ElectionClient,
 	metrics Metrics) *Sequencer {
 	return &Sequencer{
 		ctx:              driverCtx,
@@ -144,6 +151,7 @@ func NewSequencer(driverCtx context.Context, log log.Logger, rollupCfg *rollup.C
 		metrics:          metrics,
 		timeNow:          time.Now,
 		toBlockRef:       derive.PayloadToBlockRef,
+		electionClient:   electionClient,
 	}
 }
 
@@ -189,8 +197,6 @@ func (d *Sequencer) OnEvent(ev event.Event) bool {
 		d.onEngineResetConfirmedEvent(x)
 	case engine.ForkchoiceUpdateEvent:
 		d.onForkchoiceUpdate(x)
-	case rollup.ElectionWinnerEvent:
-		d.electionWinners = x.ElectionWinners
 	default:
 		return false
 	}
@@ -377,10 +383,10 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 				DerivedFrom:  eth.L1BlockRef{},
 			})
 		} else if d.latest == (BuildingState{}) {
-			if len(d.electionWinners) > 0 {
-				lastWinner := d.electionWinners[len(d.electionWinners)-1]
-				if lastWinner.ParentSlot != 0 && lastWinner.ParentSlot < d.latestHead.Time {
-					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", lastWinner.ParentSlot)
+			latestElectionWinner := d.electionClient.GetLastWinnerInCurrentEpoch()
+			if latestElectionWinner != (eth.ElectionWinner{}) {
+				if latestElectionWinner.ParentSlot != 0 && latestElectionWinner.ParentSlot < d.latestHead.Time {
+					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", latestElectionWinner.ParentSlot)
 					// We need to try retrying the build action when this check passes
 					// TODO(spire): This might be too aggressive of a delay time wise, we are getting a lot of logs
 					// but there are no reorgs and it seems to build correctly.
@@ -525,7 +531,10 @@ func (d *Sequencer) startBuildingBlock() {
 
 	log.Info("L2 Head is at block", "block", l2Head.Number, "time", l2Head.Time)
 
-	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), d.electionWinners)
+	electionWinner := d.electionClient.GetElectionWinnerByParentSlot(l2Head.Time)
+	log.Debug("Next election winner", "block", l2Head, "time", l2Head.Time, "electionWinner", electionWinner)
+
+	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), electionWinner)
 	if err != nil {
 		if errors.Is(err, derive.ErrTemporary) {
 			d.emitter.Emit(rollup.EngineTemporaryErrorEvent{Err: err})

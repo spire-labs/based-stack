@@ -71,8 +71,6 @@ type PipelineDeriver struct {
 	emitter event.Emitter
 
 	needAttributesConfirmation bool
-	electionWinners            []*eth.ElectionWinner
-	electionWinnersQueue       [][]*eth.ElectionWinner
 }
 
 func NewPipelineDeriver(ctx context.Context, pipeline *DerivationPipeline) *PipelineDeriver {
@@ -98,17 +96,11 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
-		if len(d.electionWinners) > 0 && len(d.electionWinnersQueue) > 0 {
-			lastWinner := d.electionWinners[len(d.electionWinners)-1]
-			if lastWinner.ParentSlot < x.PendingSafe.Time {
-				d.pipeline.log.Info("Updating election winners in deriver", "pendingSafe", x.PendingSafe.Time, "parentSlot", lastWinner.ParentSlot, "winners", d.electionWinners, "queue", d.electionWinnersQueue)
-				d.electionWinners = d.electionWinnersQueue[0]
-				d.electionWinnersQueue = d.electionWinnersQueue[1:]
-			}
-		}
+		electionWinner := d.pipeline.electionClient.GetElectionWinnerByParentSlot(x.PendingSafe.Time)
+		d.pipeline.log.Debug("Election winner", "winner", electionWinner, "pendingSafe", x.PendingSafe, "time", x.PendingSafe.Time)
 
 		preOrigin := d.pipeline.Origin()
-		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, d.electionWinners)
+		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, electionWinner)
 		postOrigin := d.pipeline.Origin()
 
 		if preOrigin != postOrigin {
@@ -144,14 +136,6 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.ConfirmEngineReset()
 	case ConfirmReceivedAttributesEvent:
 		d.needAttributesConfirmation = false
-	case rollup.ElectionWinnerEvent:
-		if len(d.electionWinners) == 0 {
-			d.pipeline.log.Info("Election winners empty, updating right away")
-			d.electionWinners = x.ElectionWinners
-			return true
-		}
-
-		d.electionWinnersQueue = append(d.electionWinnersQueue, x.ElectionWinners)
 	default:
 		return false
 	}

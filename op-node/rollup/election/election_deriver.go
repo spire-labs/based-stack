@@ -25,8 +25,9 @@ type ElectionDeriver struct {
 	emitter  event.Emitter
 	ctx      context.Context
 
-	l2Unsafe eth.L2BlockRef
-	l1Unsafe eth.L1BlockRef
+	l2Finalized eth.L2BlockRef
+	l2Unsafe    eth.L2BlockRef
+	l1Unsafe    eth.L1BlockRef
 
 	electionWinners []ElectionWinners
 
@@ -64,6 +65,12 @@ func (ed *ElectionDeriver) OnEvent(ev event.Event) bool {
 	case engine.PendingSafeUpdateEvent:
 		ed.l2Unsafe = x.Unsafe
 		ed.ProcessNewBlock()
+	case engine.ForkchoiceUpdateEvent:
+		// optimization: only emit event if the finalized L2 head has changed
+		if x.FinalizedL2Head.Number > ed.l2Finalized.Number {
+			ed.l2Finalized = x.FinalizedL2Head
+			ed.emitter.Emit(rollup.ElectionWinnerOutdatedEvent{Time: x.FinalizedL2Head.Time})
+		}
 	default:
 		return false
 	}
