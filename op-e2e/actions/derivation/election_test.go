@@ -21,8 +21,6 @@ import (
 func TestElectionType(gt *testing.T) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	dp := e2eutils.MakeDeployParams(t, actionsHelpers.DefaultRollupTestParams)
-	dp.DeployConfig.L1BlockTime = 12
-	dp.DeployConfig.L2BlockTime = 12
 	sd := e2eutils.Setup(t, dp, actionsHelpers.DefaultAlloc)
 	log := testlog.Logger(t, log.LevelDebug)
 	miner, l2Engine, sequencer, verifier, _, batcher := actionsHelpers.SetupElectionTest(t, dp, sd, log)
