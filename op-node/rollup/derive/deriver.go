@@ -97,16 +97,10 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
 		electionWinner := d.pipeline.electionClient.GetElectionWinnerByParentSlot(x.PendingSafe.Time)
-
-		// TODO: what should we do if we don't have an election winner? (shouldn't happen)
-		if electionWinner == nil {
-			// TODO: this error is emitted on the first block, not necessary
-			d.pipeline.log.Error("No election winner found by parent slot in deriver", "time", x.PendingSafe.Time)
-			electionWinner = &eth.ElectionWinner{}
-		}
+		d.pipeline.log.Debug("Election winner", "winner", electionWinner, "pendingSafe", x.PendingSafe, "time", x.PendingSafe.Time)
 
 		preOrigin := d.pipeline.Origin()
-		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, *electionWinner)
+		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, electionWinner)
 		postOrigin := d.pipeline.Origin()
 
 		if preOrigin != postOrigin {

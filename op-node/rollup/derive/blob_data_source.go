@@ -137,7 +137,7 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 	blockTime := ds.ref.Time
 	electionWinner := ds.electionClient.GetElectionWinnerByTime(blockTime)
 
-	if electionWinner == nil {
+	if electionWinner == (eth.ElectionWinner{}) {
 		ds.log.Warn("No election winner found for block", "blockTime", blockTime)
 		return data, hashes
 	}

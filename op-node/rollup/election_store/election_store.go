@@ -44,16 +44,28 @@ func (e *ElectionStore) OnEvent(ev event.Event) bool {
 	return true
 }
 
-func (e *ElectionStore) GetElectionWinnerByTime(timestamp uint64) *eth.ElectionWinner {
-	return e.electionWinnersMapByTime[timestamp]
+func (e *ElectionStore) GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner {
+	out := e.electionWinnersMapByTime[timestamp]
+	if out == nil {
+		return eth.ElectionWinner{}
+	}
+	return *out
 }
 
-func (e *ElectionStore) GetElectionWinnerByParentSlot(timestamp uint64) *eth.ElectionWinner {
-	return e.electionWinnersMapByParentSlot[timestamp]
+func (e *ElectionStore) GetElectionWinnerByParentSlot(timestamp uint64) eth.ElectionWinner {
+	out := e.electionWinnersMapByParentSlot[timestamp]
+	if out == nil {
+		return eth.ElectionWinner{}
+	}
+	return *out
 }
 
-func (e *ElectionStore) GetLatestElectionWinner() *eth.ElectionWinner {
-	return e.latestWinner
+func (e *ElectionStore) GetLatestElectionWinner() eth.ElectionWinner {
+	out := e.latestWinner
+	if out == nil {
+		return eth.ElectionWinner{}
+	}
+	return *out
 }
 
 // StoreElectionWinners stores election winners in the electionWinnersMap

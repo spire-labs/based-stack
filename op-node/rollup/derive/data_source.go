@@ -39,8 +39,7 @@ type AltDAInputFetcher interface {
 }
 
 type ElectionWinnersProvider interface {
-	// todo: return election winner or error
-	GetElectionWinnerByTime(timestamp uint64) *eth.ElectionWinner
+	GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner
 }
 
 // DataSourceFactory reads raw transactions from a given block & then filters for

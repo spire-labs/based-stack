@@ -154,16 +154,16 @@ var _ AsyncGossiper = (*FakeAsyncGossip)(nil)
 type FakeElectionClient struct {
 }
 
-func (e *FakeElectionClient) GetElectionWinnerByTime(timestamp uint64) *eth.ElectionWinner {
-	return &eth.ElectionWinner{}
+func (e *FakeElectionClient) GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner {
+	return eth.ElectionWinner{}
 }
 
-func (e *FakeElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) *eth.ElectionWinner {
-	return &eth.ElectionWinner{}
+func (e *FakeElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) eth.ElectionWinner {
+	return eth.ElectionWinner{}
 }
 
-func (e *FakeElectionClient) GetLatestElectionWinner() *eth.ElectionWinner {
-	return &eth.ElectionWinner{}
+func (e *FakeElectionClient) GetLatestElectionWinner() eth.ElectionWinner {
+	return eth.ElectionWinner{}
 }
 
 // TestSequencer_StartStop runs through start/stop state back and forth to test state changes.
@@ -659,7 +659,6 @@ func createSequencer(log log.Logger) (*Sequencer, *sequencerTestDeps) {
 	deps := &sequencerTestDeps{
 		cfg:           cfg,
 		attribBuilder: &FakeAttributesBuilder{cfg: cfg, rng: rng},
-		// electionClient:
 		l1OriginSelector: &FakeL1OriginSelector{
 			l1OriginFn: func(l2Head eth.L2BlockRef) (eth.L1BlockRef, error) {
 				panic("override this")

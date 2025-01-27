@@ -48,9 +48,9 @@ type L2Source interface {
 }
 
 type ElectionClient interface {
-	GetLatestElectionWinner() *eth.ElectionWinner
-	GetElectionWinnerByParentSlot(uint64) *eth.ElectionWinner
-	GetElectionWinnerByTime(uint64) *eth.ElectionWinner
+	GetLatestElectionWinner() eth.ElectionWinner
+	GetElectionWinnerByParentSlot(uint64) eth.ElectionWinner
+	GetElectionWinnerByTime(uint64) eth.ElectionWinner
 }
 
 // DerivationPipeline is updated with new L1 data, and the Step() function can be iterated on to generate attributes

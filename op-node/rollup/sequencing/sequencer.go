@@ -52,8 +52,8 @@ type AsyncGossiper interface {
 }
 
 type ElectionClient interface {
-	GetLatestElectionWinner() *eth.ElectionWinner
-	GetElectionWinnerByParentSlot(uint64) *eth.ElectionWinner
+	GetLatestElectionWinner() eth.ElectionWinner
+	GetElectionWinnerByParentSlot(uint64) eth.ElectionWinner
 }
 
 // SequencerActionEvent triggers the sequencer to start/seal a block, if active and ready to act.
@@ -384,7 +384,7 @@ func (d *Sequencer) onSequencerAction(x SequencerActionEvent) {
 			})
 		} else if d.latest == (BuildingState{}) {
 			latestElectionWinner := d.electionClient.GetLatestElectionWinner()
-			if latestElectionWinner != nil {
+			if latestElectionWinner != (eth.ElectionWinner{}) {
 				if latestElectionWinner.ParentSlot != 0 && latestElectionWinner.ParentSlot < d.latestHead.Time {
 					d.log.Info("Waiting for election winner update...", "latestHead", d.latestHead.Time, "parentSlot", latestElectionWinner.ParentSlot)
 					// We need to try retrying the build action when this check passes
@@ -532,14 +532,9 @@ func (d *Sequencer) startBuildingBlock() {
 	log.Info("L2 Head is at block", "block", l2Head.Number, "time", l2Head.Time)
 
 	electionWinner := d.electionClient.GetElectionWinnerByParentSlot(l2Head.Time)
+	log.Debug("Next election winner", "block", l2Head, "time", l2Head.Time, "electionWinner", electionWinner)
 
-	if electionWinner == nil {
-		d.log.Error("No election winner found by parent slot in sequencer", "time", l2Head.Time)
-		// d.emitter.Emit(rollup.ResetEvent{Err: fmt.Errorf("no election winner found for slot %d", l2Head.Time+12)})
-		return
-	}
-
-	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), *electionWinner)
+	attrs, err := d.attrBuilder.PreparePayloadAttributes(fetchCtx, l2Head, l1Origin.ID(), electionWinner)
 	if err != nil {
 		if errors.Is(err, derive.ErrTemporary) {
 			d.emitter.Emit(rollup.EngineTemporaryErrorEvent{Err: err})
