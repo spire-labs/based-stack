@@ -457,6 +457,7 @@ contract Deploy is Deployer {
         deployBatchInbox();
         deployBlockDutchAuction();
         deployAnchorStateRegistry();
+        deployDataAvailabilityChallenge();
     }
 
     /// @notice Initialize all of the implementations
