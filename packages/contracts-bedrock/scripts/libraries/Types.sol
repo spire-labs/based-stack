@@ -19,6 +19,6 @@ library Types {
         address ProtocolVersions;
         address SuperchainConfig;
         address BatchInbox;
-        address DataAvalabilityChallenge;
+        address DataAvailabilityChallenge;
     }
 }
