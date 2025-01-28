@@ -370,9 +370,9 @@ func TestAltDA_ChallengeResolved(gt *testing.T) {
 
 // DA storage service goes offline while sequencer keeps making blocks. When storage comes back online, it should be able to catch up.
 func TestAltDA_StorageError(gt *testing.T) {
-	if !e2eutils.UseAltDA() {
-		gt.Skip("AltDA is not enabled")
-	}
+	//if !e2eutils.UseAltDA() {
+	//	gt.Skip("AltDA is not enabled")
+	//}
 
 	t := helpers.NewDefaultTesting(gt)
 	harness := NewL2AltDA(t)
@@ -544,9 +544,9 @@ func TestAltDA_SequencerStalledMultiChallenges(gt *testing.T) {
 // Verify that finalization happens based on altDA windows.
 // based on l2_batcher_test.go L2Finalization
 func TestAltDA_Finalization(gt *testing.T) {
-	if !e2eutils.UseAltDA() {
-		gt.Skip("AltDA is not enabled")
-	}
+	//if !e2eutils.UseAltDA() {
+	//	gt.Skip("AltDA is not enabled")
+	//}
 	t := helpers.NewDefaultTesting(gt)
 	a := NewL2AltDA(t)
 
