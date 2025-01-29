@@ -883,7 +883,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(2));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -902,7 +902,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(0));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -921,7 +921,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(0));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -940,7 +940,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(2));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -959,7 +959,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(1));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -978,7 +978,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(0));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -997,7 +997,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(1));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -1016,7 +1016,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(1));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -1035,7 +1035,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(2));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -1054,7 +1054,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(0));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -1073,7 +1073,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(1));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -1092,7 +1092,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(2));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -1111,7 +1111,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(0));
         vm.mockCallRevert(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -1130,7 +1130,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(1));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -1150,7 +1150,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
         bytes memory returnData = abi.encode(uint256(0));
         vm.mockCall(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
         vm.expectCall(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)));
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -1169,7 +1169,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(1));
         vm.mockCallRevert(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -1201,7 +1201,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnData);
 
         // It should return false because the second rule is not met
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertFalse(systemConfig.checkSequencerRules());
     }
 
@@ -1235,7 +1235,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
         _mockAndExpect(address(1), abi.encodeWithSelector(ERC20.balanceOf.selector, address(0)), returnDataCallTwo);
 
         // It should return true because all rules are met
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules());
     }
 
@@ -1261,7 +1261,7 @@ contract SystemConfig_SequencerConfigRules_Test is SystemConfig_Init {
 
         bytes memory returnData = abi.encode(uint256(2));
         _mockAndExpect(address(0), abi.encodeWithSelector(ERC20.balanceOf.selector, _injectee), returnData);
-        vm.prank(CALLER);
+        vm.prank(CALLER, CALLER);
         assertTrue(systemConfig.checkSequencerRules(_injectee));
     }
 
