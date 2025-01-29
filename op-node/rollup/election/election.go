@@ -115,7 +115,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Unsafe
 	var electionWinners []*eth.ElectionWinner
 
 	// Initialize election winners
-	for i, validator := range validators {
+	for _, validator := range validators {
 		time, err := e.bc.GetTimeFromSlot(ctx, uint64(validator.Slot))
 		if err != nil {
 			return []*eth.ElectionWinner{}, err
@@ -127,28 +127,6 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Unsafe
 				return common.Address{}
 			}(),
 			Time: time,
-			ParentSlot: func() uint64 {
-				// TODO(spire): This breaks if L2 block time is not == L1 block time
-				// Should also not be hardcoded but gotten from the rollup config
-				if time == l2UnsafeParentTime+e.cfg.BlockTime {
-					return l2UnsafeParentTime
-				}
-
-				// Sanity check, if first check fails at first index we need to return 0
-				// To avoid out of bounds error
-				if i == 0 {
-					return 0
-				}
-
-				parent := electionWinners[i-1].ParentSlot
-
-				// Keep chaining zeroes, we dont want to increment
-				if parent == 0 {
-					return 0
-				}
-
-				return parent + e.cfg.BlockTime
-			}(),
 		}
 		electionWinners = append(electionWinners, &winner)
 	}

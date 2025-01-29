@@ -66,14 +66,11 @@ func TestAttributesQueue(t *testing.T) {
 	l2Fetcher := &testutils.MockL2Client{}
 	l2Fetcher.ExpectSystemConfigByL2Hash(safeHead.Hash, parentL1Cfg, nil)
 
-	electionWinner := eth.ElectionWinner{
-		Address:    common.Address{0xaa},
-		Time:       l1Info.InfoTime,
-		ParentSlot: l1Info.InfoTime,
-	}
+	winner := common.Address{0xaa}
+	electionClient := &MockElectionWinnersProvider{electionWinner: winner}
 
 	rollupCfg := rollup.Config{}
-	l1InfoTx, err := L1InfoDepositBytes(&rollupCfg, expectedL1Cfg, safeHead.SequenceNumber+1, l1Info, 0, common.Address{0xaa})
+	l1InfoTx, err := L1InfoDepositBytes(&rollupCfg, expectedL1Cfg, safeHead.SequenceNumber+1, l1Info, 0, winner)
 	require.NoError(t, err)
 	burnTx, err := BurnTxBytes(common.Address{0xaa})
 	require.NoError(t, err)
@@ -85,11 +82,11 @@ func TestAttributesQueue(t *testing.T) {
 		NoTxPool:              true,
 		GasLimit:              (*eth.Uint64Quantity)(&expectedL1Cfg.GasLimit),
 	}
-	attrBuilder := NewFetchingAttributesBuilder(cfg, l1Fetcher, l2Fetcher)
+	attrBuilder := NewFetchingAttributesBuilder(cfg, l1Fetcher, l2Fetcher, electionClient)
 
 	aq := NewAttributesQueue(testlog.Logger(t, log.LevelError), cfg, attrBuilder, nil)
 
-	actual, err := aq.createNextAttributes(context.Background(), &batch, safeHead, electionWinner)
+	actual, err := aq.createNextAttributes(context.Background(), &batch, safeHead)
 
 	require.NoError(t, err)
 	require.Equal(t, attrs, *actual)

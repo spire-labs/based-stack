@@ -46,7 +46,7 @@ func decodeID(data []byte) eth.BlockID {
 }
 
 func (m *FakeAttributesBuilder) PreparePayloadAttributes(ctx context.Context,
-	l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinner eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
+	l2Parent eth.L2BlockRef, epoch eth.BlockID) (attrs *eth.PayloadAttributes, err error) {
 	gasLimit := eth.Uint64Quantity(30_000_000)
 	attrs = &eth.PayloadAttributes{
 		Timestamp:             eth.Uint64Quantity(l2Parent.Time + m.cfg.BlockTime),
@@ -154,11 +154,7 @@ var _ AsyncGossiper = (*FakeAsyncGossip)(nil)
 type FakeElectionClient struct {
 }
 
-func (e *FakeElectionClient) GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner {
-	return eth.ElectionWinner{}
-}
-
-func (e *FakeElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) eth.ElectionWinner {
+func (e *FakeElectionClient) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
 	return eth.ElectionWinner{}
 }
 

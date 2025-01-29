@@ -96,11 +96,8 @@ func (d *PipelineDeriver) OnEvent(ev event.Event) bool {
 		}
 		d.pipeline.log.Trace("Derivation pipeline step", "onto_origin", d.pipeline.Origin())
 
-		electionWinner := d.pipeline.electionClient.GetElectionWinnerByParentSlot(x.PendingSafe.Time)
-		d.pipeline.log.Debug("Election winner", "winner", electionWinner, "pendingSafe", x.PendingSafe, "time", x.PendingSafe.Time)
-
 		preOrigin := d.pipeline.Origin()
-		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe, electionWinner)
+		attrib, err := d.pipeline.Step(d.ctx, x.PendingSafe)
 		postOrigin := d.pipeline.Origin()
 
 		if preOrigin != postOrigin {

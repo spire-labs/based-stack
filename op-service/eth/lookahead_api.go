@@ -13,9 +13,8 @@ type Validator struct {
 }
 
 type ElectionWinner struct {
-	Address    common.Address
-	Time       uint64
-	ParentSlot uint64
+	Address common.Address
+	Time    uint64
 }
 
 func (e ElectionWinner) String() string {

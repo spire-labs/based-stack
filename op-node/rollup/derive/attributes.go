@@ -25,16 +25,18 @@ type SystemConfigL2Fetcher interface {
 
 // FetchingAttributesBuilder fetches inputs for the building of L2 payload attributes on the fly.
 type FetchingAttributesBuilder struct {
-	rollupCfg *rollup.Config
-	l1        L1ReceiptsFetcher
-	l2        SystemConfigL2Fetcher
+	rollupCfg      *rollup.Config
+	l1             L1ReceiptsFetcher
+	l2             SystemConfigL2Fetcher
+	electionClient ElectionWinnersProvider
 }
 
-func NewFetchingAttributesBuilder(rollupCfg *rollup.Config, l1 L1ReceiptsFetcher, l2 SystemConfigL2Fetcher) *FetchingAttributesBuilder {
+func NewFetchingAttributesBuilder(rollupCfg *rollup.Config, l1 L1ReceiptsFetcher, l2 SystemConfigL2Fetcher, electionClient ElectionWinnersProvider) *FetchingAttributesBuilder {
 	return &FetchingAttributesBuilder{
-		rollupCfg: rollupCfg,
-		l1:        l1,
-		l2:        l2,
+		rollupCfg:      rollupCfg,
+		l1:             l1,
+		l2:             l2,
+		electionClient: electionClient,
 	}
 }
 
@@ -43,7 +45,7 @@ func NewFetchingAttributesBuilder(rollupCfg *rollup.Config, l1 L1ReceiptsFetcher
 // by setting NoTxPool=false as sequencer, or by appending batch transactions as verifier.
 // The severity of the error is returned; a crit=false error means there was a temporary issue, like a failed RPC or time-out.
 // A crit=true error means the input arguments are inconsistent or invalid.
-func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinner eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
+func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID) (attrs *eth.PayloadAttributes, err error) {
 	var l1Info eth.BlockInfo
 	var depositTxs []hexutil.Bytes
 	var seqNumber uint64
@@ -93,11 +95,6 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		seqNumber = l2Parent.SequenceNumber + 1
 	}
 
-	// Sanity check if election winner has a valid timestamp
-	if electionWinner != (eth.ElectionWinner{}) && electionWinner.ParentSlot != l2Parent.Time {
-		return nil, NewResetError(fmt.Errorf("invalid election winner parent slot %d, expected %d", electionWinner.ParentSlot, l2Parent.Time))
-	}
-
 	// Sanity check the L1 origin was correctly selected to maintain the time invariant between L1 and L2
 	nextL2Time := l2Parent.Time + ba.rollupCfg.BlockTime
 	if nextL2Time < l1Info.Time() {
@@ -121,6 +118,7 @@ func (ba *FetchingAttributesBuilder) PreparePayloadAttributes(ctx context.Contex
 		upgradeTxs = append(upgradeTxs, fjord...)
 	}
 
+	electionWinner := ba.electionClient.GetElectionWinner(nextL2Time)
 	l1InfoTx, err := L1InfoDepositBytes(ba.rollupCfg, sysConfig, seqNumber, l1Info, nextL2Time, electionWinner.Address)
 	if err != nil {
 		return nil, NewCriticalError(fmt.Errorf("failed to create l1InfoTx: %w", err))
