@@ -18,6 +18,12 @@ contract BatchCheckSeqConfig {
     bool[] memory results = new bool[](_addrs.length);
 
     for (uint256 i = 0; i < _addrs.length; i++) {
+      // If we passed in zero address we mark it as false and skip
+      if (_addrs[i] == address(0)) {
+        results[i] = false;
+        continue;
+      }
+
       results[i] = ISystemConfig(_sysConfig).checkSequencerRules(_addrs[i]);
     }
 
