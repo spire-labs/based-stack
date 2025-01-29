@@ -15,12 +15,14 @@ import (
 	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/consensus/misc/eip4844"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto/kzg4844"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/holiman/uint256"
 
@@ -912,7 +914,7 @@ func (m *SimpleTxManager) SuggestGasPriceCaps(ctx context.Context) (*big.Int, *b
 		return nil, nil, nil, errors.New("txmgr does not support pre-london blocks that do not have a base fee")
 	}
 
-	baseFee := head.BaseFee
+	baseFee := m.calcBaseFee(head)
 	m.metr.RecordBaseFee(baseFee)
 	m.metr.RecordTipCap(tip)
 
@@ -935,6 +937,44 @@ func (m *SimpleTxManager) SuggestGasPriceCaps(ctx context.Context) (*big.Int, *b
 		m.metr.RecordBlobBaseFee(blobFee)
 	}
 	return tip, baseFee, blobFee, nil
+}
+
+// calcBaseFee calculates the basefee of the header. Copied directly from go-ethereum code, as we need
+// to use the unchanged version for L1. TODO(spire): POC ONLY: we're using the default params here as they
+// do not change across our current envs
+func (m *SimpleTxManager) calcBaseFee(parent *types.Header) *big.Int {
+	parentGasTarget := parent.GasLimit / params.DefaultElasticityMultiplier
+	// If the parent gasUsed is the same as the target, the baseFee remains unchanged.
+	if parent.GasUsed == parentGasTarget {
+		return new(big.Int).Set(parent.BaseFee)
+	}
+
+	var (
+		num   = new(big.Int)
+		denom = new(big.Int)
+	)
+
+	if parent.GasUsed > parentGasTarget {
+		// If the parent block used more gas than its target, the baseFee should increase.
+		// max(1, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
+		num.SetUint64(parent.GasUsed - parentGasTarget)
+		num.Mul(num, parent.BaseFee)
+		num.Div(num, denom.SetUint64(parentGasTarget))
+		num.Div(num, denom.SetUint64(params.DefaultBaseFeeChangeDenominator))
+		baseFeeDelta := math.BigMax(num, common.Big1)
+
+		return num.Add(parent.BaseFee, baseFeeDelta)
+	} else {
+		// Otherwise if the parent block used less gas than its target, the baseFee should decrease.
+		// max(0, parentBaseFee * gasUsedDelta / parentGasTarget / baseFeeChangeDenominator)
+		num.SetUint64(parentGasTarget - parent.GasUsed)
+		num.Mul(num, parent.BaseFee)
+		num.Div(num, denom.SetUint64(parentGasTarget))
+		num.Div(num, denom.SetUint64(params.DefaultBaseFeeChangeDenominator))
+		baseFee := num.Sub(parent.BaseFee, num)
+
+		return math.BigMax(baseFee, common.Big0)
+	}
 }
 
 // checkLimits checks that the tip and baseFee have not increased by more than the configured multipliers
