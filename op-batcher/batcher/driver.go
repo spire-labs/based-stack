@@ -377,8 +377,8 @@ func (l *BatchSubmitter) loop() {
 	ticker := time.NewTicker(l.Config.PollInterval)
 	defer ticker.Stop()
 
-	publishAndWait := func() {
-		l.publishStateToL1(queue, receiptsCh, daGroup)
+	publishAndWait := func(targetBlockNum uint64) {
+		l.publishStateToL1(queue, receiptsCh, daGroup, targetBlockNum)
 		if !l.Txmgr.IsClosed() {
 			if l.Config.UseAltDA {
 				l.Log.Info("Waiting for altDA writes to complete...")
@@ -405,7 +405,7 @@ func (l *BatchSubmitter) loop() {
 			}
 			// By waiting until the L1 tip == target block number - 1, we can ensure that the batcher
 			// doesn't read blocks from the safe head too early, preventing overlapping txs from being sent.
-			shouldPublish := l.shouldPublish()
+			shouldPublish, targetBlockNum := l.shouldPublish()
 
 			if !shouldPublish {
 				l.Log.Info("Target slot not reached yet, don't fetch blocks from L2.")
@@ -423,11 +423,11 @@ func (l *BatchSubmitter) loop() {
 				}
 				// on reorg we want to publish all pending state then wait until each result clears before resetting
 				// the state.
-				publishAndWait()
+				publishAndWait(targetBlockNum)
 				l.clearState(l.shutdownCtx)
 				continue
 			}
-			l.publishStateToL1(queue, receiptsCh, daGroup)
+			l.publishStateToL1(queue, receiptsCh, daGroup, targetBlockNum)
 		case <-l.shutdownCtx.Done():
 			if l.Txmgr.IsClosed() {
 				l.Log.Info("Txmgr is closed, remaining channel data won't be sent")
@@ -443,7 +443,12 @@ func (l *BatchSubmitter) loop() {
 					l.Log.Error("Error closing the channel manager on shutdown", "err", err)
 				}
 			}
-			publishAndWait()
+			shouldPublish, targetBlockNum := l.shouldPublish()
+			if !shouldPublish {
+				l.Log.Info("Shouldn't publish in this slot, returning")
+				return
+			}
+			publishAndWait(targetBlockNum)
 			l.Log.Info("Finished publishing all remaining channel data")
 			return
 		}
@@ -484,7 +489,7 @@ func (l *BatchSubmitter) waitNodeSync() error {
 
 // publishStateToL1 queues one tx to be published to the L1, returning after a tx was published
 // or if there was an error queing the data.
-func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group) {
+func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group, targetBlockNum uint64) {
 	// if the txmgr is closed, we stop the transaction sending
 	if l.Txmgr.IsClosed() {
 		l.Log.Info("Txmgr is closed, aborting state publishing")
@@ -495,7 +500,7 @@ func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh 
 		return
 	}
 
-	err := l.publishTxToL1(queue, receiptsCh, daGroup)
+	err := l.publishTxToL1(queue, receiptsCh, daGroup, targetBlockNum)
 	if err != nil {
 		if err != io.EOF {
 			l.Log.Error("Error publishing tx to l1", "err", err)
@@ -545,7 +550,7 @@ func (l *BatchSubmitter) clearState(ctx context.Context) {
 }
 
 // publishTxToL1 submits a single state tx to the L1
-func (l *BatchSubmitter) publishTxToL1(queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group) error {
+func (l *BatchSubmitter) publishTxToL1(queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group, targetBlockNum uint64) error {
 	// Collect next transaction data. This pulls data out of the channel, so we need to make sure
 	// to put it back if ever da or txmgr requests fail, by calling l.recordFailedDARequest/recordFailedTx.
 	txdata, err := l.state.TxData(l.lastL1Tip.ID())
@@ -558,7 +563,7 @@ func (l *BatchSubmitter) publishTxToL1(queue *txmgr.Queue[txRef], receiptsCh cha
 		return err
 	}
 
-	if err = l.sendTransaction(txdata, queue, receiptsCh, daGroup); err != nil {
+	if err = l.sendTransaction(txdata, queue, receiptsCh, daGroup, targetBlockNum); err != nil {
 		return fmt.Errorf("BatchSubmitter.sendTransaction failed: %w", err)
 	}
 	return nil
@@ -596,7 +601,7 @@ func (l *BatchSubmitter) cancelBlockingTx(queue *txmgr.Queue[txRef], receiptsCh 
 	var err error
 	if isBlockedBlob {
 		candidate = l.calldataTxCandidate([]byte{})
-	} else if candidate, err = l.blobTxCandidate(emptyTxData); err != nil {
+	} else if candidate, err = l.blobTxCandidate(emptyTxData, 0); err != nil {
 		panic(err) // this error should not happen
 	}
 	l.Log.Warn("sending a cancellation transaction to unblock txpool", "blocked_blob", isBlockedBlob)
@@ -644,7 +649,7 @@ func (l *BatchSubmitter) publishToAltDAAndL1(txdata txData, queue *txmgr.Queue[t
 // sendTransaction creates & queues for sending a transaction to the batch inbox address with the given `txData`.
 // This call will block if the txmgr queue is at the  max-pending limit.
 // The method will block if the queue's MaxPendingTransactions is exceeded.
-func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group) error {
+func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group, targetBlockNum uint64) error {
 	var err error
 
 	// if Alt DA is enabled we post the txdata to the DA Provider and replace it with the commitment.
@@ -656,7 +661,7 @@ func (l *BatchSubmitter) sendTransaction(txdata txData, queue *txmgr.Queue[txRef
 
 	var candidate *txmgr.TxCandidate
 	if txdata.asBlob {
-		if candidate, err = l.blobTxCandidate(txdata); err != nil {
+		if candidate, err = l.blobTxCandidate(txdata, targetBlockNum); err != nil {
 			// We could potentially fall through and try a calldata tx instead, but this would
 			// likely result in the chain spending more in gas fees than it is tuned for, so best
 			// to just fail. We do not expect this error to trigger unless there is a serious bug
@@ -683,17 +688,15 @@ func (l *BatchSubmitter) sendTx(txdata txData, isCancel bool, candidate *txmgr.T
 	queue.Send(txRef{id: txdata.ID(), isCancel: isCancel, isBlob: txdata.asBlob}, *candidate, receiptsCh)
 }
 
-func (l *BatchSubmitter) encodeSubmitTx(l1BlockNumber uint64) ([]byte, error) {
+func (l *BatchSubmitter) encodeSubmitTx(targetBlockNum uint64) ([]byte, error) {
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	submitMethod, ok := batchInboxAbi.Methods["submit"]
 	if !ok {
 		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
 	}
 
-	// The current L1 block is already built, so target the next block
-	nextBlockNumber := l1BlockNumber + 1
 	// The submit method is expecting a uint256, so use big int
-	l1BlockNumberBigInt := new(big.Int).SetUint64(nextBlockNumber)
+	l1BlockNumberBigInt := new(big.Int).SetUint64(targetBlockNum)
 
 	// encode the target L1 block and attempt to submit the batch
 	txData, err := submitMethod.Inputs.Pack(l1BlockNumberBigInt)
@@ -706,7 +709,7 @@ func (l *BatchSubmitter) encodeSubmitTx(l1BlockNumber uint64) ([]byte, error) {
 	return append(submitSel[:], txData...), nil
 }
 
-func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error) {
+func (l *BatchSubmitter) blobTxCandidate(data txData, targetBlockNum uint64) (*txmgr.TxCandidate, error) {
 	blobs, err := data.Blobs()
 	if err != nil {
 		return nil, fmt.Errorf("generating blobs for tx data: %w", err)
@@ -717,15 +720,7 @@ func (l *BatchSubmitter) blobTxCandidate(data txData) (*txmgr.TxCandidate, error
 		"size", size, "last_size", lastSize, "num_blobs", len(blobs))
 	l.Metr.RecordBlobUsedBytes(lastSize)
 
-	// TODO(spire): enable other DA sources
-	// Get the current L1 block number
-	l1Tip, err := l.l1Tip(l.killCtx)
-	if err != nil {
-		return nil, fmt.Errorf("getting L1 tip: %w", err)
-	}
-	l1BlockNumber := l1Tip.Number
-
-	fullTxData, err := l.encodeSubmitTx(l1BlockNumber)
+	fullTxData, err := l.encodeSubmitTx(targetBlockNum)
 	if err != nil {
 		return nil, fmt.Errorf("encoding submit transaction: %w", err)
 	}
@@ -853,15 +848,15 @@ func (l *BatchSubmitter) generateTargetTimesamps(epoch uint64) ([]uint64, error)
 	return out, nil
 }
 
-func (l *BatchSubmitter) shouldPublish() bool {
+func (l *BatchSubmitter) shouldPublish() (bool, uint64) {
 	if err := l.updateL1Tip(); err != nil {
 		l.Log.Warn("Error updating l1 tip", "err", err)
-		return false
+		return false, 0
 	}
 
 	if l.lastL1Tip == l.lastSubmit {
 		l.Log.Info("Already submitted in this slot")
-		return false
+		return false, 0
 	}
 
 	// Check if the Sequencer has processed the most recent L1 block. If so, we can
@@ -871,17 +866,17 @@ func (l *BatchSubmitter) shouldPublish() bool {
 	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
 	if err != nil {
 		l.Log.Warn("Error getting rollup client", "error", err)
-		return false
+		return false, 0
 	}
 
 	syncStatus, err := rollupClient.SyncStatus(ctx)
 	if err != nil {
 		l.Log.Warn("Error fetching sync status", "error", err)
-		return false
+		return false, 0
 	}
 	if syncStatus.HeadL1 == (eth.L1BlockRef{}) {
 		l.Log.Warn("Sequencer has not prosessed the most recent L1 block.")
-		return false
+		return false, 0
 	}
 
 	// TODO(Spire): use config here
@@ -890,14 +885,14 @@ func (l *BatchSubmitter) shouldPublish() bool {
 	epoch, err := l.BeaconClient.GetEpochNumber(ctx, nextL1SlotTimestamp)
 	if err != nil {
 		l.Log.Warn("Error fetching epoch number", "error", err)
-		return false
+		return false, 0
 	}
 
 	if epoch >= l.nextEpochToCheck {
 		targetTimestamps, err := l.generateTargetTimesamps(epoch)
 		if err != nil {
 			l.Log.Warn("Error while generating target timestamps", "error", err)
-			return false
+			return false, 0
 		}
 
 		l.targetTimestamps = targetTimestamps
@@ -912,16 +907,17 @@ func (l *BatchSubmitter) shouldPublish() bool {
 
 	if len(l.targetTimestamps) == 0 {
 		l.Log.Debug("Target timestamps empty")
-		return false
+		return false, 0
 	}
 
 	if nextL1SlotTimestamp == l.targetTimestamps[0] {
-		l.Log.Info("Should publish in the next slot", "timestamp", nextL1SlotTimestamp, "number", l.lastL1Tip.Number+1)
-		return true
+		targetBlockNum := l.lastL1Tip.Number + 1
+		l.Log.Info("Should publish in the next slot", "timestamp", nextL1SlotTimestamp, "number", targetBlockNum)
+		return true, targetBlockNum
 	}
 
 	l.Log.Debug("Next slot timestamp is not target slot", "timestamp", nextL1SlotTimestamp, "target", l.targetTimestamps[0])
-	return false
+	return false, 0
 }
 
 func logFields(xs ...any) (fs []any) {
