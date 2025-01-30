@@ -199,10 +199,6 @@ func (e *Election) GetBatchCheckSeqConfig(ctx context.Context, potentialWinners 
 
 	constructorArgs, err := parsedABI.Pack("", e.cfg.L1SystemConfigAddress, potentialWinners)
 
-	e.log.Info("Potential winners", "winners", potentialWinners)
-	e.log.Info("Sys config address", "address", e.cfg.L1SystemConfigAddress)
-	e.log.Info("Address zero", "address", common.Address{})
-
 	if err != nil {
 		return []bool{}, err
 	}
@@ -213,7 +209,6 @@ func (e *Election) GetBatchCheckSeqConfig(ctx context.Context, potentialWinners 
 	encodedReturnData, err := e.l1.Call(ctx, toBatchCallMsg(common.Address{}, creationCode), blockNumber)
 
 	if err != nil {
-		e.log.Error("Failed to get config results", "err", err)
 		// If we cant determien the config results, we cant determine the winners
 		return []bool{}, err
 	}
@@ -236,8 +231,6 @@ func (e *Election) GetBatchCheckSeqConfig(ctx context.Context, potentialWinners 
 	}
 
 	decoded, err := args.Unpack(encodedReturnDataAsBytes)
-
-	e.log.Info("Decoded results", "results", decoded)
 
 	if err != nil {
 		return []bool{}, err
