@@ -72,7 +72,7 @@
   "daBondSize": 1000000,
   "daResolverRefundPercentage": 0,
   "minimumPreconfirmationCollateral": 0,
-  "electionFallbackList": "0x0103050000000000000000000000000000000000000000000000000000000000",
+  "electionFallbackList": "0x0203050000000000000000000000000000000000000000000000000000000000",
   "genesisAllocation": {
     "targets": [
       "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",

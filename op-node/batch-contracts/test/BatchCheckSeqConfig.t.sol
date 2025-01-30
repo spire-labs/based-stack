@@ -54,4 +54,18 @@ contract Unit_BatchCheckSeqConfig is Utils {
     assertFalse(results[1]);
     assertEq(results.length, 2);
   }
+
+  /// @dev Tests that the BatchCheckSeqConfig contract returns false if no address is passed in
+  function test_zeroAddressIsSkipped_succeeds() public {
+    address[] memory addrs = new address[](1);
+    addrs[0] = address(0);
+
+    BatchCheckSeqConfig batchCheckSeqConfig = new BatchCheckSeqConfig(sysConfig, addrs);
+
+    bytes memory retdata = address(batchCheckSeqConfig).code;
+    bool[] memory results = abi.decode(retdata, (bool[]));
+
+    assertFalse(results[0]);
+    assertEq(results.length, 1);
+  }
 }
