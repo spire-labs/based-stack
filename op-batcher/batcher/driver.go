@@ -482,34 +482,27 @@ func (l *BatchSubmitter) waitNodeSync() error {
 	return dial.WaitRollupSync(l.shutdownCtx, l.Log, rollupClient, l1TargetBlock, time.Second*12)
 }
 
-// publishStateToL1 queues up all pending TxData to be published to the L1, returning when there is
-// no more data to queue for publishing or if there was an error queing the data.
+// publishStateToL1 queues one tx to be published to the L1, returning after a tx was published
+// or if there was an error queing the data.
 func (l *BatchSubmitter) publishStateToL1(queue *txmgr.Queue[txRef], receiptsCh chan txmgr.TxReceipt[txRef], daGroup *errgroup.Group) {
-	for {
-		// if the txmgr is closed, we stop the transaction sending
-		if l.Txmgr.IsClosed() {
-			l.Log.Info("Txmgr is closed, aborting state publishing")
-			return
-		}
-		if !l.checkTxpool(queue, receiptsCh) {
-			l.Log.Info("txpool state is not good, aborting state publishing")
-			return
-		}
-		// TODO(spire): we should skip this check, we should ensure that a tx is actually submitted in a correct slot.
-		if err := l.updateL1Tip(); err != nil {
-			l.Log.Error("Failed to query L1 tip", "err", err)
-			return
-		}
-
-		err := l.publishTxToL1(queue, receiptsCh, daGroup)
-		if err != nil {
-			if err != io.EOF {
-				l.Log.Error("Error publishing tx to l1", "err", err)
-			}
-			return
-		}
-		l.lastSubmit = l.lastL1Tip
+	// if the txmgr is closed, we stop the transaction sending
+	if l.Txmgr.IsClosed() {
+		l.Log.Info("Txmgr is closed, aborting state publishing")
+		return
 	}
+	if !l.checkTxpool(queue, receiptsCh) {
+		l.Log.Info("txpool state is not good, aborting state publishing")
+		return
+	}
+
+	err := l.publishTxToL1(queue, receiptsCh, daGroup)
+	if err != nil {
+		if err != io.EOF {
+			l.Log.Error("Error publishing tx to l1", "err", err)
+		}
+		return
+	}
+	l.lastSubmit = l.lastL1Tip
 }
 
 // clearState clears the state of the channel manager
@@ -877,6 +870,7 @@ func (l *BatchSubmitter) shouldPublish() bool {
 
 	rollupClient, err := l.EndpointProvider.RollupClient(ctx)
 	if err != nil {
+		l.Log.Warn("Error getting rollup client", "error", err)
 		return false
 	}
 
@@ -917,6 +911,7 @@ func (l *BatchSubmitter) shouldPublish() bool {
 	}
 
 	if len(l.targetTimestamps) == 0 {
+		l.Log.Debug("Target timestamps empty")
 		return false
 	}
 
@@ -925,6 +920,7 @@ func (l *BatchSubmitter) shouldPublish() bool {
 		return true
 	}
 
+	l.Log.Debug("Next slot timestamp is not target slot", "timestamp", nextL1SlotTimestamp, "target", l.targetTimestamps[0])
 	return false
 }
 
