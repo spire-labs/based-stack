@@ -39,40 +39,38 @@ type AltDAInputFetcher interface {
 }
 
 type ElectionWinnersProvider interface {
-	GetElectionWinner(timestamp uint64) eth.ElectionWinner
+	GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner
 }
 
 // DataSourceFactory reads raw transactions from a given block & then filters for
 // batch submitter transactions.
 // This is not a stage in the pipeline, but a wrapper for another stage in the pipeline
 type DataSourceFactory struct {
-	log                  log.Logger
-	dsCfg                DataSourceConfig
-	fetcher              L1Fetcher
-	blobsFetcher         L1BlobsFetcher
-	altDAFetcher         AltDAInputFetcher
-	ecotoneTime          *uint64
-	emitter              event.Emitter
-	electionWinners      []*eth.ElectionWinner
-	electionWinnersQueue [][]*eth.ElectionWinner
+	log            log.Logger
+	dsCfg          DataSourceConfig
+	fetcher        L1Fetcher
+	blobsFetcher   L1BlobsFetcher
+	altDAFetcher   AltDAInputFetcher
+	ecotoneTime    *uint64
+	emitter        event.Emitter
+	electionClient ElectionWinnersProvider
 }
 
-func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher) *DataSourceFactory {
+func NewDataSourceFactory(log log.Logger, cfg *rollup.Config, fetcher L1Fetcher, blobsFetcher L1BlobsFetcher, altDAFetcher AltDAInputFetcher, electionClient ElectionWinnersProvider) *DataSourceFactory {
 	config := DataSourceConfig{
 		l1Signer:          cfg.L1Signer(),
 		batchInboxAddress: cfg.BatchInboxContractAddress,
 		altDAEnabled:      cfg.AltDAEnabled(),
 	}
 	return &DataSourceFactory{
-		log:                  log,
-		dsCfg:                config,
-		fetcher:              fetcher,
-		blobsFetcher:         blobsFetcher,
-		altDAFetcher:         altDAFetcher,
-		ecotoneTime:          cfg.EcotoneTime,
-		emitter:              nil,
-		electionWinners:      []*eth.ElectionWinner{},
-		electionWinnersQueue: [][]*eth.ElectionWinner{},
+		log:            log,
+		dsCfg:          config,
+		fetcher:        fetcher,
+		blobsFetcher:   blobsFetcher,
+		altDAFetcher:   altDAFetcher,
+		ecotoneTime:    cfg.EcotoneTime,
+		emitter:        nil,
+		electionClient: electionClient,
 	}
 }
 
@@ -85,7 +83,7 @@ func (ds *DataSourceFactory) OpenData(ctx context.Context, ref eth.L1BlockRef, b
 		if ds.blobsFetcher == nil {
 			return nil, fmt.Errorf("ecotone upgrade active but beacon endpoint not configured")
 		}
-		src = NewBlobDataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ds.blobsFetcher, ref, batcherAddr, ds)
+		src = NewBlobDataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ds.blobsFetcher, ref, batcherAddr, ds.electionClient)
 	} else {
 		src = NewCalldataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ref, batcherAddr)
 	}
@@ -138,46 +136,4 @@ func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, c
 
 func addressFromTopic(topic common.Hash) common.Address {
 	return common.Address(topic.Bytes()[12:])
-}
-
-func (ds *DataSourceFactory) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
-	if len(ds.electionWinners) > 0 && len(ds.electionWinnersQueue) > 0 {
-		lastWinner := ds.electionWinners[len(ds.electionWinners)-1]
-		if lastWinner.Time < timestamp {
-			ds.log.Info("Updating election winners in data source factory", "lastWinnerTime", lastWinner.Time, "timestamp", timestamp)
-			ds.electionWinners = ds.electionWinnersQueue[0]
-			ds.electionWinnersQueue = ds.electionWinnersQueue[1:]
-		}
-	}
-
-	var out eth.ElectionWinner
-	for _, winner := range ds.electionWinners {
-		if winner.Time == timestamp {
-			out = *winner
-		}
-	}
-	if out == (eth.ElectionWinner{}) {
-		ds.log.Warn("No election winner found for timestamp", "timestamp", timestamp, "stored", ds.electionWinners, "queue", ds.electionWinnersQueue)
-	}
-
-	return out
-}
-
-func (ds *DataSourceFactory) AttachEmitter(em event.Emitter) {
-	ds.emitter = em
-}
-
-func (ds *DataSourceFactory) OnEvent(ev event.Event) bool {
-	switch x := ev.(type) {
-	case rollup.ElectionWinnerEvent:
-		if len(ds.electionWinners) == 0 {
-			ds.electionWinners = x.ElectionWinners
-			return true
-		}
-
-		ds.electionWinnersQueue = append(ds.electionWinnersQueue, x.ElectionWinners)
-	default:
-		return false
-	}
-	return true
 }

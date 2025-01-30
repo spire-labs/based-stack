@@ -46,7 +46,7 @@ func decodeID(data []byte) eth.BlockID {
 }
 
 func (m *FakeAttributesBuilder) PreparePayloadAttributes(ctx context.Context,
-	l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinners []*eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
+	l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinner eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error) {
 	gasLimit := eth.Uint64Quantity(30_000_000)
 	attrs = &eth.PayloadAttributes{
 		Timestamp:             eth.Uint64Quantity(l2Parent.Time + m.cfg.BlockTime),
@@ -150,6 +150,21 @@ func (f *FakeAsyncGossip) Start() {
 }
 
 var _ AsyncGossiper = (*FakeAsyncGossip)(nil)
+
+type FakeElectionClient struct {
+}
+
+func (e *FakeElectionClient) GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner {
+	return eth.ElectionWinner{}
+}
+
+func (e *FakeElectionClient) GetElectionWinnerByParentSlot(timestamp uint64) eth.ElectionWinner {
+	return eth.ElectionWinner{}
+}
+
+func (e *FakeElectionClient) GetLastWinnerInCurrentEpoch() eth.ElectionWinner {
+	return eth.ElectionWinner{}
+}
 
 // TestSequencer_StartStop runs through start/stop state back and forth to test state changes.
 func TestSequencer_StartStop(t *testing.T) {
@@ -615,6 +630,7 @@ type sequencerTestDeps struct {
 	seqState         *BasicSequencerStateListener
 	conductor        *FakeConductor
 	asyncGossip      *FakeAsyncGossip
+	electionClient   *FakeElectionClient
 }
 
 func createSequencer(log log.Logger) (*Sequencer, *sequencerTestDeps) {
@@ -648,13 +664,15 @@ func createSequencer(log log.Logger) (*Sequencer, *sequencerTestDeps) {
 				panic("override this")
 			},
 		},
-		seqState:    &BasicSequencerStateListener{},
-		conductor:   &FakeConductor{},
-		asyncGossip: &FakeAsyncGossip{},
+		seqState:       &BasicSequencerStateListener{},
+		conductor:      &FakeConductor{},
+		asyncGossip:    &FakeAsyncGossip{},
+		electionClient: &FakeElectionClient{},
 	}
 	seq := NewSequencer(context.Background(), log, cfg, deps.attribBuilder,
 		deps.l1OriginSelector, deps.seqState, deps.conductor,
-		deps.asyncGossip, metrics.NoopMetrics)
+		deps.asyncGossip, deps.electionClient,
+		metrics.NoopMetrics)
 	// We create mock payloads, with the epoch-id as tx[0], rather than proper L1Block-info deposit tx.
 	seq.toBlockRef = func(rollupCfg *rollup.Config, payload *eth.ExecutionPayload) (eth.L2BlockRef, error) {
 		return eth.L2BlockRef{

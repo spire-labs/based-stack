@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/confdepth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_client"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/finality"
@@ -74,7 +75,7 @@ type L2Chain interface {
 
 type DerivationPipeline interface {
 	Reset()
-	Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinners []*eth.ElectionWinner) (*derive.AttributesWithParent, error)
+	Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinner eth.ElectionWinner) (*derive.AttributesWithParent, error)
 	Origin() eth.L1BlockRef
 	DerivationReady() bool
 	ConfirmEngineReset()
@@ -204,6 +205,9 @@ func NewDriver(
 	electionDeriver := election.NewElectionDeriver(driverCtx, beaconClient, elec, log)
 	sys.Register("election", electionDeriver, opts)
 
+	electionStore := election_client.NewElectionStore(log)
+	sys.Register("election-store", electionStore, opts)
+
 	ec := engine.NewEngineController(l2, log, metrics, cfg, syncCfg,
 		sys.Register("engine-controller", nil, opts))
 
@@ -224,12 +228,11 @@ func NewDriver(
 	sys.Register("attributes-handler",
 		attributes.NewAttributesHandler(log, cfg, driverCtx, l2), opts)
 
-	derivationPipeline := derive.NewDerivationPipeline(log, cfg, verifConfDepth, l1Blobs, altDA, l2, metrics)
+	electionClient := election_client.NewElectionClient(electionStore)
+	derivationPipeline := derive.NewDerivationPipeline(log, cfg, verifConfDepth, l1Blobs, altDA, l2, electionClient, metrics)
 
 	sys.Register("pipeline",
 		derive.NewPipelineDeriver(driverCtx, derivationPipeline), opts)
-
-	sys.Register("data-source", derivationPipeline.DataSrc, opts)
 
 	syncDeriver := &SyncDeriver{
 		Derivation:     derivationPipeline,
@@ -259,7 +262,7 @@ func NewDriver(
 		sequencerConfDepth := confdepth.NewConfDepth(driverCfg.SequencerConfDepth, statusTracker.L1Head, l1)
 		findL1Origin := sequencing.NewL1OriginSelector(log, cfg, sequencerConfDepth)
 		sequencer = sequencing.NewSequencer(driverCtx, log, cfg, attrBuilder, findL1Origin,
-			sequencerStateListener, sequencerConductor, asyncGossiper, metrics)
+			sequencerStateListener, sequencerConductor, asyncGossiper, electionClient, metrics)
 		sys.Register("sequencer", sequencer, opts)
 	} else {
 		sequencer = sequencing.DisabledSequencer{}

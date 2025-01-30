@@ -21,6 +21,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup/derive"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/election"
+	"github.com/ethereum-optimism/optimism/op-node/rollup/election_client"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/engine"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/event"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/finality"
@@ -94,7 +95,7 @@ type safeDB interface {
 func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 	blobsSrc derive.L1BlobsFetcher, beaconClient election.BeaconClient, altDASrc driver.AltDAIface,
 	eng L2API, l1Client L1API, cfg *rollup.Config, syncCfg *sync.Config, safeHeadListener safeDB,
-	interopBackend interop.InteropBackend) *L2Verifier {
+	interopBackend interop.InteropBackend, electionStore *election_client.ElectionStore) *L2Verifier {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
@@ -125,6 +126,8 @@ func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 	elec := election.NewElection(beaconClient, eng, l1Client, log, cfg)
 	sys.Register("election", election.NewElectionDeriver(ctx, beaconClient, elec, log), opts)
 
+	sys.Register("election-store", electionStore, opts)
+
 	sys.Register("engine-reset",
 		engine.NewEngineResetDeriver(ctx, log, cfg, l1, eng, syncCfg), opts)
 
@@ -142,10 +145,9 @@ func NewL2Verifier(t Testing, log log.Logger, l1 derive.L1Fetcher,
 	sys.Register("attributes-handler",
 		attributes.NewAttributesHandler(log, cfg, ctx, eng), opts)
 
-	pipeline := derive.NewDerivationPipeline(log, cfg, l1, blobsSrc, altDASrc, eng, metrics)
+	electionClient := election_client.NewElectionClient(electionStore)
+	pipeline := derive.NewDerivationPipeline(log, cfg, l1, blobsSrc, altDASrc, eng, electionClient, metrics)
 	sys.Register("pipeline", derive.NewPipelineDeriver(ctx, pipeline), opts)
-
-	sys.Register("data-source", pipeline.DataSrc, opts)
 
 	testActionEmitter := sys.Register("test-action", nil, opts)
 
