@@ -230,7 +230,7 @@ func (e *Election) ProcessCurrentProposerWithConfigInstruction(ctx context.Conte
 			return []*eth.ElectionWinner{}, fmt.Errorf("failed to find tickets for operator %s", winner.Address.Hex())
 		}
 
-		// If they pass the ticket check we apply the winner to the election and substract a ticket
+		// If they pass the ticket check we apply the winner to the election and subtract a ticket
 		if potentialWinnerTickets.Cmp(big.NewInt(0)) > 0 {
 			electionWinners[i].Address = potentialWinner
 			tickets[potentialWinner] = potentialWinnerTickets.Sub(potentialWinnerTickets, big.NewInt(1))
