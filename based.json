@@ -401,11 +401,11 @@
     "devnet": {
       "dgType": "254",
       "daType": "blobs",
-      "isAltDa": false,
+      "isAltDa": true,
       "useL2OOAddress": false,
       "proposalInterval": "12s",
-      "genericAltDA": false,
-      "altDAService": false,
+      "genericAltDA": true,
+      "altDAService": true,
       "daCommitmentType": "GenericCommitment",
       "devnetNoBuild": false
     }

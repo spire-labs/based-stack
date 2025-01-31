@@ -1057,7 +1057,7 @@ func (d *L1Deployments) Check(deployConfig *DeployConfig) error {
 			continue
 		}
 		if val.Field(i).Interface().(common.Address) == (common.Address{}) {
-			return fmt.Errorf("Struct L1Deployments: %+v\n", d) // revert this after debugging
+			return fmt.Errorf("%s is not set", name)
 		}
 	}
 	return nil

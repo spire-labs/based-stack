@@ -170,8 +170,7 @@ contract Deploy is Deployer {
             L1ERC721Bridge: mustGetAddress("L1ERC721BridgeProxy"),
             ProtocolVersions: mustGetAddress("ProtocolVersionsProxy"),
             SuperchainConfig: mustGetAddress("SuperchainConfigProxy"),
-            BatchInbox: mustGetAddress("BatchInbox"),
-            DataAvailabilityChallenge: mustGetAddress("DataAvailabilityChallengeProxy")
+            BatchInbox: mustGetAddress("BatchInbox")
         });
     }
 
@@ -192,8 +191,7 @@ contract Deploy is Deployer {
             L1ERC721Bridge: getAddress("L1ERC721BridgeProxy"),
             ProtocolVersions: getAddress("ProtocolVersionsProxy"),
             SuperchainConfig: getAddress("SuperchainConfigProxy"),
-            BatchInbox: getAddress("BatchInbox"),
-            DataAvailabilityChallenge: getAddress("DataAvailabilityChallengeProxy")
+            BatchInbox: getAddress("BatchInbox")
         });
     }
 
@@ -457,7 +455,6 @@ contract Deploy is Deployer {
         deployBatchInbox();
         deployBlockDutchAuction();
         deployAnchorStateRegistry();
-        deployDataAvailabilityChallenge();
     }
 
     /// @notice Initialize all of the implementations
