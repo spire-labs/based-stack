@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/ethereum-optimism/optimism/op-node/batch-contracts/bindings/BatchCheckSeqConfig"
 	"github.com/ethereum-optimism/optimism/op-node/batch-contracts/bindings/BatchRandomTicketInstruction"
 	BatchTicketAccounting "github.com/ethereum-optimism/optimism/op-node/batch-contracts/bindings/BatchTicketAccounting"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -181,6 +182,70 @@ func (e *Election) GetBatchRandomTicketInstruction(ctx context.Context, timestam
 
 	return results, nil
 
+}
+
+func (e *Election) GetBatchCheckSeqConfig(ctx context.Context, potentialWinners []common.Address, blockNumber string) ([]bool, error) {
+	bin := BatchCheckSeqConfig.BatchCheckSeqConfigMetaData.Bin
+	abiJson := BatchCheckSeqConfig.BatchCheckSeqConfigMetaData.ABI
+
+	// Parse the ABI
+	parsedABI, err := abi.JSON(bytes.NewReader([]byte(abiJson)))
+
+	if err != nil {
+		// If we fail to parse the ABI, we should return an error
+		// Because we cant continue without it
+		return []bool{}, err
+	}
+
+	constructorArgs, err := parsedABI.Pack("", e.cfg.L1SystemConfigAddress, potentialWinners)
+
+	if err != nil {
+		return []bool{}, err
+	}
+
+	creationCode := "0x" + hex.EncodeToString(append(common.FromHex(bin), constructorArgs...))
+
+	// NOTE: Should we be using latest here?
+	encodedReturnData, err := e.l1.Call(ctx, toBatchCallMsg(common.Address{}, creationCode), blockNumber)
+
+	if err != nil {
+		// If we cant determien the config results, we cant determine the winners
+		return []bool{}, err
+	}
+
+	encodedReturnData = strings.TrimPrefix(encodedReturnData, "0x")
+	encodedReturnDataAsBytes, err := hex.DecodeString(encodedReturnData)
+	if err != nil {
+		return []bool{}, err
+	}
+
+	// Hardcoded type as the abi is not aware of our custom constructor return type
+	boolArrayType, err := abi.NewType("bool[]", "", nil)
+
+	if err != nil {
+		return []bool{}, err
+	}
+
+	args := abi.Arguments{
+		{Type: boolArrayType},
+	}
+
+	decoded, err := args.Unpack(encodedReturnDataAsBytes)
+
+	if err != nil {
+		return []bool{}, err
+	}
+
+	result, ok := decoded[0].([]bool)
+
+	if !ok {
+		err = fmt.Errorf("failed to convert raw data to []bool")
+		return []bool{}, err
+	}
+
+	e.log.Info("BatchCheckSeqConfig called successfully, results were", "result", result)
+
+	return result, nil
 }
 
 // Helper function to format the data into the type the rpc expects

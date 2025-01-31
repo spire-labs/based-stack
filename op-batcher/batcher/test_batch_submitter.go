@@ -30,7 +30,7 @@ func (l *TestBatchSubmitter) JamTxPool(ctx context.Context) error {
 	cc := l.state.cfgProvider.ChannelConfig()
 	if cc.UseBlobs {
 		candidate = l.calldataTxCandidate([]byte{})
-	} else if candidate, err = l.blobTxCandidate(emptyTxData); err != nil {
+	} else if candidate, err = l.blobTxCandidate(emptyTxData, 0); err != nil {
 		return err
 	}
 	if candidate.GasLimit, err = core.IntrinsicGas(candidate.TxData, nil, false, true, true, false); err != nil {

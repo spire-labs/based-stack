@@ -153,7 +153,7 @@ func (e *Election) GetWinnersAtEpoch(ctx context.Context, epoch uint64, l2Unsafe
 		electionWinners = append(electionWinners, &winner)
 	}
 
-	return e.HandleInstructions(ctx, fallbacklist, electionWinners, operatorAddresses, tickets, l2UnsafeBlock)
+	return e.HandleInstructions(ctx, fallbacklist, electionWinners, operatorAddresses, tickets, l2UnsafeBlock, l1UnsafeBlock)
 }
 
 func (e *Election) GetElectionFallbackList(ctx context.Context, blockNumber string) ([]uint8, error) {

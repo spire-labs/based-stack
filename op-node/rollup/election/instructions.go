@@ -25,7 +25,7 @@ const (
 	PERMISSIONLESS               = 0x06
 )
 
-func (e *Election) HandleInstructions(ctx context.Context, instructions []uint8, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int, l2UnsafeBlock string) ([]*eth.ElectionWinner, error) {
+func (e *Election) HandleInstructions(ctx context.Context, instructions []uint8, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int, l2UnsafeBlock string, l1UnsafeBlock string) ([]*eth.ElectionWinner, error) {
 	var err error
 
 	// Process instructions
@@ -41,7 +41,10 @@ func (e *Election) HandleInstructions(ctx context.Context, instructions []uint8,
 			}
 			continue
 		case CURRENT_PROPOSER_WITH_CONFIG:
-			// TODO(spire): This is not implemented yet
+			electionWinners, err = e.ProcessCurrentProposerWithConfigInstruction(ctx, electionWinners, operatorAddresses, tickets, l1UnsafeBlock)
+			if err != nil {
+				return []*eth.ElectionWinner{}, err
+			}
 			continue
 		case NEXT_PROPOSER:
 			electionWinners, err = e.ProcessNextProposerInstruction(electionWinners, operatorAddresses, tickets)
@@ -178,5 +181,61 @@ func (e *Election) ProcessRandomTicketInstruction(ctx context.Context, electionW
 	}
 
 	return electionWinners, nil
+}
 
+func (e *Election) ProcessCurrentProposerWithConfigInstruction(ctx context.Context, electionWinners []*eth.ElectionWinner, operatorAddresses []common.Address, tickets map[common.Address]*big.Int, blockNumber string) ([]*eth.ElectionWinner, error) {
+	if len(electionWinners) != len(operatorAddresses) {
+		return []*eth.ElectionWinner{}, fmt.Errorf("invalid input lengths for this instruction")
+	}
+
+	addressZero := common.Address{}
+	var potentialWinners []common.Address
+
+	// Gather the potential winners to check the config fors
+	for i, winner := range electionWinners {
+		// Skip because this slot already has a winner
+		if winner.Address != addressZero {
+			potentialWinners = append(potentialWinners, common.Address{})
+			continue
+		}
+
+		operator := operatorAddresses[i]
+
+		// Append the operator address
+		potentialWinners = append(potentialWinners, operator)
+	}
+
+	// Make the batch call to check the winner
+	res, err := e.GetBatchCheckSeqConfig(ctx, potentialWinners, blockNumber)
+	if err != nil {
+		return []*eth.ElectionWinner{}, err
+	}
+
+	// Apply the winners to the election if they meet the criteria
+	for i, winner := range electionWinners {
+		// Skip because this slot already has a winner
+		if winner.Address != addressZero {
+			continue
+		}
+
+		// The potential winner failed the config check, skip to the next one
+		if !res[i] {
+			continue
+		}
+
+		// Apply the ticket check to the potential winner
+		potentialWinner := potentialWinners[i]
+		potentialWinnerTickets, ok := tickets[potentialWinner]
+		if !ok {
+			return []*eth.ElectionWinner{}, fmt.Errorf("failed to find tickets for operator %s", winner.Address.Hex())
+		}
+
+		// If they pass the ticket check we apply the winner to the election and subtract a ticket
+		if potentialWinnerTickets.Cmp(big.NewInt(0)) > 0 {
+			electionWinners[i].Address = potentialWinner
+			tickets[potentialWinner] = potentialWinnerTickets.Sub(potentialWinnerTickets, big.NewInt(1))
+		}
+	}
+
+	return electionWinners, nil
 }
