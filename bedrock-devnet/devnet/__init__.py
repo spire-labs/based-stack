@@ -21,8 +21,6 @@ parser.add_argument('--allocs', help='Only create the allocs and exit', type=boo
 
 log = logging.getLogger()
 
-# Set config globally
-config = {}
 
 # Global constants
 FORKS = ["delta", "ecotone", "fjord", "granite"]
@@ -94,12 +92,14 @@ def main():
     # Fetch the devnet config globally
     config_path = 'bedrock-devnet/devnet.json'
     abs_config_path = pjoin(monorepo_dir, config_path)
+
+    config = {}
     with open(abs_config_path, 'r') as f:
         config = json.load(f)
 
 
     if args.allocs:
-        devnet_l1_allocs(paths)
+        devnet_l1_allocs(paths, config)
         devnet_l2_allocs(paths)
         return
 
@@ -120,9 +120,9 @@ def main():
         })
 
     log.info('Devnet starting')
-    devnet_deploy(paths)
+    devnet_deploy(paths, config)
 
-def init_devnet_l1_deploy_config(paths, update_timestamp=False):
+def init_devnet_l1_deploy_config(paths, config, update_timestamp=False):
     deploy_config = read_json(paths.devnet_config_template_path)
     if update_timestamp:
         deploy_config['l1GenesisBlockTimestamp'] = '{:#x}'.format(int(time.time()))
@@ -137,9 +137,9 @@ def init_devnet_l1_deploy_config(paths, update_timestamp=False):
 
     write_json(paths.devnet_config_path, deploy_config)
 
-def devnet_l1_allocs(paths):
+def devnet_l1_allocs(paths, config):
     log.info('Generating L1 genesis allocs')
-    init_devnet_l1_deploy_config(paths)
+    init_devnet_l1_deploy_config(paths, config)
 
     fqn = 'scripts/deploy/Deploy.s.sol:Deploy'
     run_command([
@@ -178,7 +178,7 @@ def devnet_l2_allocs(paths):
 
 
 # Bring up the devnet where the contracts are deployed to L1
-def devnet_deploy(paths):
+def devnet_deploy(paths, config):
     if os.path.exists(paths.genesis_l1_path):
         log.info('L1 genesis already generated.')
     else:
@@ -188,7 +188,7 @@ def devnet_deploy(paths):
             # file here always. This is because CI will run devnet-allocs
             # without setting the appropriate env var which means the allocs will be wrong.
             # Re-running this step means the allocs will be correct.
-            devnet_l1_allocs(paths)
+            devnet_l1_allocs(paths, config)
         else:
             log.info('Re-using existing L1 allocs.')
 
