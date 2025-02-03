@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_targetBlock",
+        "name": "_targetTimestamp",
         "type": "uint256"
       }
     ],
