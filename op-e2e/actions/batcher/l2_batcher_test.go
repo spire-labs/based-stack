@@ -436,6 +436,7 @@ func BigL2Txs(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 		MaxL1TxSize:          40_000, // try a small batch size, to force the data to be split between more frames
 		BatcherKey:           dp.Secrets.Batcher,
 		DataAvailabilityType: batcherFlags.CalldataType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}, sequencer.RollupClient(), miner.EthClient(), engine.EthClient(), engine.EngineClient(t, sd.RollupCfg))
 
 	sequencer.ActL2PipelineFull(t)

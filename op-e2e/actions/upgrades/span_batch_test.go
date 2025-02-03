@@ -58,6 +58,7 @@ func TestDropSpanBatchBeforeHardfork(gt *testing.T) {
 		BatcherKey:           dp.Secrets.Batcher,
 		ForceSubmitSpanBatch: true,
 		DataAvailabilityType: batcherFlags.CalldataType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}, rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 
 	// Alice makes a L2 tx
@@ -157,6 +158,7 @@ func TestHardforkMiddleOfSpanBatch(gt *testing.T) {
 		BatcherKey:           dp.Secrets.Batcher,
 		ForceSubmitSpanBatch: true,
 		DataAvailabilityType: batcherFlags.CalldataType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}, rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 
 	// Alice makes a L2 tx
@@ -266,6 +268,7 @@ func TestAcceptSingularBatchAfterHardfork(gt *testing.T) {
 		BatcherKey:               dp.Secrets.Batcher,
 		ForceSubmitSingularBatch: true,
 		DataAvailabilityType:     batcherFlags.CalldataType,
+		L1BlockTime:              dp.DeployConfig.L1BlockTime,
 	}, rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 
 	// Alice makes a L2 tx
@@ -385,6 +388,7 @@ func TestMixOfBatchesAfterHardfork(gt *testing.T) {
 			ForceSubmitSpanBatch:     i%2 == 0, // Submit SpanBatch for odd numbered batches
 			ForceSubmitSingularBatch: i%2 == 1, // Submit SingularBatch for even numbered batches
 			DataAvailabilityType:     batcherFlags.CalldataType,
+			L1BlockTime:              dp.DeployConfig.L1BlockTime,
 		}
 		batcher := actionsHelpers.NewL2Batcher(log, sd.RollupCfg, &batcherCfg, rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sd.RollupCfg))
 		// Submit all new blocks
@@ -643,6 +647,7 @@ func TestBatchEquivalence(gt *testing.T) {
 		BatcherKey:           dp.Secrets.Batcher,
 		ForceSubmitSpanBatch: true,
 		DataAvailabilityType: batcherFlags.CalldataType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}, rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sdDeltaActivated.RollupCfg))
 
 	// Setup SingularBatcher
@@ -652,6 +657,7 @@ func TestBatchEquivalence(gt *testing.T) {
 		BatcherKey:               dp.Secrets.Batcher,
 		ForceSubmitSingularBatch: true,
 		DataAvailabilityType:     batcherFlags.CalldataType,
+		L1BlockTime:              dp.DeployConfig.L1BlockTime,
 	}, rollupSeqCl, miner.EthClient(), seqEngine.EthClient(), seqEngine.EngineClient(t, sdDeltaDeactivated.RollupCfg))
 
 	const numTestUsers = 5

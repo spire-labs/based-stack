@@ -128,5 +128,6 @@ func setupBatcher(t actionsHelpers.Testing, log log.Logger, sd *e2eutils.SetupDa
 		MaxL1TxSize:          128_000,
 		BatcherKey:           dp.Secrets.Bob,
 		DataAvailabilityType: "blobs",
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}, sequencer.RollupClient(), miner.EthClient(), engine.EthClient(), engine.EngineClient(t, sd.RollupCfg))
 }

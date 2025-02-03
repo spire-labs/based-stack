@@ -15,7 +15,7 @@ func runSequenceWindowExpireTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	tp := helpers.NewTestParams()
 	tp.L1BlockTime = 15 // TODO(spire): L1BlockTime = 12 breaks this test
-	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
+	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg(tp.L1BlockTime))
 
 	// Mine an empty block for gas estimation purposes.
 	env.Miner.ActEmptyBlock(t)
@@ -54,7 +54,7 @@ func runSequenceWindowExpireTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 func runSequenceWindowExpire_ChannelCloseAfterWindowExpiry_Test(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	tp := helpers.NewTestParams()
-	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
+	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg(tp.L1BlockTime))
 
 	// Mine 2 empty blocks on L2.
 	for i := 0; i < 2; i++ {
