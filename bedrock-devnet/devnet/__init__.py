@@ -197,7 +197,7 @@ def devnet_deploy(paths, config):
         # function.  But, without it, CI flakes on this test rather consistently.
         # If someone reads this comment and understands why this is being done, please
         # update this comment to explain.
-        init_devnet_l1_deploy_config(paths, update_timestamp=True)
+        init_devnet_l1_deploy_config(paths, config, update_timestamp=True)
         run_command([
             'go', 'run', 'cmd/main.go', 'genesis', 'l1',
             '--deploy-config', paths.devnet_config_path,
