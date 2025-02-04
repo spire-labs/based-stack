@@ -55,6 +55,5 @@
   "disputeGameFinalityDelaySeconds": 302400,
   "respectedGameType": 0,
   "useFaultProofs": true,
-  "minimumPreconfirmationCollateral": 0,
   "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
 }

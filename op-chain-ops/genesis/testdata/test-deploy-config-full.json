@@ -95,10 +95,15 @@
   "daChallengeWindow": 0,
   "daResolveWindow": 0,
   "daResolverRefundPercentage": 0,
-  "minimumPreconfirmationCollateral": 0,
   "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "genesisAllocation": {
     "targets": [],
     "amounts": []
+  },
+  "sequencerRules": {
+    "assertionType": [],
+    "desiredRetdata": [],
+    "configCalldata": [],
+    "target": []
   }
 }
