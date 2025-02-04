@@ -30,6 +30,7 @@ import { L1CrossDomainMessenger } from "src/L1/L1CrossDomainMessenger.sol";
 import { L1ERC721Bridge } from "src/L1/L1ERC721Bridge.sol";
 import { L1StandardBridge } from "src/L1/L1StandardBridge.sol";
 import { OptimismMintableERC20Factory } from "src/universal/OptimismMintableERC20Factory.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 contract DeployOPChainInput_Test is Test {
     DeployOPChainInput doi;
@@ -338,6 +339,8 @@ contract DeployOPChain_TestBase is Test {
     uint256 l2ChainId = 300;
     uint256 minimumPreconfirmationCollateral = 0;
     bytes32 electionFallbackList = bytes32(0);
+    ElectionSystemConfig.SequencerRule[] sequencerRules;
+
     OPStackManager opsm = OPStackManager(address(0));
 
     function setUp() public virtual {

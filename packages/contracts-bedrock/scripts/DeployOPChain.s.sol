@@ -48,8 +48,8 @@ contract DeployOPChainInput is BaseDeployIO {
     OPStackManager internal _opsmProxy;
 
     // Election System Config
-    uint256 internal _minimumPreconfirmationCollateral;
     bytes32 internal _electionFallbackList;
+    ElectionSystemConfig.SequencerRule[] internal _sequencerRules;
 
     function set(bytes4 _sel, address _addr) public {
         require(_addr != address(0), "DeployOPChainInput: cannot set zero address");
@@ -71,8 +71,6 @@ contract DeployOPChainInput is BaseDeployIO {
         } else if (_sel == this.l2ChainId.selector) {
             require(_value != 0 && _value != block.chainid, "DeployOPChainInput: invalid l2ChainId");
             _l2ChainId = _value;
-        } else if (_sel == this.minimumPreconfirmationCollateral.selector) {
-            _minimumPreconfirmationCollateral = _value;
         } else {
             revert("DeployOPChainInput: unknown selector");
         }
@@ -83,17 +81,26 @@ contract DeployOPChainInput is BaseDeployIO {
         else revert("DeployOPChainInput: unknown selector");
     }
 
+    function set(bytes4 _sel, ElectionSystemConfig.SequencerRule[] memory _value) public {
+        if (_sel == this.sequencerRules.selector) {
+            for (uint256 i; i < _value.length; i++) {
+                _sequencerRules.push(_value[i]);
+            }
+        }
+        else revert("DeployOPChainInput: unknown selector");
+    }
+
     function loadInputFile(string memory _infile) public pure {
         _infile;
         require(false, "DeployOPChainInput: not implemented");
     }
 
-    function minimumPreconfirmationCollateral() public view returns (uint256) {
-        return _minimumPreconfirmationCollateral;
-    }
-
     function electionFallbackList() public view returns (bytes32) {
         return _electionFallbackList;
+    }
+
+    function sequencerRules() public view returns (ElectionSystemConfig.SequencerRule[] memory) {
+        return _sequencerRules;
     }
 
     function opChainProxyAdminOwner() public view returns (address) {
@@ -453,7 +460,8 @@ contract DeployOPChain is Script {
             electionFallbackList: _doi.electionFallbackList(),
             basefeeScalar: _doi.basefeeScalar(),
             blobBasefeeScalar: _doi.blobBaseFeeScalar(),
-            l2ChainId: _doi.l2ChainId()
+            l2ChainId: _doi.l2ChainId(),
+            sequencerRules: _doi.sequencerRules()
         });
 
         vm.broadcast(msg.sender);
