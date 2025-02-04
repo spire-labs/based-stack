@@ -54,6 +54,8 @@ type BatcherCfg struct {
 	MinL1TxSize uint64
 	MaxL1TxSize uint64
 
+	L1BlockTime uint64
+
 	BatcherKey *ecdsa.PrivateKey
 
 	GarbageCfg *GarbageChannelCfg
@@ -72,6 +74,7 @@ func DefaultBatcherCfg(dp *e2eutils.DeployParams) *BatcherCfg {
 		MaxL1TxSize:          128_000,
 		BatcherKey:           dp.Secrets.Batcher,
 		DataAvailabilityType: batcherFlags.CalldataType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}
 }
 
@@ -81,6 +84,7 @@ func BlobBatcherCfg(dp *e2eutils.DeployParams) *BatcherCfg {
 		MaxL1TxSize:          128_000,
 		BatcherKey:           dp.Secrets.Batcher,
 		DataAvailabilityType: batcherFlags.BlobsType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}
 }
 
@@ -92,6 +96,7 @@ func AltDABatcherCfg(dp *e2eutils.DeployParams, altDA AltDAInputSetter) *Batcher
 		DataAvailabilityType: batcherFlags.CalldataType,
 		AltDA:                altDA,
 		UseAltDA:             true,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}
 }
 
@@ -313,7 +318,7 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 		if blobFeeCap.Lt(uint256.NewInt(params.GWei)) { // ensure we meet 1 gwei geth tx-pool minimum
 			blobFeeCap = uint256.NewInt(params.GWei)
 		}
-		calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Number+1)
+		calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Time+s.l2BatcherCfg.L1BlockTime)
 		require.NoError(t, err)
 
 		txData = &types.BlobTx{
@@ -341,12 +346,12 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 	s.LastSubmitted = tx
 }
 
-func submitTxCalldata(t require.TestingT, submitBlockNumber uint64) ([]byte, error) {
+func submitTxCalldata(t require.TestingT, targetTimestam uint64) ([]byte, error) {
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	submitMethod, ok := batchInboxAbi.Methods["submit"]
 	require.True(t, ok)
 
-	inputs, err := submitMethod.Inputs.Pack(new(big.Int).SetUint64(submitBlockNumber))
+	inputs, err := submitMethod.Inputs.Pack(new(big.Int).SetUint64(targetTimestam))
 	require.NoError(t, err)
 
 	submitSel := submitMethod.ID
@@ -414,7 +419,7 @@ func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
 		blobFeeCap = uint256.NewInt(params.GWei)
 	}
 
-	calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Number+1)
+	calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Time+s.l2BatcherCfg.L1BlockTime)
 	require.NoError(t, err)
 
 	txData := &types.BlobTx{

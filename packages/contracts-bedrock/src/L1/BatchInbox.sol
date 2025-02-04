@@ -13,9 +13,9 @@ contract BatchInbox {
     event BatchSubmitted(address indexed _submitter);
 
     /// @notice Submits a new batch.
-    function submit(uint256 _targetBlock) public {
-        if (_targetBlock != block.number) {
-            revert InvalidTargetBlock(_targetBlock, block.number);
+    function submit(uint256 _targetTimestamp) public {
+        if (_targetTimestamp != block.timestamp) {
+            revert InvalidTargetTimestamp(_targetTimestamp, block.timestamp);
         }
         emit BatchSubmitted(msg.sender);
     }

@@ -218,11 +218,12 @@ func NewDeployParams(t helpers.Testing, tp *e2eutils.TestParams, params ...Deplo
 
 type BatcherCfgParam func(c *helpers.BatcherCfg)
 
-func NewBatcherCfg(params ...BatcherCfgParam) *helpers.BatcherCfg {
+func NewBatcherCfg(l1BlockTime uint64, params ...BatcherCfgParam) *helpers.BatcherCfg {
 	dfault := &helpers.BatcherCfg{
 		MinL1TxSize:          0,
 		MaxL1TxSize:          128_000,
 		DataAvailabilityType: batcherFlags.BlobsType,
+		L1BlockTime:          l1BlockTime,
 	}
 	for _, apply := range params {
 		apply(dfault)

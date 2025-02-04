@@ -13,7 +13,8 @@ import (
 func runSimpleProgramTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	t.Skip("TODO(spire): Reenable these tests")
-	env := helpers.NewL2FaultProofEnv(t, testCfg, helpers.NewTestParams(), helpers.NewBatcherCfg())
+	tp := helpers.NewTestParams()
+	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg(tp.L1BlockTime))
 
 	// Build an empty block on L2
 	env.Sequencer.ActL2StartBlock(t)

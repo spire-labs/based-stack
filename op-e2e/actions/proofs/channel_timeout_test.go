@@ -15,7 +15,7 @@ func runChannelTimeoutTest(gt *testing.T, testCfg *helpers.TestCfg[any]) {
 	t := actionsHelpers.NewDefaultTesting(gt)
 	t.Skip("TODO(spire): Reenable these tests")
 	tp := helpers.NewTestParams()
-	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
+	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg(tp.L1BlockTime))
 	channelTimeout := env.Sd.ChainSpec.ChannelTimeout(0)
 
 	const NumL2Blocks = 10
@@ -102,7 +102,7 @@ func runChannelTimeoutTest_CloseChannelLate(gt *testing.T, testCfg *helpers.Test
 	t := actionsHelpers.NewDefaultTesting(gt)
 	t.Skip("TODO(spire): Reenable these tests")
 	tp := helpers.NewTestParams()
-	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
+	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg(tp.L1BlockTime))
 	channelTimeout := env.Sd.ChainSpec.ChannelTimeout(0)
 
 	const NumL2Blocks = 10

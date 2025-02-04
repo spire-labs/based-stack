@@ -33,7 +33,7 @@ func runGarbageChannelTest(gt *testing.T, testCfg *helpers.TestCfg[actionsHelper
 		// Set the channel timeout to 10 blocks, 12x lower than the sequencing window.
 		tp.ChannelTimeout = 10
 	})
-	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg())
+	env := helpers.NewL2FaultProofEnv(t, testCfg, tp, helpers.NewBatcherCfg(tp.L1BlockTime))
 
 	includeBatchTx := func(env *helpers.L2FaultProofEnv) {
 		// Instruct the batcher to submit the first channel frame to L1, and include the transaction.
