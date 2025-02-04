@@ -15,7 +15,7 @@ contract BatchInbox {
     /// @notice Submits a new batch.
     function submit(uint256 _targetTimestamp) public {
         if (_targetTimestamp != block.timestamp) {
-            revert InvalidTargetBlock(_targetTimestamp, block.timestamp);
+            revert InvalidTargetTimestamp(_targetTimestamp, block.timestamp);
         }
         emit BatchSubmitted(msg.sender);
     }
