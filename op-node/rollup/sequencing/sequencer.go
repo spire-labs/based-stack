@@ -53,7 +53,7 @@ type AsyncGossiper interface {
 
 type ElectionClient interface {
 	GetLastWinnerInCurrentEpoch() eth.ElectionWinner
-	GetElectionWinner(uint64) eth.ElectionWinner
+	GetElectionWinner(time uint64) eth.ElectionWinner
 }
 
 // SequencerActionEvent triggers the sequencer to start/seal a block, if active and ready to act.

@@ -14,8 +14,8 @@ func NewElectionClient(store *ElectionStore) *ElectionClient {
 	}
 }
 
-func (e *ElectionClient) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
-	return e.store.GetElectionWinner(timestamp)
+func (e *ElectionClient) GetElectionWinner(time uint64) eth.ElectionWinner {
+	return e.store.GetElectionWinner(time)
 }
 
 func (e *ElectionClient) GetLastWinnerInCurrentEpoch() eth.ElectionWinner {

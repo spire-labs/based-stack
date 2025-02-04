@@ -42,8 +42,8 @@ func (e *ElectionStore) OnEvent(ev event.Event) bool {
 	return true
 }
 
-func (e *ElectionStore) GetElectionWinner(timestamp uint64) eth.ElectionWinner {
-	out := e.electionWinnersMap[timestamp]
+func (e *ElectionStore) GetElectionWinner(time uint64) eth.ElectionWinner {
+	out := e.electionWinnersMap[time]
 	if out == nil {
 		return eth.ElectionWinner{}
 	}
@@ -78,11 +78,11 @@ func (e *ElectionStore) StoreElectionWinners(winners []*eth.ElectionWinner) {
 	}
 }
 
-func (e *ElectionStore) RemoveOutdatedElectionWinners(timestamp uint64) {
-	e.log.Debug("Removing outdated election winners", "time", timestamp, "store", e.winnersLength())
+func (e *ElectionStore) RemoveOutdatedElectionWinners(time uint64) {
+	e.log.Debug("Removing outdated election winners", "time", time, "store", e.winnersLength())
 
 	for k := range e.electionWinnersMap {
-		if k < timestamp {
+		if k < time {
 			delete(e.electionWinnersMap, k)
 		}
 	}

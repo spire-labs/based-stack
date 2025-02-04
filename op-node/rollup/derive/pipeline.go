@@ -49,7 +49,7 @@ type L2Source interface {
 
 type ElectionClient interface {
 	GetLastWinnerInCurrentEpoch() eth.ElectionWinner
-	GetElectionWinner(uint64) eth.ElectionWinner
+	GetElectionWinner(time uint64) eth.ElectionWinner
 }
 
 // DerivationPipeline is updated with new L1 data, and the Step() function can be iterated on to generate attributes
