@@ -150,7 +150,8 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
     }
 
@@ -181,7 +182,8 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
         assertEq(systemConfig.startBlock(), block.number);
     }
@@ -213,7 +215,8 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: Constants.ETHER
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
         assertEq(systemConfig.startBlock(), 1);
     }
@@ -309,7 +312,8 @@ contract SystemConfig_Init_ResourceConfig is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
     }
 }
@@ -348,7 +352,8 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _gasPayingToken
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
     }
 

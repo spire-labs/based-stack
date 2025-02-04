@@ -75,7 +75,8 @@ interface ISystemConfig {
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         Addresses memory _addresses,
-        bytes32 _fallbackList
+        bytes32 _fallbackList,
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRules
     )
         external;
     function isCustomGasToken() external view returns (bool);

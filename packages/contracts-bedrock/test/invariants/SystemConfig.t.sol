@@ -38,7 +38,8 @@ contract SystemConfig_GasLimitBoundaries_Invariant is Test {
                         optimismMintableERC20Factory: address(0),
                         gasPayingToken: Constants.ETHER
                     }),
-                    bytes32(0)
+                    bytes32(0),
+                    new ElectionSystemConfig.SequencerRule[](0)
                 )
             )
         );

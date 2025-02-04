@@ -19,6 +19,7 @@ interface ISystemConfigInterop is ISystemConfig {
         address _batchInbox,
         Addresses memory _addresses,
         bytes32 _fallbackList,
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRules,
         address _dependencyManager
     )
         external;

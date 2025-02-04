@@ -327,6 +327,12 @@
           1,
           1
         ]
+      },
+      "sequencerRules": {
+        "assertionType": [],
+        "desiredRetdata": [],
+        "configCalldata": [],
+        "target": []
       }
     },
     "hardhat": {
