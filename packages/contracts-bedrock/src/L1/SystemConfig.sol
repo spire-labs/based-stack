@@ -162,9 +162,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.8
+    /// @custom:semver 2.3.1-beta.9
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.8";
+        return "2.3.1-beta.9";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -525,7 +525,8 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     ///      Due to this we restrict to only be callable through the context of an eth_call
     function _checkSequencerRules(address _optionalInjectee) internal returns (bool) {
         // eth_call from field needs to be address(0)
-        if (msg.sender != address(0)) revert NotEthCall();
+        // We use tx.origin to allow for contracts to call this function
+        if (tx.origin != address(0)) revert NotEthCall();
 
         SequencerRule memory _rule;
         bool _success;

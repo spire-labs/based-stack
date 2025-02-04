@@ -44,7 +44,7 @@ func TestSingleCurrentProposerInstruction(t *testing.T) {
 	e := &Election{}
 
 	instructions := []uint8{CURRENT_PROPOSER}
-	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
@@ -55,7 +55,7 @@ func TestSingleNextProposerInstruction(t *testing.T) {
 	e := &Election{}
 
 	instructions := []uint8{NEXT_PROPOSER}
-	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
@@ -66,7 +66,7 @@ func TestMultipleInstructions(t *testing.T) {
 	e := &Election{}
 
 	instructions := []uint8{CURRENT_PROPOSER, NEXT_PROPOSER}
-	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
@@ -77,7 +77,7 @@ func TestInvalidInstruction(t *testing.T) {
 	e := &Election{}
 
 	instructions := []uint8{255} // Unknown instruction
-	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber, blockNumber)
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, "unknown fallback instruction: 255")
@@ -89,7 +89,7 @@ func TestNoInstructions(t *testing.T) {
 	e := &Election{}
 
 	instructions := []uint8{}
-	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber)
+	result, err := e.HandleInstructions(ctx, instructions, electionWinners, operatorAddresses, tickets, blockNumber, blockNumber)
 
 	assert.NoError(t, err)
 	assert.Equal(t, electionWinners, result)
