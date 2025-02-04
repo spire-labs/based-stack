@@ -122,9 +122,9 @@ func TestBatchSubmitter_EncodeSubmitTx(t *testing.T) {
 	bs, _ := setup(t)
 
 	t.Run("ValidBlockNumber", func(t *testing.T) {
-		l1BlockNumber := uint64(123456)
+		slotTimestamp := uint64(123456)
 
-		txData, err := bs.encodeSubmitTx(l1BlockNumber)
+		txData, err := bs.encodeSubmitTx(slotTimestamp)
 
 		require.NoError(t, err)
 		require.NotNil(t, txData)

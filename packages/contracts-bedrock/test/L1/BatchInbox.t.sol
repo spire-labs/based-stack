@@ -17,21 +17,23 @@ contract BatchInboxTest is Test {
     }
 
     function test_submit_emitsEvent_succeeds() public {
-        uint256 targetBlock = block.number;
+        uint256 targetTimestamp = block.timestamp;
 
         vm.expectEmit(true, true, true, true);
         emit BatchSubmitted(mockWinner);
 
         vm.prank(mockWinner);
-        batchInbox.submit(targetBlock);
+        batchInbox.submit(targetTimestamp);
     }
 
-    function test_submit_invalidTargetBlock_reverts() public {
-        uint256 currentBlock = block.number;
-        uint256 invalidTargetBlock = currentBlock + 1;
+    function test_submit_invalidTargetTimestamp_reverts() public {
+        uint256 currentTimestamp = block.timestamp;
+        uint256 invalidTargetTimestamp = currentTimestamp + 1;
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidTargetBlock.selector, invalidTargetBlock, currentBlock));
+        vm.expectRevert(
+            abi.encodeWithSelector(InvalidTargetTimestamp.selector, invalidTargetTimestamp, currentTimestamp)
+        );
         vm.prank(mockWinner);
-        batchInbox.submit(invalidTargetBlock);
+        batchInbox.submit(invalidTargetTimestamp);
     }
 }
