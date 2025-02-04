@@ -724,9 +724,6 @@ type ElectionSystemConfig struct {
 }
 
 func (d *ElectionSystemConfig) Check(log log.Logger) error {
-	if d.MinimumPreconfirmationCollateral == nil {
-		log.Warn("MinimumPreconfirmationCollateral is nil")
-	}
 	if d.ElectionFallbackList == (common.Hash{}) {
 		log.Warn("ElectionFallbackList is nil")
 	}

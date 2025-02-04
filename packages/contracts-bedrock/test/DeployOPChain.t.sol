@@ -337,7 +337,6 @@ contract DeployOPChain_TestBase is Test {
     uint32 basefeeScalar = 100;
     uint32 blobBaseFeeScalar = 200;
     uint256 l2ChainId = 300;
-    uint256 minimumPreconfirmationCollateral = 0;
     bytes32 electionFallbackList = bytes32(0);
     ElectionSystemConfig.SequencerRule[] sequencerRules;
 
