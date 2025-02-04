@@ -711,9 +711,16 @@ func (d *FaultProofDeployConfig) Check(log log.Logger) error {
 	return nil
 }
 
+type SequencerRulesConfig struct {
+	AssertionType  []*big.Int       `json:"assertionType"`
+	DesiredRetdata []*common.Hash   `json:"desiredRetdata"`
+	Target         []common.Address `json:"target"`
+	ConfigCalldata [][]byte         `json:"configCalldata"`
+}
+
 type ElectionSystemConfig struct {
-	MinimumPreconfirmationCollateral *big.Int    `json:"minimumPreconfirmationCollateral"`
-	ElectionFallbackList             common.Hash `json:"electionFallbackList"`
+	SequencerRules       SequencerRulesConfig `json:"sequencerRules"`
+	ElectionFallbackList common.Hash          `json:"electionFallbackList"`
 }
 
 func (d *ElectionSystemConfig) Check(log log.Logger) error {
