@@ -30,7 +30,9 @@ contract BatchInboxTest is Test {
         uint256 currentTimestamp = block.timestamp;
         uint256 invalidTargetTimestamp = currentTimestamp + 1;
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidTargetTimestamp.selector, invalidTargetTimestamp, currentTimestamp));
+        vm.expectRevert(
+            abi.encodeWithSelector(InvalidTargetTimestamp.selector, invalidTargetTimestamp, currentTimestamp)
+        );
         vm.prank(mockWinner);
         batchInbox.submit(invalidTargetTimestamp);
     }
