@@ -86,8 +86,9 @@ contract DeployOPChainInput is BaseDeployIO {
             for (uint256 i; i < _value.length; i++) {
                 _sequencerRules.push(_value[i]);
             }
+        } else {
+            revert("DeployOPChainInput: unknown selector");
         }
-        else revert("DeployOPChainInput: unknown selector");
     }
 
     function loadInputFile(string memory _infile) public pure {

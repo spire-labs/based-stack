@@ -38,8 +38,20 @@ contract OPStackManagerInterop is OPStackManager {
         // to update where this value is pulled from in the future. To support a different dependency
         // manager in this contract without an invasive change of redefining the `Roles` struct,
         // we will make the change described in https://github.com/ethereum-optimism/optimism/issues/11783.
-        address dependencyManager = address(_input.roles.opChainProxyAdminOwner);
+        return _getCalldata(selector, _input, referenceResourceConfig, opChainAddrs);
+    }
 
+    /// Using a new internal function to avoid stack too deep errors.
+    function _getCalldata(
+        bytes4 selector,
+        DeployInput memory _input,
+        ResourceMetering.ResourceConfig memory referenceResourceConfig,
+        SystemConfig.Addresses memory opChainAddrs
+    )
+        internal
+        pure
+        returns (bytes memory)
+    {
         return abi.encodeWithSelector(
             selector,
             _input.roles.systemConfigOwner,
@@ -52,7 +64,8 @@ contract OPStackManagerInterop is OPStackManager {
             chainIdToBatchInboxAddress(_input.l2ChainId),
             opChainAddrs,
             _input.electionFallbackList,
-            dependencyManager
+            _input.roles.opChainProxyAdminOwner,
+            _input.sequencerRules
         );
     }
 }

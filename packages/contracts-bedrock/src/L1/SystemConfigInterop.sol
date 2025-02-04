@@ -54,7 +54,7 @@ contract SystemConfigInterop is SystemConfig {
         SystemConfig.Addresses memory _addresses,
         bytes32 _fallbackList,
         address _dependencyManager,
-        SequencerRule[] memory _sequencerRules
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRules
     )
         external
     {
