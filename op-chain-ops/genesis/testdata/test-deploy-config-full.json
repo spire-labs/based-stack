@@ -96,10 +96,12 @@
   "daResolveWindow": 0,
   "daResolverRefundPercentage": 0,
   "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "genesisAllocation": {
-    "targets": [],
-    "amounts": []
-  },
+  "genesisAllocation": [
+    {
+      "amount": 0,
+      "target": "0x0000000000000000000000000000000000000000"
+    }
+  ],
   "sequencerRules": {
     "assertionType": 1,
     "desiredRetdata": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",

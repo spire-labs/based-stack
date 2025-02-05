@@ -72,140 +72,180 @@
   "daBondSize": 1000000,
   "daResolverRefundPercentage": 0,
   "electionFallbackList": "0x0203050000000000000000000000000000000000000000000000000000000000",
-  "genesisAllocation": {
-    "targets": [
-      "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
-      "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
-      "0xb7f682183f898daaf1b98f9e946c1ad58818fcf1",
-      "0xa8a4c939ec0ee6ff6c58ace82cb82a603fd246de",
-      "0xaf88318ed207829fe806e3a78499a64d13b0cf03",
-      "0xaacaf07d7ade408847d18ef8410f6da332ab0a37",
-      "0xae809a58eb62ac77b1a9c4b0ba4a3e3dc5024027",
-      "0x980f54178ab1e2d21822e9cd7327acb170269e62",
-      "0xa86404df6d392d2ba08e01a3a967bfd58f081f45",
-      "0xa2794c3671f0520ffa1032dac4ef67b0a00a6525",
-      "0x858b74656127a05134b7614d5fba180e97739c99",
-      "0xb4a484c89a1f85c32773f80e915a1441d7e83db6",
-      "0xa90d4602211e30aa9f2d0fdb179bd113492028ca",
-      "0xb22df594adad3ae08c339d6e2079ec7b4c69cab5",
-      "0x89931c9f649137fe9a6d59a455bcc695af861fa0",
-      "0x88091d52b099523e2717d3a526f8a41a7ff20ca4",
-      "0xa459e9ad0870b24aeb95d53b437014dc5dd97bbe",
-      "0xb88c4324866296a28c22416988207436ec2878ec",
-      "0x8bf7c9c9972045c582b7363af44e93da26aef3c8",
-      "0xae23fb1b0c76e4fd9800c18945094932655fa3a6",
-      "0xa125a3659c269801fb2e00c8f38d6b6fbe91a85d",
-      "0x847cddf22fe1483b2808f08bb98586deba65165f",
-      "0x8dc5f6f45cc02e68b008e6035492c3c10835e924",
-      "0xa77a318dd834183c3e3b3921c94b1dbb8d1bb2c6",
-      "0xb0591fe44b7eba93e4f088344d0b924bbe3c7ed9",
-      "0xb5889b85291f380a80e2cdf02fc62edf4041ef1f",
-      "0x935b301be1f67fc6a896b57309e546bfc1ae731a",
-      "0xb505fbc0beb4fef613b0720292aa7d74b59ee7ae",
-      "0x961d5cb5deed3612dfbbbffccada34d5a940bcb9",
-      "0xa960c5230b2348f3121d891aeabb2d3598893f7d",
-      "0xb37774192885fd4974e3621e13020acb2208c2b2",
-      "0x85bc68a8c76d4f706648059fa2d3b387c86ee650",
-      "0xb563024394c9553c1123af15dce2630b60eaaafd",
-      "0x8f1e06e20ac5dd13518bd6c5e19c0a00a9dac968",
-      "0xa1ae1d14d16cf61a6ae0c9589a19a8f38e161f02",
-      "0x95419a10ad9771dc7545637bc14e4eb7938e0bcc",
-      "0x89929f3a811cf44f70d60ccaa4571dff9371c73f",
-      "0x988085e2781db7997526af727a32b8660d402225",
-      "0xa4662c910f9eda828898a0cddd61332aca5808be",
-      "0x9401d4c66e72e596e0072c27de5bcf3c99900011",
-      "0xb2c65e1c252c703d96a29edc5e4b6d22b905a560",
-      "0x82626f97b0fc009c2d2e098e2c3b21922c6525d3",
-      "0xb88c17f529454d0305f27188d32f1aea28a82881",
-      "0xb178bccfd693edfb8d163a2050dfb251b2a4d5b4",
-      "0x95123a9757f7295b4cdfeb8808d9d7de69761477",
-      "0x85242431f0f8a0e939f2e469d6d35473e72a9577",
-      "0x8df81a9e3c61ff1cba9f13c792f1c933131b6d15",
-      "0x958979725c3497149c8f1ed2e3f073a56207ff17",
-      "0x8cf690a81a1eab3d0554acfc7087e0b9ad3dcd50",
-      "0xa2ab702302efc9f00d6f50b367de843c24ef708f",
-      "0x91838562f203c048b60308d5dae4e845977b8bd9",
-      "0xb154fd14f7e9c617a1845078cc17f838621b4cfc",
-      "0xa8b7eaa52875524b0b4716b56d2f377cb878ceb5",
-      "0x89d3dbfe89713fa12d2735e2379da4391e22169e",
-      "0x8c3d37929876321cfb221b3dca80feb1c38159ee",
-      "0xaff9f2432d328bba781aa2a6bac512a225d2a528",
-      "0x8b49344506042460fc40f4a60d64079e86a29e87",
-      "0xa3ed99f5e10128dcfa3553c0875021d57da65788",
-      "0xb35142bcfe0b34acd33d38a42af340f3d4c033a5",
-      "0x8ca1bccbe513b4503f8496b8468c42718972718f",
-      "0x99804a3e664ba9d8b0a91fdb6127f2753932e41c",
-      "0x99729eb9833e428853a7444653824aac57986467",
-      "0x87fa175dd34496aee3b88a482accaa19e271be98",
-      "0xab0b0a68c9ab8ef73338f8ee1bce7bdfb4fdd102"
-    ],
-    "amounts": [
-      150,
-      10,
-      0,
-      1,
-      1,
-      0,
-      1,
-      3,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      1,
-      1,
-      1,
-      0,
-      1,
-      1,
-      1,
-      2,
-      1,
-      1,
-      3,
-      1,
-      1,
-      0,
-      1,
-      0,
-      0,
-      0,
-      1,
-      4,
-      1,
-      1,
-      1,
-      2,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      1,
-      1,
-      1,
-      2,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1
-    ]
-  },
+  "genesisAllocation": [
+    {
+      "amount": 150,
+      "target": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc"
+    },
+    {
+      "amount": 10,
+      "target": "0x976EA74026E726554dB657fA54763abd0C3a0aa9"
+    },
+    {
+      "amount": 0,
+      "target": "0xb7f682183f898daaf1b98f9e946c1ad58818fcf1"
+    },
+    {
+      "amount": 1,
+      "target": "0xa8a4c939ec0ee6ff6c58ace82cb82a603fd246de"
+    },
+    {
+      "amount": 1,
+      "target": "0xaf88318ed207829fe806e3a78499a64d13b0cf03"
+    },
+    {
+      "amount": 0,
+      "target": "0xaacaf07d7ade408847d18ef8410f6da332ab0a37"
+    },
+    {
+      "amount": 1,
+      "target": "0xae809a58eb62ac77b1a9c4b0ba4a3e3dc5024027"
+    },
+    {
+      "amount": 3,
+      "target": "0x980f54178ab1e2d21822e9cd7327acb170269e62"
+    },
+    {
+      "amount": 1,
+      "target": "0xa86404df6d392d2ba08e01a3a967bfd58f081f45"
+    },
+    {
+      "amount": 1,
+      "target": "0xa2794c3671f0520ffa1032dac4ef67b0a00a6525"
+    },
+    {
+      "amount": 1,
+      "target": "0x858b74656127a05134b7614d5fba180e97739c99"
+    },
+    {
+      "amount": 1,
+      "target": "0xb4a484c89a1f85c32773f80e915a1441d7e83db6"
+    },
+    {
+      "amount": 1,
+      "target": "0xa90d4602211e30aa9f2d0fdb179bd113492028ca"
+    },
+    {
+      "amount": 1,
+      "target": "0xb22df594adad3ae08c339d6e2079ec7b4c69cab5"
+    },
+    {
+      "amount": 0,
+      "target": "0x89931c9f649137fe9a6d59a455bcc695af861fa0"
+    },
+    {
+      "amount": 1,
+      "target": "0x88091d52b099523e2717d3a526f8a41a7ff20ca4"
+    },
+    {
+      "amount": 1,
+      "target": "0xa459e9ad0870b24aeb95d53b437014dc5dd97bbe"
+    },
+    {
+      "amount": 1,
+      "target": "0xb88c4324866296a28c22416988207436ec2878ec"
+    },
+    {
+      "amount": 0,
+      "target": "0x8bf7c9c9972045c582b7363af44e93da26aef3c8"
+    },
+    {
+      "amount": 1,
+      "target": "0xae23fb1b0c76e4fd9800c18945094932655fa3a6"
+    },
+    {
+      "amount": 1,
+      "target": "0xa125a3659c269801fb2e00c8f38d6b6fbe91a85d"
+    },
+    {
+      "amount": 1,
+      "target": "0x847cddf22fe1483b2808f08bb98586deba65165f"
+    },
+    {
+      "amount": 2,
+      "target": "0x8dc5f6f45cc02e68b008e6035492c3c10835e924"
+    },
+    {
+      "amount": 1,
+      "target": "0xa77a318dd834183c3e3b3921c94b1dbb8d1bb2c6"
+    },
+    {
+      "amount": 1,
+      "target": "0xb0591fe44b7eba93e4f088344d0b924bbe3c7ed9"
+    },
+    {
+      "amount": 3,
+      "target": "0xb5889b85291f380a80e2cdf02fc62edf4041ef1f"
+    },
+    {
+      "amount": 1,
+      "target": "0x935b301be1f67fc6a896b57309e546bfc1ae731a"
+    },
+    {
+      "amount": 1,
+      "target": "0xb505fbc0beb4fef613b0720292aa7d74b59ee7ae"
+    },
+    {
+      "amount": 0,
+      "target": "0x961d5cb5deed3612dfbbbffccada34d5a940bcb9"
+    },
+    {
+      "amount": 1,
+      "target": "0xa960c5230b2348f3121d891aeabb2d3598893f7d"
+    },
+    {
+      "amount": 0,
+      "target": "0xb37774192885fd4974e3621e13020acb2208c2b2"
+    },
+    {
+      "amount": 0,
+      "target": "0x85bc68a8c76d4f706648059fa2d3b387c86ee650"
+    },
+    {
+      "amount": 0,
+      "target": "0xb563024394c9553c1123af15dce2630b60eaaafd"
+    },
+    {
+      "amount": 1,
+      "target": "0x8f1e06e20ac5dd13518bd6c5e19c0a00a9dac968"
+    },
+    {
+      "amount": 4,
+      "target": "0xa1ae1d14d16cf61a6ae0c9589a19a8f38e161f02"
+    },
+    {
+      "amount": 1,
+      "target": "0x95419a10ad9771dc7545637bc14e4eb7938e0bcc"
+    },
+    {
+      "amount": 1,
+      "target": "0x89929f3a811cf44f70d60ccaa4571dff9371c73f"
+    },
+    {
+      "amount": 1,
+      "target": "0x988085e2781db7997526af727a32b8660d402225"
+    },
+    {
+      "amount": 2,
+      "target": "0xa4662c910f9eda828898a0cddd61332aca5808be"
+    },
+    {
+      "amount": 1,
+      "target": "0x9401d4c66e72e596e0072c27de5bcf3c99900011"
+    },
+    {
+      "amount": 1,
+      "target": "0xb2c65e1c252c703d96a29edc5e4b6d22b905a560"
+    },
+    {
+      "amount": 1,
+      "target": "0x82626f97b0fc009c2d2e098e2c3b21922c6525d3"
+    },
+    {
+      "amount": 1,
+      "target": "0xb88c17f529454d0305f27188d32f1aea28a82881"
+    }
+  ],
   "sequencerRules": {
     "inner": [
       {
