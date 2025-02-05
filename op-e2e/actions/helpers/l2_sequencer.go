@@ -57,13 +57,13 @@ func NewL2Sequencer(t Testing, log log.Logger, l1 derive.L1Fetcher, blobSrc deri
 	interopBackend interop.InteropBackend) *L2Sequencer {
 
 	electionStore := election_client.NewElectionStore(log)
+	electionClient := election_client.NewElectionClient(electionStore)
 	ver := NewL2Verifier(t, log, l1, blobSrc, beaconClient, altDASrc, eng, l1Client, cfg, &sync.Config{}, safedb.Disabled, interopBackend, electionStore)
-	attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, eng)
+	attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, eng, electionClient)
 	seqConfDepthL1 := confdepth.NewConfDepth(seqConfDepth, ver.syncStatus.L1Head, l1)
 	l1OriginSelector := &MockL1OriginSelector{
 		actual: sequencing.NewL1OriginSelector(log, cfg, seqConfDepthL1),
 	}
-	electionClient := election_client.NewElectionClient(electionStore)
 	metr := metrics.NoopMetrics
 	seqStateListener := node.DisabledConfigPersistence{}
 	conduc := &conductor.NoOpConductor{}

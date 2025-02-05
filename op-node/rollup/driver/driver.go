@@ -75,7 +75,7 @@ type L2Chain interface {
 
 type DerivationPipeline interface {
 	Reset()
-	Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinner eth.ElectionWinner) (*derive.AttributesWithParent, error)
+	Step(ctx context.Context, pendingSafeHead eth.L2BlockRef) (*derive.AttributesWithParent, error)
 	Origin() eth.L1BlockRef
 	DerivationReady() bool
 	ConfirmEngineReset()
@@ -258,7 +258,7 @@ func NewDriver(
 	var sequencer sequencing.SequencerIface
 	if driverCfg.SequencerEnabled {
 		asyncGossiper := async.NewAsyncGossiper(driverCtx, network, log, metrics)
-		attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, l2)
+		attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, l2, electionClient)
 		sequencerConfDepth := confdepth.NewConfDepth(driverCfg.SequencerConfDepth, statusTracker.L1Head, l1)
 		findL1Origin := sequencing.NewL1OriginSelector(log, cfg, sequencerConfDepth)
 		sequencer = sequencing.NewSequencer(driverCtx, log, cfg, attrBuilder, findL1Origin,

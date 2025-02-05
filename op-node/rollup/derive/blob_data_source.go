@@ -135,7 +135,7 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 	var hashes []eth.IndexedBlobHash
 	blobIndex := 0 // index of each blob in the block's blob sidecar
 	blockTime := ds.ref.Time
-	electionWinner := ds.electionClient.GetElectionWinnerByTime(blockTime)
+	electionWinner := ds.electionClient.GetElectionWinner(blockTime)
 
 	if electionWinner == (eth.ElectionWinner{}) {
 		ds.log.Warn("No election winner found for block", "blockTime", blockTime)
