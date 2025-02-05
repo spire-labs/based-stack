@@ -715,7 +715,8 @@ type SequencerRulesConfig struct {
 	AssertionType  []*big.Int       `json:"assertionType"`
 	DesiredRetdata []*common.Hash   `json:"desiredRetdata"`
 	Target         []common.Address `json:"target"`
-	ConfigCalldata [][]byte         `json:"configCalldata"`
+	// Is there a better type for ConfigCalldata? Cant use []byte because a hexadecimal string is inputted
+	ConfigCalldata []string `json:"configCalldata"`
 }
 
 type ElectionSystemConfig struct {
