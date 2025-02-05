@@ -58,6 +58,7 @@ contract OPStackManager is ISemver, Initializable {
         uint32 basefeeScalar;
         uint32 blobBasefeeScalar;
         uint256 l2ChainId;
+        ElectionSystemConfig.SequencerRule[] sequencerRules;
     }
 
     /// @notice The full set of outputs from deploying a new OP Stack chain.
@@ -118,8 +119,8 @@ contract OPStackManager is ISemver, Initializable {
 
     // -------- Constants and Variables --------
 
-    /// @custom:semver 1.0.1-beta.4
-    string public constant version = "1.0.1-beta.4";
+    /// @custom:semver 1.0.1-beta.6
+    string public constant version = "1.0.1-beta.6";
 
     /// @notice Address of the SuperchainConfig contract shared by all chains.
     SuperchainConfig public immutable superchainConfig;
@@ -410,7 +411,8 @@ contract OPStackManager is ISemver, Initializable {
             referenceResourceConfig,
             chainIdToBatchInboxAddress(_input.l2ChainId),
             opChainAddrs,
-            _input.electionFallbackList
+            _input.electionFallbackList,
+            _input.sequencerRules
         );
     }
 

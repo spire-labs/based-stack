@@ -71,7 +71,6 @@
   "daResolveWindow": 16,
   "daBondSize": 1000000,
   "daResolverRefundPercentage": 0,
-  "minimumPreconfirmationCollateral": 0,
   "electionFallbackList": "0x0203050000000000000000000000000000000000000000000000000000000000",
   "genesisAllocation": {
     "targets": [
@@ -206,5 +205,11 @@
       1,
       1
     ]
+  },
+  "sequencerRules": {
+    "assertionType": [],
+    "desiredRetdata": [],
+    "configCalldata": [],
+    "target": []
   }
 }

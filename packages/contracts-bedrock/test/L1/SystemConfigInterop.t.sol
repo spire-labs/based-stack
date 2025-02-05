@@ -131,7 +131,8 @@ contract SystemConfigInterop_Test is CommonTest {
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: _token
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
     }
 

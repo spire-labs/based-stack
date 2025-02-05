@@ -9,6 +9,7 @@ import { Process } from "scripts/libraries/Process.sol";
 import { Chains } from "scripts/libraries/Chains.sol";
 import { Config, Fork, ForkUtils } from "scripts/libraries/Config.sol";
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
 /// @title DeployConfig
 /// @notice Represents the configuration required to deploy the system. It is expected
@@ -86,7 +87,6 @@ contract DeployConfig is Script {
     uint256 public daResolveWindow;
     uint256 public daBondSize;
     uint256 public daResolverRefundPercentage;
-    uint256 public minimumPreconfirmationCollateral;
     bytes32 public electionFallbackList;
 
     bool public useCustomGasToken;
@@ -94,6 +94,8 @@ contract DeployConfig is Script {
 
     bool public useInterop;
 
+    // Made internal to create a view function that returns the proper types
+    ElectionSystemConfig.SequencerRule[] internal _sequencerRules;
     ElectionTickets.GenesisAllocation[] internal _genesisAllocation;
 
     function read(string memory _path) public {
@@ -181,7 +183,6 @@ contract DeployConfig is Script {
         useInterop = _readOr(_json, "$.useInterop", false);
 
         // Election system config
-        minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
         electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
 
         address[] memory targets = _readOr(_json, "$.genesisAllocation.targets", new address[](0));
@@ -192,8 +193,34 @@ contract DeployConfig is Script {
             revert("GenesisAllocation: targets and amounts must be the same length");
         }
 
-        for (uint256 i = 0; i < targets.length; i++) {
+        for (uint256 i; i < targets.length; i++) {
             _genesisAllocation.push(ElectionTickets.GenesisAllocation({ target: targets[i], amount: amounts[i] }));
+        }
+
+        // Read sequencer rules
+        uint256[] memory assertionType = _readOr(_json, "$.sequencerRules.assertionType", new uint256[](0));
+        bytes32[] memory desiredRetdata = _readOr(_json, "$.sequencerRules.desiredRetdata", new bytes32[](0));
+        bytes[] memory configCalldata = _readOr(_json, "$.sequencerRules.configCalldata", new bytes[](0));
+        address[] memory target = _readOr(_json, "$.sequencerRules.targets", new address[](0));
+
+        if (
+            assertionType.length != desiredRetdata.length || desiredRetdata.length != configCalldata.length
+                || configCalldata.length != target.length
+        ) {
+            revert("SequencerRules: assertionType, desiredRetdata, configCalldata, and target must be the same length");
+        }
+
+        // TODO(spire): Support addressOffsets, should be added in the enhance json config pr
+        for (uint256 i; i < assertionType.length; i++) {
+            _sequencerRules.push(
+                ElectionSystemConfig.SequencerRule({
+                    assertionType: ElectionSystemConfig.SequencerAssertion(assertionType[i]),
+                    desiredRetdata: desiredRetdata[i],
+                    configCalldata: configCalldata[i],
+                    target: target[i],
+                    addressOffsets: new uint256[](0)
+                })
+            );
         }
     }
 
@@ -265,6 +292,10 @@ contract DeployConfig is Script {
 
     function genesisAllocation() public view returns (ElectionTickets.GenesisAllocation[] memory) {
         return _genesisAllocation;
+    }
+
+    function sequencerRules() public view returns (ElectionSystemConfig.SequencerRule[] memory) {
+        return _sequencerRules;
     }
 
     function latestGenesisFork() internal view returns (Fork) {
@@ -340,5 +371,29 @@ contract DeployConfig is Script {
         returns (string memory)
     {
         return vm.keyExists(json, key) ? json.readString(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        bytes32[] memory defaultValue
+    )
+        internal
+        view
+        returns (bytes32[] memory)
+    {
+        return vm.keyExists(json, key) ? json.readBytes32Array(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        bytes[] memory defaultValue
+    )
+        internal
+        view
+        returns (bytes[] memory)
+    {
+        return vm.keyExists(json, key) ? json.readBytesArray(key) : defaultValue;
     }
 }

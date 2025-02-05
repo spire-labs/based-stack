@@ -62,6 +62,5 @@
   "daResolveWindow": 100,
   "daBondSize": 1000,
   "daResolverRefundPercentage": 50,
-  "minimumPreconfirmationCollateral": 0,
   "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
 }

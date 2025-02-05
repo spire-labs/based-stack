@@ -57,7 +57,6 @@
       "disputeGameFinalityDelaySeconds": 302400,
       "respectedGameType": 0,
       "useFaultProofs": true,
-      "minimumPreconfirmationCollateral": 0,
       "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
     },
     "sepolia": {
@@ -116,7 +115,6 @@
       "disputeGameFinalityDelaySeconds": 302400,
       "respectedGameType": 0,
       "useFaultProofs": true,
-      "minimumPreconfirmationCollateral": 0,
       "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
     },
     "devnetL1-template": {
@@ -192,7 +190,6 @@
       "daResolveWindow": 16,
       "daBondSize": 1000000,
       "daResolverRefundPercentage": 0,
-      "minimumPreconfirmationCollateral": 0,
       "electionFallbackList": "0x0203050000000000000000000000000000000000000000000000000000000000",
       "genesisAllocation": {
         "targets": [
@@ -327,6 +324,12 @@
           1,
           1
         ]
+      },
+      "sequencerRules": {
+        "assertionType": [],
+        "desiredRetdata": [],
+        "configCalldata": [],
+        "target": []
       }
     },
     "hardhat": {
@@ -393,7 +396,6 @@
       "daResolveWindow": 100,
       "daBondSize": 1000,
       "daResolverRefundPercentage": 50,
-      "minimumPreconfirmationCollateral": 0,
       "electionFallbackList": "0x0000000000000000000000000000000000000000000000000000000000000000"
     }
   },

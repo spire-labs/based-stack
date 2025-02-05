@@ -711,15 +711,20 @@ func (d *FaultProofDeployConfig) Check(log log.Logger) error {
 	return nil
 }
 
+type SequencerRulesConfig struct {
+	AssertionType  []*big.Int       `json:"assertionType"`
+	DesiredRetdata []*common.Hash   `json:"desiredRetdata"`
+	Target         []common.Address `json:"target"`
+	// Is there a better type for ConfigCalldata? Cant use []byte because a hexadecimal string is inputted
+	ConfigCalldata []string `json:"configCalldata"`
+}
+
 type ElectionSystemConfig struct {
-	MinimumPreconfirmationCollateral *big.Int    `json:"minimumPreconfirmationCollateral"`
-	ElectionFallbackList             common.Hash `json:"electionFallbackList"`
+	SequencerRules       SequencerRulesConfig `json:"sequencerRules"`
+	ElectionFallbackList common.Hash          `json:"electionFallbackList"`
 }
 
 func (d *ElectionSystemConfig) Check(log log.Logger) error {
-	if d.MinimumPreconfirmationCollateral == nil {
-		log.Warn("MinimumPreconfirmationCollateral is nil")
-	}
 	if d.ElectionFallbackList == (common.Hash{}) {
 		log.Warn("ElectionFallbackList is nil")
 	}

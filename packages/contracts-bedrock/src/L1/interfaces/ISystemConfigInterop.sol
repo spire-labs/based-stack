@@ -19,7 +19,8 @@ interface ISystemConfigInterop is ISystemConfig {
         address _batchInbox,
         Addresses memory _addresses,
         bytes32 _fallbackList,
-        address _dependencyManager
+        address _dependencyManager,
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRules
     )
         external;
     function removeDependency(uint256 _chainId) external;

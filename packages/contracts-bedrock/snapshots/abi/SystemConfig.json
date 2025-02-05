@@ -480,6 +480,38 @@
         "internalType": "bytes32",
         "name": "_fallbackList",
         "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum ElectionSystemConfig.SequencerAssertion",
+            "name": "assertionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configCalldata",
+            "type": "bytes"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct ElectionSystemConfig.SequencerRule[]",
+        "name": "_sequencerRules",
+        "type": "tuple[]"
       }
     ],
     "name": "initialize",
