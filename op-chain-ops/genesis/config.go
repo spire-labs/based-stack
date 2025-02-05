@@ -711,12 +711,16 @@ func (d *FaultProofDeployConfig) Check(log log.Logger) error {
 	return nil
 }
 
-type SequencerRulesConfig struct {
+type SequencerRules struct {
 	AssertionType  *big.Int       `json:"assertionType"`
 	DesiredRetdata *common.Hash   `json:"desiredRetdata"`
 	Target         common.Address `json:"target"`
 	ConfigCalldata string         `json:"configCalldata"`
 	AddressOffsets []*big.Int     `json:"addressOffsets"`
+}
+
+type SequencerRulesConfig struct {
+	Inner []SequencerRules `json:"inner"`
 }
 
 type ElectionSystemConfig struct {
@@ -987,12 +991,6 @@ func NewDeployConfig(path string) (*DeployConfig, error) {
 	var config DeployConfig
 	if err := dec.Decode(&config); err != nil {
 		return nil, fmt.Errorf("cannot unmarshal deploy config: %w", err)
-	}
-
-	// Manually make the array empty instead of being initialized to nil
-	// NOTE: Not sure this is needed
-	if config.SequencerRules.AddressOffsets == nil {
-		config.SequencerRules.AddressOffsets = make([]*big.Int, 0)
 	}
 
 	return &config, nil

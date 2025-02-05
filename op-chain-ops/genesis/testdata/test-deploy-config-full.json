@@ -103,10 +103,14 @@
     }
   ],
   "sequencerRules": {
-    "assertionType": 1,
-    "desiredRetdata": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-    "configCalldata": "0xffff",
-    "target": "0x0000000000000000000000000000000000000000",
-    "addressOffsets": []
+    "inner": [
+        {
+        "assertionType": 1,
+        "desiredRetdata": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "configCalldata": "0xffff",
+        "target": "0x0000000000000000000000000000000000000000",
+        "addressOffsets": []
+      }
+    ]
   }
 }
