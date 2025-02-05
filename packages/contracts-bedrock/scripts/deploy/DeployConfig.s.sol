@@ -11,6 +11,10 @@ import { Config, Fork, ForkUtils } from "scripts/libraries/Config.sol";
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
 import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
 
+struct SequencerRules {
+    ElectionSystemConfig.SequencerRule[] inner;
+}
+
 /// @title DeployConfig
 /// @notice Represents the configuration required to deploy the system. It is expected
 ///         to read the file from JSON. A future improvement would be to have fallback
@@ -198,29 +202,11 @@ contract DeployConfig is Script {
         }
 
         // Read sequencer rules
-        uint256[] memory assertionType = _readOr(_json, "$.sequencerRules.assertionType", new uint256[](0));
-        bytes32[] memory desiredRetdata = _readOr(_json, "$.sequencerRules.desiredRetdata", new bytes32[](0));
-        bytes[] memory configCalldata = _readOr(_json, "$.sequencerRules.configCalldata", new bytes[](0));
-        address[] memory target = _readOr(_json, "$.sequencerRules.targets", new address[](0));
-
-        if (
-            assertionType.length != desiredRetdata.length || desiredRetdata.length != configCalldata.length
-                || configCalldata.length != target.length
-        ) {
-            revert("SequencerRules: assertionType, desiredRetdata, configCalldata, and target must be the same length");
-        }
-
         // TODO(spire): Support addressOffsets, should be added in the enhance json config pr
-        for (uint256 i; i < assertionType.length; i++) {
-            _sequencerRules.push(
-                ElectionSystemConfig.SequencerRule({
-                    assertionType: ElectionSystemConfig.SequencerAssertion(assertionType[i]),
-                    desiredRetdata: desiredRetdata[i],
-                    configCalldata: configCalldata[i],
-                    target: target[i],
-                    addressOffsets: new uint256[](0)
-                })
-            );
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRulesTemp =
+            _readOr(_json, "$.sequencerRules", new ElectionSystemConfig.SequencerRule[](0));
+        for (uint256 i; i < _sequencerRulesTemp.length; i++) {
+            _sequencerRules.push(_sequencerRulesTemp[i]);
         }
     }
 
@@ -354,6 +340,24 @@ contract DeployConfig is Script {
         returns (uint256[] memory)
     {
         return vm.keyExistsJson(json, key) ? json.readUintArray(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        ElectionSystemConfig.SequencerRule[] memory defaultValue
+    )
+        internal
+        view
+        returns (ElectionSystemConfig.SequencerRule[] memory)
+    {
+        if (vm.keyExistsJson(json, key)) {
+            bytes memory data = json.parseRaw(key);
+            SequencerRules memory rules = abi.decode(data, (SequencerRules));
+            return rules.inner;
+        }
+
+        return defaultValue;
     }
 
     function _isNull(string memory json, string memory key) internal pure returns (bool) {

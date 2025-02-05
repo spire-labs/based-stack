@@ -325,12 +325,15 @@
           1
         ]
       },
-      "sequencerRules": {
-        "assertionType": [],
-        "desiredRetdata": [],
-        "configCalldata": [],
-        "target": []
-      }
+"sequencerRules": {
+  "inner": [{
+    "addressOffsets": [1],
+    "assertionType": 1,
+    "configCalldata": "0xffff",
+    "desiredRetdata": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "target": "0x0000000000000000000000000000000000000000"
+  }]
+}
     },
     "hardhat": {
       "finalSystemOwner": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",

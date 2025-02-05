@@ -207,9 +207,16 @@
     ]
   },
   "sequencerRules": {
-    "assertionType": [],
-    "desiredRetdata": [],
-    "configCalldata": [],
-    "target": []
+    "inner": [
+      {
+        "addressOffsets": [
+          1
+        ],
+        "assertionType": 1,
+        "configCalldata": "0xffff",
+        "desiredRetdata": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "target": "0x0000000000000000000000000000000000000000"
+      }
+    ]
   }
 }
