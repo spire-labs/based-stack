@@ -102,11 +102,6 @@ type DataSourceConfig struct {
 }
 
 func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, cfg *DataSourceConfig, logger log.Logger) bool {
-	if receipt.Type != types.BlobTxType {
-		// TODO(spire): enable other DA sources
-		logger.Debug("Not a blob tx", "tx", receipt.TxHash)
-		return false
-	}
 
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID

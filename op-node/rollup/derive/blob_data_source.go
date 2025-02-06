@@ -149,13 +149,14 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 			blobIndex += len(tx.tx.BlobHashes())
 			continue
 		}
-		// TODO(spire): enable other DA sources
+
 		// handle non-blob batcher transactions by extracting their calldata
-		// if tx.tx.Type() != types.BlobTxType {
-		// 	calldata := eth.Data(tx.tx.Data())
-		// 	data = append(data, blobOrCalldata{nil, &calldata})
-		// 	continue
-		// }
+		if tx.tx.Type() != types.BlobTxType {
+			calldata := eth.Data(tx.tx.Data())
+			data = append(data, blobOrCalldata{nil, &calldata})
+			continue
+		}
+
 		for _, h := range tx.tx.BlobHashes() {
 			idh := eth.IndexedBlobHash{
 				Index: uint64(blobIndex),

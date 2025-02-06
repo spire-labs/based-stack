@@ -59,21 +59,27 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		electionClient: mockElectionProvider,
 	}
 
-	// TODO(spire): enable other DA sources
 	// create a valid non-blob batcher transaction and make sure it's picked up
-	// txData := &types.LegacyTx{
-	// 	Nonce:    rng.Uint64(),
-	// 	GasPrice: new(big.Int).SetUint64(rng.Uint64()),
-	// 	Gas:      2_000_000,
-	// 	To:       &batchInboxAddr,
-	// 	Value:    big.NewInt(10),
-	// 	Data:     testutils.RandomData(rng, rng.Intn(1000)),
-	// }
-	// calldataTx, _ := types.SignNewTx(privateKey, signer, txData)
-	// txs := types.Transactions{calldataTx}
-	// data, blobHashes := dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
-	// require.Equal(t, 1, len(data))
-	// require.Equal(t, 0, len(blobHashes))
+	calldataTxData := &types.LegacyTx{
+		Nonce:    rng.Uint64(),
+		GasPrice: new(big.Int).SetUint64(rng.Uint64()),
+		Gas:      2_000_000,
+		To:       &batchInboxAddr,
+		Value:    big.NewInt(10),
+		Data:     testutils.RandomData(rng, rng.Intn(1000)),
+	}
+	calldataTx, _ := types.SignNewTx(privateKey, signer, calldataTxData)
+	calldataReceipt := &types.Receipt{
+		Type: types.LegacyTxType,
+		Logs: []*types.Log{{
+			Address: batchInboxAddr,
+			Topics:  []common.Hash{batchSubmittedEventTopic, padAddress(electionWinnerAddr)},
+		}},
+	}
+	txs := []TxWithReceipt{{tx: calldataTx, receipt: calldataReceipt}}
+	data, blobHashes := ds.dataAndHashesFromTxs(txs, &config, logger)
+	require.Equal(t, 1, len(data))
+	require.Equal(t, 0, len(blobHashes))
 
 	// create a valid blob batcher tx and make sure it's picked up
 	blobHash := testutils.RandomHash(rng)
@@ -84,26 +90,39 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		BlobHashes: []common.Hash{blobHash},
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
-	receipt := &types.Receipt{
+	blobReceipt := &types.Receipt{
 		Type: types.BlobTxType,
 		Logs: []*types.Log{{
 			Address: batchInboxAddr,
 			Topics:  []common.Hash{batchSubmittedEventTopic, padAddress(electionWinnerAddr)},
 		}},
 	}
-	txs := []TxWithReceipt{{tx: blobTx, receipt: receipt}}
-	data, blobHashes := ds.dataAndHashesFromTxs(txs, &config, logger)
+	txs = []TxWithReceipt{{tx: blobTx, receipt: blobReceipt}}
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
 	require.Equal(t, 1, len(data))
 	require.Equal(t, 1, len(blobHashes))
 	require.Nil(t, data[0].calldata)
 
-	// TODO(spire): enable other DA sources
 	// try again with both the blob & calldata transactions and make sure both are picked up
-	// txs = types.Transactions{blobTx, calldataTx}
-	// data, blobHashes = dataAndHashesFromTxs(txs, &config, batcherAddr, logger)
-	// require.Equal(t, 2, len(data))
-	// require.Equal(t, 1, len(blobHashes))
-	// require.NotNil(t, data[1].calldata)
+	txs = []TxWithReceipt{{tx: blobTx, receipt: blobReceipt}, {tx: calldataTx, receipt: calldataReceipt}}
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
+	require.Equal(t, 2, len(data))
+	require.Equal(t, 1, len(blobHashes))
+	require.NotNil(t, data[1].calldata)
+
+	// make sure calldata tx to the batch inbox is ignored if election winner is invalid
+	randomAddr := testutils.RandomAddress(rng)
+	calldataTxData.Data = testutils.RandomData(rng, rng.Intn(1000))
+	calldataTx, _ = types.SignNewTx(privateKey, signer, calldataTxData)
+	txs = []TxWithReceipt{{tx: calldataTx, receipt: &types.Receipt{
+		Logs: []*types.Log{{
+			Address: batchInboxAddr,
+			Topics:  []common.Hash{batchSubmittedEventTopic, padAddress(randomAddr)},
+		}},
+	}}}
+	data, blobHashes = ds.dataAndHashesFromTxs(txs, &config, logger)
+	require.Equal(t, 0, len(data))
+	require.Equal(t, 0, len(blobHashes))
 
 	// make sure blob tx to the batch inbox is ignored if not calling the submit fn
 	blobTxData.Data = testutils.RandomData(rng, rng.Intn(1000))
