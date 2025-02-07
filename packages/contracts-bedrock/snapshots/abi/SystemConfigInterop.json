@@ -348,14 +348,14 @@
       {
         "components": [
           {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          },
+          {
             "internalType": "enum ElectionSystemConfig.SequencerAssertion",
             "name": "assertionType",
             "type": "uint8"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "desiredRetdata",
-            "type": "bytes32"
           },
           {
             "internalType": "bytes",
@@ -363,14 +363,14 @@
             "type": "bytes"
           },
           {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "target",
             "type": "address"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "addressOffsets",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct ElectionSystemConfig.SequencerRule",
@@ -503,21 +503,16 @@
         "type": "bytes32"
       },
       {
-        "internalType": "address",
-        "name": "_dependencyManager",
-        "type": "address"
-      },
-      {
         "components": [
+          {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          },
           {
             "internalType": "enum ElectionSystemConfig.SequencerAssertion",
             "name": "assertionType",
             "type": "uint8"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "desiredRetdata",
-            "type": "bytes32"
           },
           {
             "internalType": "bytes",
@@ -525,14 +520,14 @@
             "type": "bytes"
           },
           {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "target",
             "type": "address"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "addressOffsets",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct ElectionSystemConfig.SequencerRule[]",
@@ -667,16 +662,21 @@
         "type": "bytes32"
       },
       {
+        "internalType": "address",
+        "name": "_dependencyManager",
+        "type": "address"
+      },
+      {
         "components": [
+          {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          },
           {
             "internalType": "enum ElectionSystemConfig.SequencerAssertion",
             "name": "assertionType",
             "type": "uint8"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "desiredRetdata",
-            "type": "bytes32"
           },
           {
             "internalType": "bytes",
@@ -684,14 +684,14 @@
             "type": "bytes"
           },
           {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "target",
             "type": "address"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "addressOffsets",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct ElectionSystemConfig.SequencerRule[]",
@@ -1047,14 +1047,14 @@
       {
         "components": [
           {
+            "internalType": "uint256[]",
+            "name": "addressOffsets",
+            "type": "uint256[]"
+          },
+          {
             "internalType": "enum ElectionSystemConfig.SequencerAssertion",
             "name": "assertionType",
             "type": "uint8"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "desiredRetdata",
-            "type": "bytes32"
           },
           {
             "internalType": "bytes",
@@ -1062,14 +1062,14 @@
             "type": "bytes"
           },
           {
+            "internalType": "bytes32",
+            "name": "desiredRetdata",
+            "type": "bytes32"
+          },
+          {
             "internalType": "address",
             "name": "target",
             "type": "address"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "addressOffsets",
-            "type": "uint256[]"
           }
         ],
         "internalType": "struct ElectionSystemConfig.SequencerRule",

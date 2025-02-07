@@ -35,9 +35,9 @@ contract ElectionTickets_initialize_Test is ElectionTickets_Test {
     function test_initialize_mintGenesisTickets_succeeds() public {
         ElectionTickets.GenesisAllocation[] memory _genAlloc = new ElectionTickets.GenesisAllocation[](3);
 
-        _genAlloc[0] = ElectionTickets.GenesisAllocation(address(1), 1);
-        _genAlloc[1] = ElectionTickets.GenesisAllocation(address(2), 2);
-        _genAlloc[2] = ElectionTickets.GenesisAllocation(address(3), 3);
+        _genAlloc[0] = ElectionTickets.GenesisAllocation(1, address(1));
+        _genAlloc[1] = ElectionTickets.GenesisAllocation(2, address(2));
+        _genAlloc[2] = ElectionTickets.GenesisAllocation(3, address(3));
 
         for (uint256 i; i < _genAlloc.length; i++) {
             vm.assume(_genAlloc[i].target != address(0));
