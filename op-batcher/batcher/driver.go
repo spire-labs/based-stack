@@ -690,7 +690,7 @@ func (l *BatchSubmitter) sendTx(txdata txData, isCancel bool, candidate *txmgr.T
 
 func (l *BatchSubmitter) encodeSubmitTx(targetTimestamp uint64) ([]byte, error) {
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	submitBlobMethod, ok := batchInboxAbi.Methods["submitBlob"]
 	if !ok {
 		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
 	}
@@ -699,13 +699,13 @@ func (l *BatchSubmitter) encodeSubmitTx(targetTimestamp uint64) ([]byte, error) 
 	blockTimestampBigInt := new(big.Int).SetUint64(targetTimestamp)
 
 	// encode the target L1 block and attempt to submit the batch
-	txData, err := submitMethod.Inputs.Pack(blockTimestampBigInt)
+	txData, err := submitBlobMethod.Inputs.Pack(blockTimestampBigInt)
 
 	if err != nil {
 		return nil, fmt.Errorf("packing submit method inputs: %w", err)
 	}
 
-	submitSel := submitMethod.ID
+	submitSel := submitBlobMethod.ID
 	return append(submitSel[:], txData...), nil
 }
 

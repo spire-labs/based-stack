@@ -288,16 +288,18 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 	pendingHeader, err := s.l1.HeaderByNumber(t.Ctx(), big.NewInt(-1))
 	require.NoError(t, err, "need l1 pending header for gas price estimation")
 	gasFeeCap := new(big.Int).Add(gasTipCap, new(big.Int).Mul(pendingHeader.BaseFee, big.NewInt(2)))
+	nextBlockTime := syncStatus.CurrentL1.Time + s.l2BatcherCfg.L1BlockTime
 
 	var txData types.TxData
 	if s.l2BatcherCfg.DataAvailabilityType == batcherFlags.CalldataType {
+		calldata := submitCalldataTxData(t, nextBlockTime, payload)
 		rawTx := &types.DynamicFeeTx{
 			ChainID:   s.rollupCfg.L1ChainID,
 			Nonce:     nonce,
 			To:        &s.rollupCfg.BatchInboxContractAddress,
 			GasTipCap: gasTipCap,
 			GasFeeCap: gasFeeCap,
-			Data:      payload,
+			Data:      calldata,
 		}
 		for _, opt := range txOpts {
 			opt(rawTx)
@@ -305,7 +307,7 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 
 		gas, err := core.IntrinsicGas(rawTx.Data, nil, false, true, true, false)
 		require.NoError(t, err, "need to compute intrinsic gas")
-		rawTx.Gas = gas
+		rawTx.Gas = gas + 30000 // TODO(spire): POC only
 		txData = rawTx
 	} else if s.l2BatcherCfg.DataAvailabilityType == batcherFlags.BlobsType {
 		var b eth.Blob
@@ -318,9 +320,7 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 		if blobFeeCap.Lt(uint256.NewInt(params.GWei)) { // ensure we meet 1 gwei geth tx-pool minimum
 			blobFeeCap = uint256.NewInt(params.GWei)
 		}
-		calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Time+s.l2BatcherCfg.L1BlockTime)
-		require.NoError(t, err)
-
+		calldata := submitBlobTxData(t, syncStatus.CurrentL1.Time+s.l2BatcherCfg.L1BlockTime)
 		txData = &types.BlobTx{
 			To:         s.rollupCfg.BatchInboxContractAddress,
 			Data:       calldata,
@@ -346,16 +346,28 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 	s.LastSubmitted = tx
 }
 
-func submitTxCalldata(t require.TestingT, targetTimestam uint64) ([]byte, error) {
+func submitBlobTxData(t require.TestingT, targetTimestamp uint64) []byte {
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	submitBlobMethod, ok := batchInboxAbi.Methods["submitBlob"]
 	require.True(t, ok)
 
-	inputs, err := submitMethod.Inputs.Pack(new(big.Int).SetUint64(targetTimestam))
+	inputs, err := submitBlobMethod.Inputs.Pack(new(big.Int).SetUint64(targetTimestamp))
 	require.NoError(t, err)
 
-	submitSel := submitMethod.ID
-	return append(submitSel[:], inputs...), nil
+	submitSel := submitBlobMethod.ID
+	return append(submitSel[:], inputs...)
+}
+
+func submitCalldataTxData(t require.TestingT, targetTimestamp uint64, payload []byte) []byte {
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	submitCalldataMethod, ok := batchInboxAbi.Methods["submitCalldata"]
+	require.True(t, ok)
+
+	inputs, err := submitCalldataMethod.Inputs.Pack(new(big.Int).SetUint64(targetTimestamp), payload)
+	require.NoError(t, err)
+
+	submitSel := submitCalldataMethod.ID
+	return append(submitSel[:], inputs...)
 }
 
 func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
@@ -419,9 +431,7 @@ func (s *L2Batcher) ActL2BatchSubmitMultiBlob(t Testing, numBlobs int) {
 		blobFeeCap = uint256.NewInt(params.GWei)
 	}
 
-	calldata, err := submitTxCalldata(t, syncStatus.CurrentL1.Time+s.l2BatcherCfg.L1BlockTime)
-	require.NoError(t, err)
-
+	calldata := submitBlobTxData(t, syncStatus.CurrentL1.Time+s.l2BatcherCfg.L1BlockTime)
 	txData := &types.BlobTx{
 		To:         s.rollupCfg.BatchInboxContractAddress,
 		Data:       calldata,
