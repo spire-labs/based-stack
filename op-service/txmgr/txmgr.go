@@ -1132,80 +1132,89 @@ func (m *SimpleTxManager) isBatchSubmission(txData []byte) (bool, error) {
 	if len(txData) < 4 {
 		return false, fmt.Errorf("transaction data is too short to contain a method selector")
 	}
+	txSelector := txData[:4]
 
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitMethod, ok := batchInboxAbi.Methods["submit"]
+	submitBlob, ok := batchInboxAbi.Methods["submitBlob"]
 	if !ok {
-		return false, nil
+		return false, fmt.Errorf("no submitBlob method on batchInbox")
+	}
+	submitCalldata, ok := batchInboxAbi.Methods["submitCalldata"]
+	if !ok {
+		return false, fmt.Errorf("no submitCalldata method on batchInbox")
 	}
 
-	txMethodSelector := txData[:4]
-
-	submitMethodSelector := submitMethod.ID
-
-	if bytes.Equal(txMethodSelector, submitMethodSelector) {
-		return true, nil
-	}
-
-	return false, nil
+	return bytes.Equal(txSelector, submitBlob.ID) || bytes.Equal(txSelector, submitCalldata.ID), nil
 }
 
 // extracts the target L1 block number from the transaction data, if it is a batch submission transaction
-func (m *SimpleTxManager) getTargetBlockForBatchSubmission(txData []byte) (*big.Int, error) {
+func (m *SimpleTxManager) getTargetTimestampForBatchSubmission(txData []byte) (*big.Int, error) {
 	// Ensure the txData is long enough to strip the first 4 bytes
 	if len(txData) < 4 {
 		return nil, fmt.Errorf("transaction data is too short, expected at least 4 bytes, got %d", len(txData))
 	}
 
+	submitMethods := []string{"submitBlob", "submitCalldata"}
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
-	submitMethod, ok := batchInboxAbi.Methods["submit"]
-	if !ok {
-		return nil, fmt.Errorf("submit method not found in BatchInbox contract ABI")
+
+	var outErr error
+	for _, method := range submitMethods {
+		submitMethod, ok := batchInboxAbi.Methods[method]
+		if !ok {
+			outErr = fmt.Errorf("submit method: %s not found in BatchInbox contract ABI", submitMethod)
+			continue
+		}
+
+		// Verify the first argument type in the ABI
+		if len(submitMethod.Inputs) == 0 || submitMethod.Inputs[0].Type.String() != "uint256" {
+			outErr = fmt.Errorf("unexpected type for first argument, expected uint256, got %s", submitMethod.Inputs[0].Type.String())
+			continue
+		}
+
+		dataWithoutSelector := txData[4:]
+		unpacked, err := submitMethod.Inputs.Unpack(dataWithoutSelector)
+		if err != nil {
+			outErr = fmt.Errorf("error unpacking transaction data: %w", err)
+			continue
+		}
+
+		// The unpacked data should be a uint256 representing the target L1 block number
+		if len(unpacked) == 0 {
+			outErr = fmt.Errorf("unpacked data is empty")
+			continue
+		}
+
+		// The first argument should be the target L1 block number (as a *big.Int)
+		targetTimestamp, ok := unpacked[0].(*big.Int)
+		if !ok {
+			outErr = fmt.Errorf("expected first argument to be *big.Int, got %T", unpacked[0])
+			continue
+		}
+
+		return targetTimestamp, nil
 	}
 
-	// Verify the first argument type in the ABI
-	if len(submitMethod.Inputs) == 0 || submitMethod.Inputs[0].Type.String() != "uint256" {
-		return nil, fmt.Errorf("unexpected type for first argument, expected uint256, got %s", submitMethod.Inputs[0].Type.String())
-	}
-
-	dataWithoutSelector := txData[4:]
-	unpacked, err := submitMethod.Inputs.Unpack(dataWithoutSelector)
-	if err != nil {
-		return nil, fmt.Errorf("error unpacking transaction data: %w", err)
-	}
-
-	// The unpacked data should be a uint256 representing the target L1 block number
-	if len(unpacked) == 0 {
-		return nil, fmt.Errorf("unpacked data is empty")
-	}
-
-	// The first argument should be the target L1 block number (as a *big.Int)
-	l1BlockNumber, ok := unpacked[0].(*big.Int)
-	if !ok {
-		return nil, fmt.Errorf("expected first argument to be *big.Int, got %T", unpacked[0])
-	}
-
-	return l1BlockNumber, nil
+	return nil, outErr
 }
 
 // shouldRetryBatchSubmission determines if a batch submission transaction should be retried
 // based on the target L1 block number and the current L1 block number.
 // If the target block number is greater than or equal to the current block number, we should retry
 func (m *SimpleTxManager) shouldRetryBatchSubmission(txData []byte) (bool, error) {
-	targetBlock, err := m.getTargetBlockForBatchSubmission(txData)
+	targetTimestamp, err := m.getTargetTimestampForBatchSubmission(txData)
 	if err != nil {
 		return false, fmt.Errorf("error getting target block number: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.NetworkTimeout)
 	defer cancel()
-	currentBlock, err := m.backend.BlockNumber(ctx)
+	tip, err := m.backend.HeaderByNumber(ctx, nil)
 	if err != nil {
 		return false, fmt.Errorf("error getting current block number: %w", err)
 	}
 
-	log.Info("Current block number", "block", currentBlock)
-	log.Info("Target block number", "block", targetBlock)
-	// If the target block -1 is equal to the current block, we should retry
-	return new(big.Int).Sub(targetBlock, big.NewInt(1)).Cmp(new(big.Int).SetUint64(currentBlock)) == 0, nil
+	log.Info("Current block time", "time", tip.Time)
+	log.Info("Target block time", "time")
+	// If the target timestamp is larger than current time, we should retry
+	return targetTimestamp.Cmp(new(big.Int).SetUint64(tip.Time)) == 1, nil
 }

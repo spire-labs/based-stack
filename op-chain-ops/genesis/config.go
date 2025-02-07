@@ -86,20 +86,20 @@ type DevDeployConfig struct {
 }
 
 type TicketAllocation struct {
-	Targets []common.Address `json:"targets"`
-	Amounts []uint64         `json:"amounts"`
+	Targets common.Address `json:"target"`
+	Amounts uint64         `json:"amount"`
 }
 
 type L2GenesisBlockDeployConfig struct {
-	GenesisAllocation           TicketAllocation `json:"genesisAllocation"`
-	L2GenesisBlockNonce         hexutil.Uint64   `json:"l2GenesisBlockNonce"`
-	L2GenesisBlockGasLimit      hexutil.Uint64   `json:"l2GenesisBlockGasLimit"`
-	L2GenesisBlockDifficulty    *hexutil.Big     `json:"l2GenesisBlockDifficulty"`
-	L2GenesisBlockMixHash       common.Hash      `json:"l2GenesisBlockMixHash"`
-	L2GenesisBlockNumber        hexutil.Uint64   `json:"l2GenesisBlockNumber"`
-	L2GenesisBlockGasUsed       hexutil.Uint64   `json:"l2GenesisBlockGasUsed"`
-	L2GenesisBlockParentHash    common.Hash      `json:"l2GenesisBlockParentHash"`
-	L2GenesisBlockBaseFeePerGas *hexutil.Big     `json:"l2GenesisBlockBaseFeePerGas"`
+	GenesisAllocation           []TicketAllocation `json:"genesisAllocation"`
+	L2GenesisBlockNonce         hexutil.Uint64     `json:"l2GenesisBlockNonce"`
+	L2GenesisBlockGasLimit      hexutil.Uint64     `json:"l2GenesisBlockGasLimit"`
+	L2GenesisBlockDifficulty    *hexutil.Big       `json:"l2GenesisBlockDifficulty"`
+	L2GenesisBlockMixHash       common.Hash        `json:"l2GenesisBlockMixHash"`
+	L2GenesisBlockNumber        hexutil.Uint64     `json:"l2GenesisBlockNumber"`
+	L2GenesisBlockGasUsed       hexutil.Uint64     `json:"l2GenesisBlockGasUsed"`
+	L2GenesisBlockParentHash    common.Hash        `json:"l2GenesisBlockParentHash"`
+	L2GenesisBlockBaseFeePerGas *hexutil.Big       `json:"l2GenesisBlockBaseFeePerGas"`
 	// L2GenesisBlockExtraData is configurable extradata. Will default to []byte("BEDROCK") if left unspecified.
 	L2GenesisBlockExtraData []byte `json:"l2GenesisBlockExtraData"`
 	// Note that there is no L2 genesis timestamp:
@@ -711,15 +711,24 @@ func (d *FaultProofDeployConfig) Check(log log.Logger) error {
 	return nil
 }
 
+type SequencerRules struct {
+	AssertionType  *big.Int       `json:"assertionType"`
+	DesiredRetdata *common.Hash   `json:"desiredRetdata"`
+	Target         common.Address `json:"target"`
+	ConfigCalldata string         `json:"configCalldata"`
+	AddressOffsets []*big.Int     `json:"addressOffsets"`
+}
+
+type SequencerRulesConfig struct {
+	Inner []SequencerRules `json:"inner"`
+}
+
 type ElectionSystemConfig struct {
-	MinimumPreconfirmationCollateral *big.Int    `json:"minimumPreconfirmationCollateral"`
-	ElectionFallbackList             common.Hash `json:"electionFallbackList"`
+	SequencerRules       SequencerRulesConfig `json:"sequencerRules"`
+	ElectionFallbackList common.Hash          `json:"electionFallbackList"`
 }
 
 func (d *ElectionSystemConfig) Check(log log.Logger) error {
-	if d.MinimumPreconfirmationCollateral == nil {
-		log.Warn("MinimumPreconfirmationCollateral is nil")
-	}
 	if d.ElectionFallbackList == (common.Hash{}) {
 		log.Warn("ElectionFallbackList is nil")
 	}

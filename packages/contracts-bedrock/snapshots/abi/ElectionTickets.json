@@ -97,14 +97,14 @@
       {
         "components": [
           {
-            "internalType": "address",
-            "name": "target",
-            "type": "address"
-          },
-          {
             "internalType": "uint256",
             "name": "amount",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
           }
         ],
         "internalType": "struct ElectionTickets.GenesisAllocation[]",

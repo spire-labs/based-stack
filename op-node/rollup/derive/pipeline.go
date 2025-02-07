@@ -49,8 +49,7 @@ type L2Source interface {
 
 type ElectionClient interface {
 	GetLastWinnerInCurrentEpoch() eth.ElectionWinner
-	GetElectionWinnerByParentSlot(uint64) eth.ElectionWinner
-	GetElectionWinnerByTime(uint64) eth.ElectionWinner
+	GetElectionWinner(time uint64) eth.ElectionWinner
 }
 
 // DerivationPipeline is updated with new L1 data, and the Step() function can be iterated on to generate attributes
@@ -80,8 +79,6 @@ type DerivationPipeline struct {
 
 	metrics Metrics
 	DataSrc *DataSourceFactory
-
-	electionClient ElectionClient
 }
 
 // NewDerivationPipeline creates a DerivationPipeline, to turn L1 data into L2 block-inputs.
@@ -96,7 +93,7 @@ func NewDerivationPipeline(log log.Logger, rollupCfg *rollup.Config, l1Fetcher L
 	bank := NewChannelBank(log, rollupCfg, frameQueue, l1Fetcher, metrics)
 	chInReader := NewChannelInReader(rollupCfg, log, bank, metrics)
 	batchQueue := NewBatchQueue(log, rollupCfg, chInReader, l2Source)
-	attrBuilder := NewFetchingAttributesBuilder(rollupCfg, l1Fetcher, l2Source)
+	attrBuilder := NewFetchingAttributesBuilder(rollupCfg, l1Fetcher, l2Source, electionClient)
 	attributesQueue := NewAttributesQueue(log, rollupCfg, attrBuilder, batchQueue)
 
 	// Reset from ResetEngine then up from L1 Traversal. The stages do not talk to each other during
@@ -105,18 +102,17 @@ func NewDerivationPipeline(log log.Logger, rollupCfg *rollup.Config, l1Fetcher L
 	stages := []ResettableStage{l1Traversal, l1Src, altDA, frameQueue, bank, chInReader, batchQueue, attributesQueue}
 
 	return &DerivationPipeline{
-		log:            log,
-		rollupCfg:      rollupCfg,
-		l1Fetcher:      l1Fetcher,
-		altDA:          altDA,
-		resetting:      0,
-		stages:         stages,
-		metrics:        metrics,
-		traversal:      l1Traversal,
-		attrib:         attributesQueue,
-		l2:             l2Source,
-		DataSrc:        dataSrc,
-		electionClient: electionClient,
+		log:       log,
+		rollupCfg: rollupCfg,
+		l1Fetcher: l1Fetcher,
+		altDA:     altDA,
+		resetting: 0,
+		stages:    stages,
+		metrics:   metrics,
+		traversal: l1Traversal,
+		attrib:    attributesQueue,
+		l2:        l2Source,
+		DataSrc:   dataSrc,
 	}
 }
 
@@ -145,7 +141,7 @@ func (dp *DerivationPipeline) Origin() eth.L1BlockRef {
 // Any other error is critical and the derivation pipeline should be reset.
 // An error is expected when the underlying source closes.
 // When Step returns nil, it should be called again, to continue the derivation process.
-func (dp *DerivationPipeline) Step(ctx context.Context, pendingSafeHead eth.L2BlockRef, electionWinner eth.ElectionWinner) (outAttrib *AttributesWithParent, outErr error) {
+func (dp *DerivationPipeline) Step(ctx context.Context, pendingSafeHead eth.L2BlockRef) (outAttrib *AttributesWithParent, outErr error) {
 	defer dp.metrics.RecordL1Ref("l1_derived", dp.Origin())
 
 	dp.metrics.SetDerivationIdle(false)
@@ -191,7 +187,7 @@ func (dp *DerivationPipeline) Step(ctx context.Context, pendingSafeHead eth.L2Bl
 		dp.origin = newOrigin
 	}
 
-	if attrib, err := dp.attrib.NextAttributes(ctx, pendingSafeHead, electionWinner); err == nil {
+	if attrib, err := dp.attrib.NextAttributes(ctx, pendingSafeHead); err == nil {
 		return attrib, nil
 	} else if err == io.EOF {
 		// If every stage has returned io.EOF, try to advance the L1 Origin

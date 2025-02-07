@@ -162,9 +162,9 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     event ConfigUpdate(uint256 indexed version, UpdateType indexed updateType, bytes data);
 
     /// @notice Semantic version.
-    /// @custom:semver 2.3.1-beta.9
+    /// @custom:semver 2.3.1-beta.11
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.9";
+        return "2.3.1-beta.11";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -199,7 +199,8 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
                 optimismMintableERC20Factory: address(0),
                 gasPayingToken: address(0)
             }),
-            _fallbackList: bytes32(0)
+            _fallbackList: bytes32(0),
+            _sequencerRules: new ElectionSystemConfig.SequencerRule[](0)
         });
     }
 
@@ -216,6 +217,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     ///                           canonical data.
     /// @param _addresses         Set of L1 contract addresses. These should be the proxies.
     /// @param _fallbackList      The defined election fallbacklist
+    /// @param _sequencerRules    The sequencer rules to be initialized with
     function initialize(
         address _owner,
         uint32 _basefeeScalar,
@@ -226,7 +228,8 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         IResourceMetering.ResourceConfig memory _config,
         address _batchInbox,
         SystemConfig.Addresses memory _addresses,
-        bytes32 _fallbackList
+        bytes32 _fallbackList,
+        SequencerRule[] memory _sequencerRules
     )
         public
         initializer
@@ -252,6 +255,10 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         _setGasPayingToken(_addresses.gasPayingToken);
         if (!_sanitizeFallbackList(_fallbackList)) revert InvalidFallbackList();
         _setElectionFallbackList(_fallbackList);
+
+        for (uint256 i; i < _sequencerRules.length; i++) {
+            _setSequencerConfigRule(_sequencerRules[i]);
+        }
 
         _setResourceConfig(_config);
         require(_gasLimit >= minimumGasLimit(), "SystemConfig: gas limit too low");

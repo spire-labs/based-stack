@@ -55,17 +55,19 @@ abstract contract ElectionSystemConfig {
 
     /// @notice Struct for appchain configuration
     ///
-    /// @param assertionType The assertion type used for the configuration
-    /// @param desiredRetdata The desired return data for the configuration
-    /// @param configCalldata The calldata to check the result of
-    /// @param target The target contract to call
+    /// @dev This structs parameters need to be kept in alphabetical order due to us using it for JSON deserialization
+    ///
     /// @param addressOffsets The offsets of the addresses to be dynamically injected inside the configCalldata
+    /// @param assertionType The assertion type used for the configuration
+    /// @param configCalldata The calldata to check the result of
+    /// @param desiredRetdata The desired return data for the configuration
+    /// @param target The target contract to call
     struct SequencerRule {
-        SequencerAssertion assertionType;
-        bytes32 desiredRetdata;
-        bytes configCalldata;
-        address target;
         uint256[] addressOffsets;
+        SequencerAssertion assertionType;
+        bytes configCalldata;
+        bytes32 desiredRetdata;
+        address target;
     }
 
     /// @notice The sequencer config

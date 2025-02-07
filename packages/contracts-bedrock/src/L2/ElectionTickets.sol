@@ -14,11 +14,14 @@ import "src/libraries/ElectionTicketErrors.sol";
 /// @notice The ERC721 token representing a ticket for sequencing rights of the L2
 contract ElectionTickets is ERC721, Initializable {
     /// @notice The struct for the genesis allocation
-    /// @param target The address to mint the ticket to
+    ///
+    /// @dev This structs parameters need to be kept in alphabetical order due to us using it for JSON deserialization
+    ///
     /// @param amount The amount of tickets to mint
+    /// @param target The address to mint the ticket to
     struct GenesisAllocation {
-        address target;
         uint256 amount;
+        address target;
     }
 
     /// @notice The address of the auction contract on L1

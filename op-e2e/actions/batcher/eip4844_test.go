@@ -42,6 +42,7 @@ func setupBatcher(t helpers.Testing, log log.Logger, sd *e2eutils.SetupData, dp 
 		MaxL1TxSize:          128_000,
 		BatcherKey:           dp.Secrets.Batcher,
 		DataAvailabilityType: daType,
+		L1BlockTime:          dp.DeployConfig.L1BlockTime,
 	}, sequencer.RollupClient(), miner.EthClient(), engine.EthClient(), engine.EngineClient(t, sd.RollupCfg))
 }
 
@@ -124,7 +125,6 @@ func TestEIP4844MultiBlobs(gt *testing.T) {
 
 func TestEIP4844DataAvailabilitySwitch(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
-	t.Skip("TODO(spire): enable other DA sources")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)

@@ -9,6 +9,11 @@ import { Process } from "scripts/libraries/Process.sol";
 import { Chains } from "scripts/libraries/Chains.sol";
 import { Config, Fork, ForkUtils } from "scripts/libraries/Config.sol";
 import { ElectionTickets } from "src/L2/ElectionTickets.sol";
+import { ElectionSystemConfig } from "src/L1/ElectionSystemConfig.sol";
+
+struct SequencerRules {
+    ElectionSystemConfig.SequencerRule[] inner;
+}
 
 /// @title DeployConfig
 /// @notice Represents the configuration required to deploy the system. It is expected
@@ -86,7 +91,6 @@ contract DeployConfig is Script {
     uint256 public daResolveWindow;
     uint256 public daBondSize;
     uint256 public daResolverRefundPercentage;
-    uint256 public minimumPreconfirmationCollateral;
     bytes32 public electionFallbackList;
 
     bool public useCustomGasToken;
@@ -94,6 +98,8 @@ contract DeployConfig is Script {
 
     bool public useInterop;
 
+    // Made internal to create a view function that returns the proper types
+    ElectionSystemConfig.SequencerRule[] internal _sequencerRules;
     ElectionTickets.GenesisAllocation[] internal _genesisAllocation;
 
     function read(string memory _path) public {
@@ -181,19 +187,21 @@ contract DeployConfig is Script {
         useInterop = _readOr(_json, "$.useInterop", false);
 
         // Election system config
-        minimumPreconfirmationCollateral = stdJson.readUint(_json, "$.minimumPreconfirmationCollateral");
         electionFallbackList = stdJson.readBytes32(_json, "$.electionFallbackList");
 
-        address[] memory targets = _readOr(_json, "$.genesisAllocation.targets", new address[](0));
-        uint256[] memory amounts = _readOr(_json, "$.genesisAllocation.amounts", new uint256[](0));
+        ElectionTickets.GenesisAllocation[] memory _tmpAllocations =
+            _readOr(_json, "$.genesisAllocation", new ElectionTickets.GenesisAllocation[](0));
 
-        // Sanity check that the arrays are parallel
-        if (targets.length != amounts.length) {
-            revert("GenesisAllocation: targets and amounts must be the same length");
+        for (uint256 i; i < _tmpAllocations.length; i++) {
+            _genesisAllocation.push(_tmpAllocations[i]);
         }
 
-        for (uint256 i = 0; i < targets.length; i++) {
-            _genesisAllocation.push(ElectionTickets.GenesisAllocation({ target: targets[i], amount: amounts[i] }));
+        // Read sequencer rules
+        // TODO(spire): Support addressOffsets, should be added in the enhance json config pr
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRulesTemp =
+            _readOr(_json, "$.sequencerRules", new ElectionSystemConfig.SequencerRule[](0));
+        for (uint256 i; i < _sequencerRulesTemp.length; i++) {
+            _sequencerRules.push(_sequencerRulesTemp[i]);
         }
     }
 
@@ -267,6 +275,10 @@ contract DeployConfig is Script {
         return _genesisAllocation;
     }
 
+    function sequencerRules() public view returns (ElectionSystemConfig.SequencerRule[] memory) {
+        return _sequencerRules;
+    }
+
     function latestGenesisFork() internal view returns (Fork) {
         if (l2GenesisGraniteTimeOffset == 0) {
             return Fork.GRANITE;
@@ -325,6 +337,43 @@ contract DeployConfig is Script {
         return vm.keyExistsJson(json, key) ? json.readUintArray(key) : defaultValue;
     }
 
+    function _readOr(
+        string memory json,
+        string memory key,
+        ElectionSystemConfig.SequencerRule[] memory defaultValue
+    )
+        internal
+        view
+        returns (ElectionSystemConfig.SequencerRule[] memory)
+    {
+        if (vm.keyExistsJson(json, key)) {
+            bytes memory data = json.parseRaw(key);
+            SequencerRules memory rules = abi.decode(data, (SequencerRules));
+            return rules.inner;
+        }
+
+        return defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        ElectionTickets.GenesisAllocation[] memory defaultValue
+    )
+        internal
+        view
+        returns (ElectionTickets.GenesisAllocation[] memory)
+    {
+        if (vm.keyExistsJson(json, key)) {
+            bytes memory data = json.parseRaw(key);
+            ElectionTickets.GenesisAllocation[] memory allocations =
+                abi.decode(data, (ElectionTickets.GenesisAllocation[]));
+            return allocations;
+        }
+
+        return defaultValue;
+    }
+
     function _isNull(string memory json, string memory key) internal pure returns (bool) {
         string memory value = json.readString(key);
         return (keccak256(bytes(value)) == keccak256(bytes("null")));
@@ -340,5 +389,29 @@ contract DeployConfig is Script {
         returns (string memory)
     {
         return vm.keyExists(json, key) ? json.readString(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        bytes32[] memory defaultValue
+    )
+        internal
+        view
+        returns (bytes32[] memory)
+    {
+        return vm.keyExists(json, key) ? json.readBytes32Array(key) : defaultValue;
+    }
+
+    function _readOr(
+        string memory json,
+        string memory key,
+        bytes[] memory defaultValue
+    )
+        internal
+        view
+        returns (bytes[] memory)
+    {
+        return vm.keyExists(json, key) ? json.readBytesArray(key) : defaultValue;
     }
 }

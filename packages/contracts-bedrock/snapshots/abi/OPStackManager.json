@@ -139,6 +139,38 @@
             "internalType": "uint256",
             "name": "l2ChainId",
             "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256[]",
+                "name": "addressOffsets",
+                "type": "uint256[]"
+              },
+              {
+                "internalType": "enum ElectionSystemConfig.SequencerAssertion",
+                "name": "assertionType",
+                "type": "uint8"
+              },
+              {
+                "internalType": "bytes",
+                "name": "configCalldata",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "desiredRetdata",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct ElectionSystemConfig.SequencerRule[]",
+            "name": "sequencerRules",
+            "type": "tuple[]"
           }
         ],
         "internalType": "struct OPStackManager.DeployInput",

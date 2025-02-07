@@ -24,7 +24,7 @@ import (
 // This stage does not need to retain any references to L1 blocks.
 
 type AttributesBuilder interface {
-	PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID, electionWinner eth.ElectionWinner) (attrs *eth.PayloadAttributes, err error)
+	PreparePayloadAttributes(ctx context.Context, l2Parent eth.L2BlockRef, epoch eth.BlockID) (attrs *eth.PayloadAttributes, err error)
 }
 
 type AttributesWithParent struct {
@@ -57,7 +57,7 @@ func (aq *AttributesQueue) Origin() eth.L1BlockRef {
 	return aq.prev.Origin()
 }
 
-func (aq *AttributesQueue) NextAttributes(ctx context.Context, parent eth.L2BlockRef, electionWinner eth.ElectionWinner) (*AttributesWithParent, error) {
+func (aq *AttributesQueue) NextAttributes(ctx context.Context, parent eth.L2BlockRef) (*AttributesWithParent, error) {
 	// Get a batch if we need it
 	if aq.batch == nil {
 		batch, isLastInSpan, err := aq.prev.NextBatch(ctx, parent)
@@ -69,7 +69,7 @@ func (aq *AttributesQueue) NextAttributes(ctx context.Context, parent eth.L2Bloc
 	}
 
 	// Actually generate the next attributes
-	if attrs, err := aq.createNextAttributes(ctx, aq.batch, parent, electionWinner); err != nil {
+	if attrs, err := aq.createNextAttributes(ctx, aq.batch, parent); err != nil {
 		return nil, err
 	} else {
 		// Clear out the local state once we will succeed
@@ -88,7 +88,7 @@ func (aq *AttributesQueue) NextAttributes(ctx context.Context, parent eth.L2Bloc
 
 // createNextAttributes transforms a batch into a payload attributes. This sets `NoTxPool` and appends the batched transactions
 // to the attributes transaction list
-func (aq *AttributesQueue) createNextAttributes(ctx context.Context, batch *SingularBatch, l2SafeHead eth.L2BlockRef, electionWinner eth.ElectionWinner) (*eth.PayloadAttributes, error) {
+func (aq *AttributesQueue) createNextAttributes(ctx context.Context, batch *SingularBatch, l2SafeHead eth.L2BlockRef) (*eth.PayloadAttributes, error) {
 	// sanity check parent hash
 	if batch.ParentHash != l2SafeHead.Hash {
 		return nil, NewResetError(fmt.Errorf("valid batch has bad parent hash %s, expected %s", batch.ParentHash, l2SafeHead.Hash))
@@ -99,7 +99,7 @@ func (aq *AttributesQueue) createNextAttributes(ctx context.Context, batch *Sing
 	}
 	fetchCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	attrs, err := aq.builder.PreparePayloadAttributes(fetchCtx, l2SafeHead, batch.Epoch(), electionWinner)
+	attrs, err := aq.builder.PreparePayloadAttributes(fetchCtx, l2SafeHead, batch.Epoch())
 	if err != nil {
 		return nil, err
 	}

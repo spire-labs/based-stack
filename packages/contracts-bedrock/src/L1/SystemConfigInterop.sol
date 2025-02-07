@@ -41,6 +41,7 @@ contract SystemConfigInterop is SystemConfig {
     /// @param _addresses         Set of L1 contract addresses. These should be the proxies.
     /// @param _fallbackList      The defined election fallback list for the election
     /// @param _dependencyManager The addressed allowed to add/remove from the dependency set
+    /// @param _sequencerRules    The sequencer rules to be initialized with
     function initialize(
         address _owner,
         uint32 _basefeeScalar,
@@ -52,7 +53,8 @@ contract SystemConfigInterop is SystemConfig {
         address _batchInbox,
         SystemConfig.Addresses memory _addresses,
         bytes32 _fallbackList,
-        address _dependencyManager
+        address _dependencyManager,
+        ElectionSystemConfig.SequencerRule[] memory _sequencerRules
     )
         external
     {
@@ -67,14 +69,15 @@ contract SystemConfigInterop is SystemConfig {
             _config: _config,
             _batchInbox: _batchInbox,
             _addresses: _addresses,
-            _fallbackList: _fallbackList
+            _fallbackList: _fallbackList,
+            _sequencerRules: _sequencerRules
         });
         Storage.setAddress(DEPENDENCY_MANAGER_SLOT, _dependencyManager);
     }
 
-    /// @custom:semver +interop-7
+    /// @custom:semver +interop-9
     function version() public pure override returns (string memory) {
-        return string.concat(super.version(), "+interop-7");
+        return string.concat(super.version(), "+interop-9");
     }
 
     /// @notice Internal setter for the gas paying token address, includes validation.

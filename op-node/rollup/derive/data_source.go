@@ -39,7 +39,7 @@ type AltDAInputFetcher interface {
 }
 
 type ElectionWinnersProvider interface {
-	GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner
+	GetElectionWinner(time uint64) eth.ElectionWinner
 }
 
 // DataSourceFactory reads raw transactions from a given block & then filters for
@@ -85,7 +85,7 @@ func (ds *DataSourceFactory) OpenData(ctx context.Context, ref eth.L1BlockRef, b
 		}
 		src = NewBlobDataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ds.blobsFetcher, ref, batcherAddr, ds.electionClient)
 	} else {
-		src = NewCalldataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ref, batcherAddr)
+		src = NewCalldataSource(ctx, ds.log, ds.dsCfg, ds.fetcher, ref, ds.electionClient)
 	}
 	if ds.dsCfg.altDAEnabled {
 		// altDA([calldata | blobdata](l1Ref)) -> data
@@ -102,11 +102,6 @@ type DataSourceConfig struct {
 }
 
 func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, cfg *DataSourceConfig, logger log.Logger) bool {
-	if receipt.Type != types.BlobTxType {
-		// TODO(spire): enable other DA sources
-		logger.Debug("Not a blob tx", "tx", receipt.TxHash)
-		return false
-	}
 
 	batchInboxAbi := snapshots.LoadBatchInboxABI()
 	topic0 := batchInboxAbi.Events["BatchSubmitted"].ID
@@ -128,8 +123,6 @@ func isValidBatchTx(receipt *types.Receipt, electionWinnerAddr common.Address, c
 		logger.Debug("Valid tx in inbox", "tx", receipt.TxHash)
 		return true
 	}
-
-	logger.Warn("Invalid tx in inbox", "tx", receipt.TxHash, "block", receipt.BlockNumber)
 
 	return false
 }

@@ -70,7 +70,7 @@ type L1Tx struct {
 const (
 	execPath = "../op-node/cmd/batch_decoder"
 	// TODO: read this address from config as it changes often
-	batchInbox   = "0x7c60541eB6f54f0F3c8B34D0a00De9045d2f5534"
+	batchInbox   = "0x11D8AfEEC4f7f31603914e26282Aca98E63ca4fC"
 	cacheDir     = "/tmp/batch_decoder/"
 	txCache      = cacheDir + "transactions_cache"
 	channelCache = cacheDir + "channel_cache"

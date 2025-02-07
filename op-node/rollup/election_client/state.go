@@ -11,19 +11,17 @@ import (
 )
 
 type ElectionStore struct {
-	electionWinnersMapByTime       map[uint64]*eth.ElectionWinner
-	electionWinnersMapByParentSlot map[uint64]*eth.ElectionWinner
-	log                            log.Logger
-	latestWinner                   *eth.ElectionWinner
+	electionWinnersMap map[uint64]*eth.ElectionWinner
+	log                log.Logger
+	latestWinner       *eth.ElectionWinner
 
 	mu sync.Mutex
 }
 
 func NewElectionStore(log log.Logger) *ElectionStore {
 	return &ElectionStore{
-		electionWinnersMapByTime:       make(map[uint64]*eth.ElectionWinner),
-		electionWinnersMapByParentSlot: make(map[uint64]*eth.ElectionWinner),
-		log:                            log,
+		electionWinnersMap: make(map[uint64]*eth.ElectionWinner),
+		log:                log,
 	}
 }
 
@@ -44,16 +42,8 @@ func (e *ElectionStore) OnEvent(ev event.Event) bool {
 	return true
 }
 
-func (e *ElectionStore) GetElectionWinnerByTime(timestamp uint64) eth.ElectionWinner {
-	out := e.electionWinnersMapByTime[timestamp]
-	if out == nil {
-		return eth.ElectionWinner{}
-	}
-	return *out
-}
-
-func (e *ElectionStore) GetElectionWinnerByParentSlot(timestamp uint64) eth.ElectionWinner {
-	out := e.electionWinnersMapByParentSlot[timestamp]
+func (e *ElectionStore) GetElectionWinner(time uint64) eth.ElectionWinner {
+	out := e.electionWinnersMap[time]
 	if out == nil {
 		return eth.ElectionWinner{}
 	}
@@ -79,8 +69,7 @@ func (e *ElectionStore) StoreElectionWinners(winners []*eth.ElectionWinner) {
 	}
 
 	for _, winner := range winners {
-		e.electionWinnersMapByTime[winner.Time] = winner
-		e.electionWinnersMapByParentSlot[winner.ParentSlot] = winner
+		e.electionWinnersMap[winner.Time] = winner
 	}
 
 	newLatest := winners[len(winners)-1]
@@ -89,23 +78,18 @@ func (e *ElectionStore) StoreElectionWinners(winners []*eth.ElectionWinner) {
 	}
 }
 
-func (e *ElectionStore) RemoveOutdatedElectionWinners(timestamp uint64) {
-	e.log.Debug("Removing outdated election winners", "time", timestamp, "store", e.winnersLength())
+func (e *ElectionStore) RemoveOutdatedElectionWinners(time uint64) {
+	e.log.Debug("Removing outdated election winners", "time", time, "store", e.winnersLength())
 
-	for k := range e.electionWinnersMapByTime {
-		if k < timestamp {
-			delete(e.electionWinnersMapByTime, k)
+	for k := range e.electionWinnersMap {
+		if k < time {
+			delete(e.electionWinnersMap, k)
 		}
 	}
 
-	for k, v := range e.electionWinnersMapByParentSlot {
-		if v.Time < timestamp {
-			delete(e.electionWinnersMapByParentSlot, k)
-		}
-	}
 	e.log.Debug("Removed outdated election winners", "map", e.winnersLength())
 }
 
 func (e *ElectionStore) winnersLength() string {
-	return fmt.Sprintf("time: %d, parentSlot: %d", len(e.electionWinnersMapByTime), len(e.electionWinnersMapByParentSlot))
+	return fmt.Sprintf("time: %d", len(e.electionWinnersMap))
 }
