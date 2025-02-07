@@ -91,7 +91,6 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	}
 	blobTx, _ := types.SignNewTx(privateKey, signer, blobTxData)
 	blobReceipt := &types.Receipt{
-		Type: types.BlobTxType,
 		Logs: []*types.Log{{
 			Address: batchInboxAddr,
 			Topics:  []common.Hash{batchSubmittedEventTopic, padAddress(electionWinnerAddr)},

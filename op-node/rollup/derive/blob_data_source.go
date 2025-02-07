@@ -152,8 +152,12 @@ func (ds *BlobDataSource) dataAndHashesFromTxs(txs []TxWithReceipt, config *Data
 
 		// handle non-blob batcher transactions by extracting their calldata
 		if tx.tx.Type() != types.BlobTxType {
-			calldata := eth.Data(tx.tx.Data())
-			data = append(data, blobOrCalldata{nil, &calldata})
+			payload, err := ExtractPayload(tx.tx)
+			if err != nil {
+				log.Error("Could not extract payload", "err", err, "tx", tx.tx)
+				continue
+			}
+			data = append(data, blobOrCalldata{blob: nil, calldata: &payload})
 			continue
 		}
 

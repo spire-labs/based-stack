@@ -125,7 +125,6 @@ func TestEIP4844MultiBlobs(gt *testing.T) {
 
 func TestEIP4844DataAvailabilitySwitch(gt *testing.T) {
 	t := helpers.NewDefaultTesting(gt)
-	t.Skip("TODO(spire): enable other DA sources")
 
 	log := testlog.Logger(t, log.LevelDebug)
 	sd, dp, miner, sequencer, seqEngine, verifier, _ := setupEIP4844Test(t, log)
