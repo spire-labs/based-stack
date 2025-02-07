@@ -447,7 +447,6 @@ func TestAltDA_ChallengeReorg(gt *testing.T) {
 // Sequencer stalls as data is not available, batcher keeps posting, untracked commitments are
 // challenged and resolved, then sequencer resumes and catches up.
 func TestAltDA_SequencerStalledMultiChallenges(gt *testing.T) {
-	gt.Skip("TODO(spire): Reenable this test once AltDA is supported")
 	if !e2eutils.UseAltDA() {
 		gt.Skip("AltDA is not enabled")
 	}

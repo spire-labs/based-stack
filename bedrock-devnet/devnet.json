@@ -1,11 +1,11 @@
 {
   "dgType": "254",
-  "daType": "blobs",
+  "daType": "auto",
   "isAltDa": true,
   "useL2OOAddress": false,
   "proposalInterval": "12s",
-  "genericAltDA": true,
-  "altDAService": true,
-  "daCommitmentType": "GenericCommitment",
+  "genericAltDA": false,
+  "altDAService": false,
+  "daCommitmentType": "KeccakCommitment",
   "devnetNoBuild": false
 }

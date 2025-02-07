@@ -42,8 +42,6 @@ func (m *MockFinalitySignal) ExpectFinalized(blockRef eth.L1BlockRef) {
 // Then it simulates rederiving while verifying it does skip the expired input until the next
 // challenge expires.
 func TestAltDADataSource(t *testing.T) {
-	// TODO(spire): enable other DA sources
-	t.Skip("only blob data source supported for now")
 	logger := testlog.Logger(t, log.LevelDebug)
 	ctx := context.Background()
 
@@ -286,8 +284,6 @@ func TestAltDADataSource(t *testing.T) {
 
 // This tests makes sure the pipeline returns a temporary error if data is not found.
 func TestAltDADataSourceStall(t *testing.T) {
-	// TODO(spire): enable other DA sources
-	t.Skip("only blob data source supported for now")
 	logger := testlog.Logger(t, log.LevelDebug)
 	ctx := context.Background()
 
@@ -417,8 +413,6 @@ func TestAltDADataSourceStall(t *testing.T) {
 // TestAltDADataSourceInvalidData tests that the pipeline skips invalid data and continues
 // this includes invalid commitments and oversized inputs.
 func TestAltDADataSourceInvalidData(t *testing.T) {
-	// TODO(spire): enable other DA sources
-	t.Skip("only blob data source supported for now")
 	logger := testlog.Logger(t, log.LevelDebug)
 	ctx := context.Background()
 
