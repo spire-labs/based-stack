@@ -60,13 +60,15 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 	}
 
 	// create a valid non-blob batcher transaction and make sure it's picked up
+
+	calldata := submitCalldataTxData(t, testutils.RandomData(rng, rng.Intn(1000)))
 	calldataTxData := &types.LegacyTx{
 		Nonce:    rng.Uint64(),
 		GasPrice: new(big.Int).SetUint64(rng.Uint64()),
 		Gas:      2_000_000,
 		To:       &batchInboxAddr,
 		Value:    big.NewInt(10),
-		Data:     testutils.RandomData(rng, rng.Intn(1000)),
+		Data:     calldata,
 	}
 	calldataTx, _ := types.SignNewTx(privateKey, signer, calldataTxData)
 	calldataReceipt := &types.Receipt{
