@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.15;
 
-import {BatchInbox, DataType} from "src/L1/BatchInbox.sol";
-import {Test} from "forge-std/Test.sol";
+import { BatchInbox, DataType } from "src/L1/BatchInbox.sol";
+import { Test } from "forge-std/Test.sol";
 import "src/libraries/BatchInboxErrors.sol";
 
 contract BatchInboxTest is Test {
@@ -34,13 +34,7 @@ contract BatchInboxTest is Test {
         uint256 targetTimestamp = 1234567;
         vm.warp(targetTimestamp + 1);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InvalidTargetTimestamp.selector,
-                targetTimestamp,
-                targetTimestamp + 1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(InvalidTargetTimestamp.selector, targetTimestamp, targetTimestamp + 1));
 
         batchInbox.submitCalldata(targetTimestamp, data);
     }
@@ -60,11 +54,7 @@ contract BatchInboxTest is Test {
         uint256 invalidTargetTimestamp = currentTimestamp + 1;
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                InvalidTargetTimestamp.selector,
-                invalidTargetTimestamp,
-                currentTimestamp
-            )
+            abi.encodeWithSelector(InvalidTargetTimestamp.selector, invalidTargetTimestamp, currentTimestamp)
         );
         vm.prank(mockWinner);
         batchInbox.submitBlob(invalidTargetTimestamp);
