@@ -76,9 +76,9 @@ func TestAltDADataSource(t *testing.T) {
 		L1Origin:       refA.ID(),
 		SequenceNumber: 0,
 	}
-	batcherPriv := testutils.RandomKey()
-	batcherAddr := crypto.PubkeyToAddress(batcherPriv.PublicKey)
-	batcherInbox := common.Address{42}
+	electionWinnerPriv := testutils.RandomKey()
+	electionWinnerAddr := crypto.PubkeyToAddress(electionWinnerPriv.PublicKey)
+	batcherInbox := crypto.PubkeyToAddress(testutils.RandomKey().PublicKey)
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
 			L1:     refA.ID(),
@@ -101,7 +101,9 @@ func TestAltDADataSource(t *testing.T) {
 
 	signer := cfg.L1Signer()
 
-	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, nil)
+	electionClient := &MockElectionWinnersProvider{electionWinnerAddr}
+
+	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, electionClient)
 
 	nc := 0
 	firstChallengeExpirationBlock := uint64(95)
@@ -119,6 +121,7 @@ func TestAltDADataSource(t *testing.T) {
 		logger.Info("new l1 block", "ref", ref)
 		// called for each l1 block to sync challenges
 		l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
+		l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
 
 		// pick a random number of commitments to include in the l1 block
 		c := rng.Intn(4)
@@ -134,7 +137,7 @@ func TestAltDADataSource(t *testing.T) {
 			comms = append(comms, kComm)
 			inclusionBlocks = append(inclusionBlocks, ref)
 
-			tx, err := types.SignNewTx(batcherPriv, signer, &types.DynamicFeeTx{
+			tx, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 				ChainID:   signer.ChainID(),
 				Nonce:     0,
 				GasTipCap: big.NewInt(2 * params.GWei),
@@ -147,7 +150,6 @@ func TestAltDADataSource(t *testing.T) {
 			require.NoError(t, err)
 
 			txs = append(txs, tx)
-
 		}
 		logger.Info("included commitments", "count", c)
 		l1F.ExpectInfoAndTxsByHash(ref.Hash, testutils.RandomBlockInfo(rng), txs, nil)
@@ -170,7 +172,7 @@ func TestAltDADataSource(t *testing.T) {
 		}
 
 		// create a new data source for each block
-		src, err := factory.OpenData(ctx, ref, batcherAddr)
+		src, err := factory.OpenData(ctx, ref, electionWinnerAddr)
 		require.NoError(t, err)
 
 		// first challenge expires
@@ -236,7 +238,7 @@ func TestAltDADataSource(t *testing.T) {
 				inputs = append(inputs, input)
 				comms = append(comms, kComm)
 
-				tx, err := types.SignNewTx(batcherPriv, signer, &types.DynamicFeeTx{
+				tx, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 					ChainID:   signer.ChainID(),
 					Nonce:     0,
 					GasTipCap: big.NewInt(2 * params.GWei),
@@ -249,14 +251,13 @@ func TestAltDADataSource(t *testing.T) {
 				require.NoError(t, err)
 
 				txs = append(txs, tx)
-
 			}
 			logger.Info("included commitments", "count", c)
 			l1F.ExpectInfoAndTxsByHash(ref.Hash, testutils.RandomBlockInfo(rng), txs, nil)
 		}
 
 		// create a new data source for each block
-		src, err := factory.OpenData(ctx, ref, batcherAddr)
+		src, err := factory.OpenData(ctx, ref, electionWinnerAddr)
 		require.NoError(t, err)
 
 		// next challenge expires
@@ -274,7 +275,6 @@ func TestAltDADataSource(t *testing.T) {
 
 			nc++
 		}
-
 	}
 
 	// finalize based on the second to last block, which will prune the commitment on block 2, and make it finalized
