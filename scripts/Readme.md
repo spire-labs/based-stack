@@ -6,7 +6,7 @@ A collection of simple scripts to make research and understanding the op-node ea
 
 Just run `go run .` in this folder
 
-```bach
+```bash
 go run .
 ```
 
