@@ -13,7 +13,7 @@
 
 - [About Spire Labs?](#about-spire-labs)
 - [Documentation](#documentation)
-- [Spinning up local OP Stack](#spinning-up-local-op-stack)
+- [Spinning up a local Based Stack](#spinning-up-local-op-stack)
 - [Specification](#specification)
 - [Community](#community)
 - [Contributing](#contributing)
