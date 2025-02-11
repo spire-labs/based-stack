@@ -24,7 +24,7 @@
 
 ## About Spire Labs?
 
-[<i>Spire</i>](https://www.spire.dev/) is the first <b>based rollup framework</b> & network on Ethereum, enabling a wide range of app developers to create their own appchains on Ethereum. Spire's sequencing design enables appchains to interact with Ethereum's liquidity and protocols natively (think: cross chain swaps). Spire appchains support a wide range of execution environments, scalability upgrades, and decentralized preconfirmations for lightning -fast UX.
+[<i>Spire</i>](https://www.spire.dev/) is developing the first <b>based rollup framework</b> & network on Ethereum, enabling a wide range of app developers to create their own appchains on Ethereum. Spire's sequencing design enables appchains to interact with Ethereum's liquidity and protocols natively (think: cross chain swaps). Spire appchains support a wide range of execution environments, scalability upgrades, and decentralized preconfirmations for lightning -fast UX.
 
 ## Documentation
 
