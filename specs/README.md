@@ -1,3 +1,0 @@
-# Specs
-
-Coming Soon!

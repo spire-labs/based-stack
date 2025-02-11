@@ -8,10 +8,6 @@ This package contains the L1 and L2 smart contracts for the Based Stack.
 
 - [Based Stack Smart Contracts](#based-stack-smart-contracts)
   - [Table of Contents](#table-of-contents)
-  - [External Usage](#external-usage)
-    - [Using Based Stack Contracts in Solidity](#using-based-stack-contracts-in-solidity)
-    - [Using Based Stack Contracts in JavaScript](#using-based-stack-contracts-in-javascript)
-  - [Contributing](#contributing)
   - [Deployment](#deployment)
   - [Generating L2 Genesis Allocs](#generating-l2-genesis-allocs)
     - [Configuration](#configuration)
@@ -24,28 +20,6 @@ This package contains the L1 and L2 smart contracts for the Based Stack.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## External Usage
-
-### Using Based Stack Contracts in Solidity
-
-Based Stack smart contracts are published to NPM and can be installed via:
-
-```sh
-npm install @eth-optimism/contracts-bedrock
-```
-
-### Using Based Stack Contracts in JavaScript
-
-Contract ABIs and addresses are published to NPM in a separate package and can be installed via:
-
-```sh
-npm install @eth-optimism/contracts-ts
-```
-
-## Contributing
-
-Coming Soon!
-
 ## Deployment
 
 The smart contracts are deployed using `foundry`. The `DEPLOYMENT_OUTFILE` env var will determine the filepath that the
@@ -53,7 +27,7 @@ deployment artifact is written to on disk after the deployment. It comes in the 
 the names of the contracts and the values are the addresses the contract was deployed to.
 
 The `DEPLOY_CONFIG_PATH` is a filepath to a deploy config file, see the `deploy-config` directory for examples and the
-[DeployConfig](https://github.com/spire-labs/optimism-internal/blob/develop/op-chain-ops/genesis/config.go) definition for
+[DeployConfig](https://github.com/spire-labs/based-stack/blob/develop/op-chain-ops/genesis/config.go) definition for
 descriptions of the values.
 If you are following the official deployment tutorial, please make sure to use the `getting-started.json` file.
 

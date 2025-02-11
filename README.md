@@ -13,9 +13,6 @@
 
 - [About Spire Labs?](#about-spire-labs)
 - [Documentation](#documentation)
-- [Spinning up a local Based Stack](#spinning-up-local-op-stack)
-- [Specification](#specification)
-- [Community](#community)
 - [Contributing](#contributing)
 - [Directory Structure](#directory-structure)
 - [License](#license)
@@ -28,23 +25,11 @@
 
 ## Documentation
 
-Coming Soon!
-
-## Spinning up local OP Stack
-
-Coming Soon!
-
-## Specification
-
-Coming Soon!
-
-## Community
-
-Coming Soon!
+Visit https://docs.spire.dev/ for documentation about this project.
 
 ## Contributing
 
-Coming Soon!
+Check out our [CONTRIBUTING.md](https://github.com/spire-labs/based-stack/blob/develop/CONTRIBUTING.md) file for a detailed explanation of the contributing process for this repository. Make sure to use the [Developer Quick Start](https://github.com/spire-labs/based-stack/blob/develop/CONTRIBUTING.md#development-quick-start) to properly set up your development environment.
 
 ## Directory Structure
 
