@@ -1,11 +1,13 @@
 <div align="center">
   <br />
   <br />
-  <a href="https://optimism.io"><img alt="Optimism" src="https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/svg/OPTIMISM-R.svg" width=600></a>
+  <a href="https://www.spire.dev"><img alt="Spire" src="https://github.com/user-attachments/assets/e08ba101-88bc-4a3f-9de3-e23529578cc1" width=600></a>
   <br />
   <h3>Derived from<a href="https://optimism.io"> Optimism</a></h3>
   <br />
 </div>
+
+
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
