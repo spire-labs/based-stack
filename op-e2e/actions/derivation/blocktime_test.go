@@ -99,7 +99,7 @@ func BatchInLastPossibleBlocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	for i := 0; i < 7; i++ {
 		batcher.ActSubmitAll(t)
 		miner.ActL1StartBlock(4)(t)
-		miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+		miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 		miner.ActL1EndBlock(t)
 		sequencer.ActL1HeadSignal(t)
 		sequencer.ActL2PipelineFull(t)
@@ -135,7 +135,7 @@ func BatchInLastPossibleBlocks(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 
 	// Check that the batch can go in on the last block of the sequence window
 	miner.ActL1StartBlock(4)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 	sequencer.ActL1HeadSignal(t)
 	sequencer.ActL2PipelineFull(t)
@@ -224,7 +224,7 @@ func LargeL1Gaps(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	for i := 0; i < 7; i++ {
 		batcher.ActSubmitAll(t)
 		miner.ActL1StartBlock(4)(t)
-		miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+		miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 		miner.ActL1EndBlock(t)
 		sequencer.ActL1HeadSignal(t)
 		sequencer.ActL2PipelineFull(t)
@@ -241,7 +241,7 @@ func LargeL1Gaps(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// Make the really long L1 block. Do include previous batches
 	batcher.ActSubmitAll(t)
 	miner.ActL1StartBlock(48)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 	sequencer.ActL1HeadSignal(t)
 	sequencer.ActL2PipelineFull(t)
@@ -272,7 +272,7 @@ func LargeL1Gaps(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// Do batch submit the previous L2 blocks.
 	batcher.ActSubmitAll(t)
 	miner.ActL1StartBlock(4)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 
 	// We are not able to do eager batch derivation for these L2 blocks because
