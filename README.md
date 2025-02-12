@@ -3,7 +3,7 @@
   <br />
   <a href="https://optimism.io"><img alt="Optimism" src="https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/svg/OPTIMISM-R.svg" width=600></a>
   <br />
-  <h3>Derived from<a href="https://optimism.io">Optimism</a></h3>
+  <h3>Derived from<a href="https://optimism.io"> Optimism</a></h3>
   <br />
 </div>
 
