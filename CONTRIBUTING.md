@@ -1,4 +1,4 @@
-# Spire Based stack Contributing Guide
+# Spire Based Stack Contributing Guide
 
 ## Disclaimer
 
