@@ -3,7 +3,7 @@
 ## Disclaimer
 
 - <b>Please keep in mind that we DO NOT have a token and we are not doing airdrops. Even if we do plan to launch a token in the future, contributing to this codebase will not be rewarded with an airdrop</b>
-- <b>Please refrain from opening low effort PRs. PRs for typo fix and modifying markdown newlines will NOT be accepted.</b>
+- <b>Please refrain from opening low effort PRs. PRs for typo fix and modifying markdown newlines will NOT be accepted as first time contributions.</b>
 
 ## What to Contribute
 
