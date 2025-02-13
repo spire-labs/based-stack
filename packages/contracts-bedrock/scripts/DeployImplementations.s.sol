@@ -379,7 +379,6 @@ contract DeployImplementationsOutput is BaseDeployIO {
         require(systemConfig.scalar() == uint256(0x01) << 248, "SYSCON-30");
         require(systemConfig.basefeeScalar() == 0, "SYSCON-40");
         require(systemConfig.blobbasefeeScalar() == 0, "SYSCON-50");
-        require(systemConfig.batcherHash() == bytes32(0), "SYSCON-60");
         require(systemConfig.gasLimit() == 1, "SYSCON-70");
         require(systemConfig.unsafeBlockSigner() == address(0), "SYSCON-80");
 

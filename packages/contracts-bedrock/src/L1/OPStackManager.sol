@@ -45,7 +45,6 @@ contract OPStackManager is ISemver, Initializable {
     struct Roles {
         address opChainProxyAdminOwner;
         address systemConfigOwner;
-        address batcher;
         address unsafeBlockSigner;
         address proposer;
         address challenger;
@@ -120,7 +119,7 @@ contract OPStackManager is ISemver, Initializable {
     // -------- Constants and Variables --------
 
     /// @custom:semver 1.0.1-beta.7
-    string public constant version = "1.0.1-beta.7";
+    string public constant version = "1.0.1-beta.8";
 
     /// @notice Address of the SuperchainConfig contract shared by all chains.
     SuperchainConfig public immutable superchainConfig;
@@ -317,7 +316,6 @@ contract OPStackManager is ISemver, Initializable {
 
         if (_input.roles.opChainProxyAdminOwner == address(0)) revert InvalidRoleAddress("opChainProxyAdminOwner");
         if (_input.roles.systemConfigOwner == address(0)) revert InvalidRoleAddress("systemConfigOwner");
-        if (_input.roles.batcher == address(0)) revert InvalidRoleAddress("batcher");
         if (_input.roles.unsafeBlockSigner == address(0)) revert InvalidRoleAddress("unsafeBlockSigner");
         if (_input.roles.proposer == address(0)) revert InvalidRoleAddress("proposer");
         if (_input.roles.challenger == address(0)) revert InvalidRoleAddress("challenger");
@@ -405,7 +403,6 @@ contract OPStackManager is ISemver, Initializable {
             _input.roles.systemConfigOwner,
             _input.basefeeScalar,
             _input.blobBasefeeScalar,
-            bytes32(uint256(uint160(_input.roles.batcher))), // batcherHash
             30_000_000, // gasLimit, TODO should this be an input?
             _input.roles.unsafeBlockSigner,
             referenceResourceConfig,

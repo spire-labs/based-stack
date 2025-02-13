@@ -82,7 +82,6 @@ library ChainAssertions {
             require(config.owner() == _cfg.finalSystemOwner());
             require(config.basefeeScalar() == _cfg.basefeeScalar());
             require(config.blobbasefeeScalar() == _cfg.blobbasefeeScalar());
-            require(config.batcherHash() == bytes32(uint256(uint160(_cfg.batchSenderAddress()))));
             require(config.gasLimit() == uint64(_cfg.l2GenesisBlockGasLimit()));
             require(config.unsafeBlockSigner() == _cfg.p2pSequencerAddress());
             require(config.scalar() >> 248 == 1);
@@ -111,7 +110,6 @@ library ChainAssertions {
             require(config.scalar() == uint256(0x01) << 248); // version 1
             require(config.basefeeScalar() == 0);
             require(config.blobbasefeeScalar() == 0);
-            require(config.batcherHash() == bytes32(0));
             require(config.gasLimit() == 1);
             require(config.unsafeBlockSigner() == address(0));
             // Check _config

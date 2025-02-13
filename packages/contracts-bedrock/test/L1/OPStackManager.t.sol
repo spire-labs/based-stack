@@ -40,7 +40,6 @@ contract OPStackManager_Deploy_Test is DeployOPChain_TestBase {
 
         doi.set(doi.opChainProxyAdminOwner.selector, opChainProxyAdminOwner);
         doi.set(doi.systemConfigOwner.selector, systemConfigOwner);
-        doi.set(doi.batcher.selector, batcher);
         doi.set(doi.unsafeBlockSigner.selector, unsafeBlockSigner);
         doi.set(doi.proposer.selector, proposer);
         doi.set(doi.challenger.selector, challenger);
@@ -59,7 +58,6 @@ contract OPStackManager_Deploy_Test is DeployOPChain_TestBase {
             roles: OPStackManager.Roles({
                 opChainProxyAdminOwner: _doi.opChainProxyAdminOwner(),
                 systemConfigOwner: _doi.systemConfigOwner(),
-                batcher: _doi.batcher(),
                 unsafeBlockSigner: _doi.unsafeBlockSigner(),
                 proposer: _doi.proposer(),
                 challenger: _doi.challenger()

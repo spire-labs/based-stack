@@ -24,7 +24,6 @@ contract SystemConfig_GasLimitBoundaries_Invariant is Test {
                     address(0xbeef), // owner
                     2100, // overhead
                     1000000, // scalar
-                    bytes32(hex"abcd"), // batcher hash
                     30_000_000, // gas limit
                     address(1), // unsafe block signer
                     Constants.DEFAULT_RESOURCE_CONFIG(),

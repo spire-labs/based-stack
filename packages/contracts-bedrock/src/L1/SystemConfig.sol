@@ -131,11 +131,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     ///         Ecotone network upgrade.
     uint256 public scalar;
 
-    /// @notice Identifier for the batcher.
-    ///         For version 1 of this configuration, this is represented as an address left-padded
-    ///         with zeros to 32 bytes.
-    bytes32 public batcherHash;
-
     /// @notice L2 block gas limit.
     uint64 public gasLimit;
 
@@ -164,7 +159,7 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @notice Semantic version.
     /// @custom:semver 2.3.1-beta.11
     function version() public pure virtual returns (string memory) {
-        return "2.3.1-beta.11";
+        return "2.3.1-beta.12";
     }
 
     /// @notice Constructs the SystemConfig contract. Cannot set
@@ -178,7 +173,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
             _owner: address(0xdEaD),
             _basefeeScalar: 0,
             _blobbasefeeScalar: 0,
-            _batcherHash: bytes32(0),
             _gasLimit: 1,
             _unsafeBlockSigner: address(0),
             _config: IResourceMetering.ResourceConfig({
@@ -209,7 +203,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
     /// @param _owner             Initial owner of the contract.
     /// @param _basefeeScalar     Initial basefee scalar value.
     /// @param _blobbasefeeScalar Initial blobbasefee scalar value.
-    /// @param _batcherHash       Initial batcher hash.
     /// @param _gasLimit          Initial gas limit.
     /// @param _unsafeBlockSigner Initial unsafe block signer address.
     /// @param _config            Initial ResourceConfig.
@@ -222,7 +215,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         address _owner,
         uint32 _basefeeScalar,
         uint32 _blobbasefeeScalar,
-        bytes32 _batcherHash,
         uint64 _gasLimit,
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,
@@ -238,7 +230,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
         transferOwnership(_owner);
 
         // These are set in ascending order of their UpdateTypes.
-        _setBatcherHash(_batcherHash);
         _setGasConfigEcotone({ _basefeeScalar: _basefeeScalar, _blobbasefeeScalar: _blobbasefeeScalar });
         _setGasLimit(_gasLimit);
 
@@ -647,21 +638,6 @@ contract SystemConfig is OwnableUpgradeable, ElectionSystemConfig, ISemver, IGas
 
         bytes memory data = abi.encode(_unsafeBlockSigner);
         emit ConfigUpdate(VERSION, UpdateType.UNSAFE_BLOCK_SIGNER, data);
-    }
-
-    /// @notice Updates the batcher hash. Can only be called by the owner.
-    /// @param _batcherHash New batcher hash.
-    function setBatcherHash(bytes32 _batcherHash) external onlyOwner {
-        _setBatcherHash(_batcherHash);
-    }
-
-    /// @notice Internal function for updating the batcher hash.
-    /// @param _batcherHash New batcher hash.
-    function _setBatcherHash(bytes32 _batcherHash) internal {
-        batcherHash = _batcherHash;
-
-        bytes memory data = abi.encode(_batcherHash);
-        emit ConfigUpdate(VERSION, UpdateType.BATCHER, data);
     }
 
     /// @notice Updates gas config. Can only be called by the owner.

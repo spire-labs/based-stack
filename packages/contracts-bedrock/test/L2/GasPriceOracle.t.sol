@@ -25,7 +25,6 @@ contract GasPriceOracle_Test is CommonTest {
     uint256 constant blobBaseFee = 3 * (10 ** 6);
     bytes32 constant hash = bytes32(uint256(64));
     uint64 constant sequenceNumber = 0;
-    bytes32 constant batcherHash = bytes32(uint256(777));
     uint256 constant l1FeeOverhead = 310;
     uint256 constant l1FeeScalar = 10;
     uint32 constant blobBaseFeeScalar = 15;
@@ -54,7 +53,6 @@ contract GasPriceOracleBedrock_Test is GasPriceOracle_Test {
             _basefee: baseFee,
             _hash: hash,
             _sequenceNumber: sequenceNumber,
-            _batcherHash: batcherHash,
             _l1FeeOverhead: l1FeeOverhead,
             _l1FeeScalar: l1FeeScalar,
             _electionWinner: l1ElectionWinner
@@ -138,7 +136,6 @@ contract GasPriceOracleEcotone_Test is GasPriceOracle_Test {
             baseFee,
             blobBaseFee,
             hash,
-            batcherHash,
             l1ElectionWinner
         );
 
@@ -239,7 +236,6 @@ contract GasPriceOracleFjordActive_Test is GasPriceOracle_Test {
             baseFee,
             blobBaseFee,
             hash,
-            batcherHash,
             l1ElectionWinner
         );
 

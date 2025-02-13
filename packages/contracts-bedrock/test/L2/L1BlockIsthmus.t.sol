@@ -246,8 +246,7 @@ contract L1BlockIsthmusSetL1BlockValuesIsthmus_Test is L1BlockIsthmusTest {
         uint64 number,
         uint256 baseFee,
         uint256 blobBaseFee,
-        bytes32 hash,
-        bytes32 batcherHash
+        bytes32 hash
     )
         external
     {
@@ -256,7 +255,7 @@ contract L1BlockIsthmusSetL1BlockValuesIsthmus_Test is L1BlockIsthmusTest {
         assertEq(_l1BlockIsthmus().isDeposit(), false);
 
         bytes memory setValuesEcotoneCalldata = abi.encodePacked(
-            baseFeeScalar, blobBaseFeeScalar, sequenceNumber, timestamp, number, baseFee, blobBaseFee, hash, batcherHash
+            baseFeeScalar, blobBaseFeeScalar, sequenceNumber, timestamp, number, baseFee, blobBaseFee, hash
         );
 
         vm.prank(_l1BlockIsthmus().DEPOSITOR_ACCOUNT());
@@ -278,7 +277,6 @@ contract L1BlockIsthmusSetL1BlockValuesIsthmus_Test is L1BlockIsthmusTest {
         assertEq(_l1BlockIsthmus().basefee(), baseFee, "base fee not properly set");
         assertEq(_l1BlockIsthmus().blobBaseFee(), blobBaseFee, "blob base fee not properly set");
         assertEq(_l1BlockIsthmus().hash(), hash, "hash not properly set");
-        assertEq(_l1BlockIsthmus().batcherHash(), batcherHash, "batcher hash not properly set");
     }
 }
 

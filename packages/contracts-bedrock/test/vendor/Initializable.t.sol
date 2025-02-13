@@ -191,7 +191,6 @@ contract Initializer_Test is Bridge_Initializer {
                         address(0xdead),
                         0,
                         0,
-                        bytes32(0),
                         1,
                         address(0),
                         IResourceMetering.ResourceConfig({
@@ -229,7 +228,6 @@ contract Initializer_Test is Bridge_Initializer {
                         address(0xdead),
                         0,
                         0,
-                        bytes32(0),
                         1,
                         address(0),
                         IResourceMetering.ResourceConfig({

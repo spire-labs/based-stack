@@ -145,7 +145,6 @@ library Encoding {
     /// @param baseFee             L1 base fee.
     /// @param blobBaseFee         L1 blob base fee.
     /// @param hash                L1 blockhash.
-    /// @param batcherHash         Versioned hash to authenticate batcher by.
     function encodeSetL1BlockValuesEcotone(
         uint32 baseFeeScalar,
         uint32 blobBaseFeeScalar,
@@ -155,7 +154,6 @@ library Encoding {
         uint256 baseFee,
         uint256 blobBaseFee,
         bytes32 hash,
-        bytes32 batcherHash,
         address electionWinner
     )
         internal
@@ -173,7 +171,6 @@ library Encoding {
             baseFee,
             blobBaseFee,
             hash,
-            batcherHash,
             electionWinner
         );
     }
@@ -187,7 +184,6 @@ library Encoding {
     /// @param _baseFee             L1 base fee.
     /// @param _blobBaseFee         L1 blob base fee.
     /// @param _hash                L1 blockhash.
-    /// @param _batcherHash         Versioned hash to authenticate batcher by.
     function encodeSetL1BlockValuesIsthmus(
         uint32 _baseFeeScalar,
         uint32 _blobBaseFeeScalar,
@@ -196,8 +192,7 @@ library Encoding {
         uint64 _number,
         uint256 _baseFee,
         uint256 _blobBaseFee,
-        bytes32 _hash,
-        bytes32 _batcherHash
+        bytes32 _hash
     )
         internal
         pure
@@ -213,8 +208,7 @@ library Encoding {
             _number,
             _baseFee,
             _blobBaseFee,
-            _hash,
-            _batcherHash
+            _hash
         );
     }
 }

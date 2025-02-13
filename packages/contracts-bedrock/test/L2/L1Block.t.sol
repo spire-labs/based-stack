@@ -32,7 +32,6 @@ contract L1BlockBedrock_Test is L1BlockTest {
         uint256 b,
         bytes32 h,
         uint64 s,
-        bytes32 bt,
         uint256 fo,
         uint256 fs,
         address winner
@@ -40,13 +39,12 @@ contract L1BlockBedrock_Test is L1BlockTest {
         external
     {
         vm.prank(depositor);
-        l1Block.setL1BlockValues(n, t, b, h, s, bt, fo, fs, winner);
+        l1Block.setL1BlockValues(n, t, b, h, s, fo, fs, winner);
         assertEq(l1Block.number(), n);
         assertEq(l1Block.timestamp(), t);
         assertEq(l1Block.basefee(), b);
         assertEq(l1Block.hash(), h);
         assertEq(l1Block.sequenceNumber(), s);
-        assertEq(l1Block.batcherHash(), bt);
         assertEq(l1Block.l1FeeOverhead(), fo);
         assertEq(l1Block.l1FeeScalar(), fs);
         assertEq(l1Block.l1ElectionWinner(), winner);
@@ -61,7 +59,6 @@ contract L1BlockBedrock_Test is L1BlockTest {
             _basefee: type(uint256).max,
             _hash: keccak256(abi.encode(1)),
             _sequenceNumber: type(uint64).max,
-            _batcherHash: bytes32(type(uint256).max),
             _l1FeeOverhead: type(uint256).max,
             _l1FeeScalar: type(uint256).max,
             _electionWinner: address(0)
@@ -77,7 +74,6 @@ contract L1BlockBedrock_Test is L1BlockTest {
             _basefee: type(uint256).max,
             _hash: keccak256(abi.encode(1)),
             _sequenceNumber: type(uint64).max,
-            _batcherHash: bytes32(type(uint256).max),
             _l1FeeOverhead: type(uint256).max,
             _l1FeeScalar: type(uint256).max,
             _electionWinner: address(0)
@@ -96,7 +92,6 @@ contract L1BlockEcotone_Test is L1BlockTest {
         uint256 baseFee,
         uint256 blobBaseFee,
         bytes32 hash,
-        bytes32 batcherHash,
         address electionWinner
     )
         external
@@ -110,7 +105,6 @@ contract L1BlockEcotone_Test is L1BlockTest {
             baseFee,
             blobBaseFee,
             hash,
-            batcherHash,
             electionWinner
         );
 
@@ -126,7 +120,6 @@ contract L1BlockEcotone_Test is L1BlockTest {
         assertEq(l1Block.basefee(), baseFee);
         assertEq(l1Block.blobBaseFee(), blobBaseFee);
         assertEq(l1Block.hash(), hash);
-        assertEq(l1Block.batcherHash(), batcherHash);
         assertEq(l1Block.l1ElectionWinner(), electionWinner);
 
         // ensure we didn't accidentally pollute the 128 bits of the sequencenum+scalars slot that
@@ -153,7 +146,6 @@ contract L1BlockEcotone_Test is L1BlockTest {
             type(uint256).max,
             type(uint256).max,
             bytes32(type(uint256).max),
-            bytes32(type(uint256).max),
             address(0)
         );
 
@@ -172,7 +164,6 @@ contract L1BlockEcotone_Test is L1BlockTest {
             type(uint64).max,
             type(uint256).max,
             type(uint256).max,
-            bytes32(type(uint256).max),
             bytes32(type(uint256).max),
             address(0)
         );

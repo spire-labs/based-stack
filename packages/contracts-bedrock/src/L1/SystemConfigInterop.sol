@@ -32,7 +32,6 @@ contract SystemConfigInterop is SystemConfig {
     /// @param _owner             Initial owner of the contract.
     /// @param _basefeeScalar     Initial basefee scalar value.
     /// @param _blobbasefeeScalar Initial blobbasefee scalar value.
-    /// @param _batcherHash       Initial batcher hash.
     /// @param _gasLimit          Initial gas limit.
     /// @param _unsafeBlockSigner Initial unsafe block signer address.
     /// @param _config            Initial ResourceConfig.
@@ -46,7 +45,6 @@ contract SystemConfigInterop is SystemConfig {
         address _owner,
         uint32 _basefeeScalar,
         uint32 _blobbasefeeScalar,
-        bytes32 _batcherHash,
         uint64 _gasLimit,
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,
@@ -63,7 +61,6 @@ contract SystemConfigInterop is SystemConfig {
             _owner: _owner,
             _basefeeScalar: _basefeeScalar,
             _blobbasefeeScalar: _blobbasefeeScalar,
-            _batcherHash: _batcherHash,
             _gasLimit: _gasLimit,
             _unsafeBlockSigner: _unsafeBlockSigner,
             _config: _config,
@@ -77,7 +74,7 @@ contract SystemConfigInterop is SystemConfig {
 
     /// @custom:semver +interop-9
     function version() public pure override returns (string memory) {
-        return string.concat(super.version(), "+interop-9");
+        return string.concat(super.version(), "+interop-10");
     }
 
     /// @notice Internal setter for the gas paying token address, includes validation.
