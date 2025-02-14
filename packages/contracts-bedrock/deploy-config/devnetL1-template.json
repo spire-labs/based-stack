@@ -71,7 +71,7 @@
   "daResolveWindow": 16,
   "daBondSize": 1000000,
   "daResolverRefundPercentage": 0,
-  "electionFallbackList": "0x0203050000000000000000000000000000000000000000000000000000000000",
+  "electionFallbackList": "0x0402050000000000000000000000000000000000000000000000000000000000",
   "genesisAllocation": [
     {
       "amount": 150,
@@ -247,16 +247,6 @@
     }
   ],
   "sequencerRules": {
-    "inner": [
-      {
-        "addressOffsets": [
-          1
-        ],
-        "assertionType": 1,
-        "configCalldata": "0xffff",
-        "desiredRetdata": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-        "target": "0x0000000000000000000000000000000000000000"
-      }
-    ]
+    "inner": []
   }
 }
