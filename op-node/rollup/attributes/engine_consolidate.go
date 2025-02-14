@@ -133,10 +133,10 @@ func logL1InfoTxns(rollupCfg *rollup.Config, l log.Logger, l2Number, l2Timestamp
 	l = l.New("number", l2Number, "time", l2Timestamp,
 		"safe_l1_number", safeInfo.Number, "safe_l1_hash", safeInfo.BlockHash,
 		"safe_l1_time", safeInfo.Time, "safe_seq_num", safeInfo.SequenceNumber,
-		"safe_l1_basefee", safeInfo.BaseFee, "safe_batcher_addr", safeInfo.BatcherAddr,
+		"safe_l1_basefee", safeInfo.BaseFee,
 		"unsafe_l1_number", unsafeInfo.Number, "unsafe_l1_hash", unsafeInfo.BlockHash,
 		"unsafe_l1_time", unsafeInfo.Time, "unsafe_seq_num", unsafeInfo.SequenceNumber,
-		"unsafe_l1_basefee", unsafeInfo.BaseFee, "unsafe_batcher_addr", unsafeInfo.BatcherAddr,
+		"unsafe_l1_basefee", unsafeInfo.BaseFee,
 	)
 	if bytes.HasPrefix(safeTxValue.Data(), types.EcotoneL1AttributesSelector) {
 		l.Error("L1 Info transaction differs",

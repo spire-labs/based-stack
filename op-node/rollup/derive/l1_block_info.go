@@ -57,8 +57,6 @@ type L1BlockInfo struct {
 	// Not strictly a piece of L1 information. Represents the number of L2 blocks since the start of the epoch,
 	// i.e. when the actual L1 info was first introduced.
 	SequenceNumber uint64
-	// BatcherAddr version 0 is just the address with 0 padding to the left.
-	BatcherAddr common.Address
 
 	L1FeeOverhead eth.Bytes32 // ignored after Ecotone upgrade
 	L1FeeScalar   eth.Bytes32 // ignored after Ecotone upgrade
@@ -104,9 +102,6 @@ func (info *L1BlockInfo) marshalBinaryBedrock() ([]byte, error) {
 	if err := solabi.WriteUint64(w, info.SequenceNumber); err != nil {
 		return nil, err
 	}
-	if err := solabi.WriteAddress(w, info.BatcherAddr); err != nil {
-		return nil, err
-	}
 	if err := solabi.WriteEthBytes32(w, info.L1FeeOverhead); err != nil {
 		return nil, err
 	}
@@ -142,9 +137,6 @@ func (info *L1BlockInfo) unmarshalBinaryBedrock(data []byte) error {
 		return err
 	}
 	if info.SequenceNumber, err = solabi.ReadUint64(reader); err != nil {
-		return err
-	}
-	if info.BatcherAddr, err = solabi.ReadAddress(reader); err != nil {
 		return err
 	}
 	if info.L1FeeOverhead, err = solabi.ReadEthBytes32(reader); err != nil {
@@ -227,10 +219,6 @@ func marshalBinaryWithSignature(info *L1BlockInfo, signature []byte) ([]byte, er
 	if err := solabi.WriteHash(w, info.BlockHash); err != nil {
 		return nil, err
 	}
-	// ABI encoding will perform the left-padding with zeroes to 32 bytes, matching the "batcherHash" SystemConfig format and version 0 byte.
-	if err := solabi.WriteAddress(w, info.BatcherAddr); err != nil {
-		return nil, err
-	}
 	if err := solabi.WriteAddressNoPadding(w, info.L1ElectionWinner); err != nil {
 		return nil, err
 	}
@@ -278,10 +266,6 @@ func unmarshalBinaryWithSignatureAndData(info *L1BlockInfo, signature []byte, da
 		return err
 	}
 	if info.BlockHash, err = solabi.ReadHash(r); err != nil {
-		return err
-	}
-	// The "batcherHash" will be correctly parsed as address, since the version 0 and left-padding matches the ABI encoding format.
-	if info.BatcherAddr, err = solabi.ReadAddress(r); err != nil {
 		return err
 	}
 	if info.L1ElectionWinner, err = solabi.ReadAddressNoPadding(r); err != nil {
@@ -333,7 +317,6 @@ func L1InfoDeposit(rollupCfg *rollup.Config, sysCfg eth.SystemConfig, seqNumber 
 		BaseFee:        block.BaseFee(),
 		BlockHash:      block.Hash(),
 		SequenceNumber: seqNumber,
-		BatcherAddr:    sysCfg.BatcherAddr,
 		// TODO: Connect this to results of l1 election in future PR
 		L1ElectionWinner: winner,
 	}

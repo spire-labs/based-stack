@@ -80,7 +80,6 @@ func TestParseL1InfoDepositTxData(t *testing.T) {
 			assert.Equal(t, res.BaseFee.Bytes(), info.BaseFee().Bytes())
 			assert.Equal(t, res.BlockHash, info.Hash())
 			assert.Equal(t, res.SequenceNumber, seqNr)
-			assert.Equal(t, res.BatcherAddr, l1Cfg.BatcherAddr)
 			assert.Equal(t, res.L1FeeOverhead, l1Cfg.Overhead)
 			assert.Equal(t, res.L1FeeScalar, l1Cfg.Scalar)
 			assert.Equal(t, res.L1ElectionWinner, common.Address{0xaa})
