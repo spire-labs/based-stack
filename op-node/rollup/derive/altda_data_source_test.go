@@ -77,7 +77,7 @@ func TestAltDADataSource(t *testing.T) {
 		SequenceNumber: 0,
 	}
 	electionWinnerPriv := testutils.RandomKey()
-	electionWinnerAddr := crypto.PubkeyToAddress(electionWinnerPriv.PublicKey)
+	electionWinnerAddress := crypto.PubkeyToAddress(electionWinnerPriv.PublicKey)
 	batcherInbox := crypto.PubkeyToAddress(testutils.RandomKey().PublicKey)
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
@@ -101,7 +101,7 @@ func TestAltDADataSource(t *testing.T) {
 
 	signer := cfg.L1Signer()
 
-	electionClient := &MockElectionWinnersProvider{electionWinnerAddr}
+	electionClient := &MockElectionWinnersProvider{electionWinnerAddress}
 
 	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, electionClient)
 
@@ -119,9 +119,24 @@ func TestAltDADataSource(t *testing.T) {
 		}
 		l1Refs = append(l1Refs, ref)
 		logger.Info("new l1 block", "ref", ref)
+
+		l1Info := testutils.RandomBlockInfo(rng)
+		receipts, _, err := makeReceiptsElectionWinner(
+			rng,
+			l1Info.InfoHash,
+			batcherInbox,
+			electionWinnerAddress,
+			[]receiptData{
+				{goodReceipt: true, DepositLogs: []bool{true, true}},
+				{goodReceipt: true, DepositLogs: []bool{true}},
+				{goodReceipt: false, DepositLogs: []bool{true}},
+				{goodReceipt: false, DepositLogs: []bool{true}},
+			},
+		)
+		require.NoError(t, err)
 		// called for each l1 block to sync challenges
-		l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
-		l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
+		l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
+		l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
 
 		// pick a random number of commitments to include in the l1 block
 		c := rng.Intn(4)
@@ -172,7 +187,7 @@ func TestAltDADataSource(t *testing.T) {
 		}
 
 		// create a new data source for each block
-		src, err := factory.OpenData(ctx, ref, electionWinnerAddr)
+		src, err := factory.OpenData(ctx, ref, electionWinnerAddress)
 		require.NoError(t, err)
 
 		// first challenge expires
@@ -257,7 +272,7 @@ func TestAltDADataSource(t *testing.T) {
 		}
 
 		// create a new data source for each block
-		src, err := factory.OpenData(ctx, ref, electionWinnerAddr)
+		src, err := factory.OpenData(ctx, ref, electionWinnerAddress)
 		require.NoError(t, err)
 
 		// next challenge expires

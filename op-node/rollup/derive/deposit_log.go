@@ -3,6 +3,7 @@ package derive
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"math/big"
 
 	"github.com/holiman/uint256"
@@ -18,6 +19,7 @@ var (
 	DepositEventABI      = "TransactionDeposited(address,address,uint256,bytes)"
 	DepositEventABIHash  = crypto.Keccak256Hash([]byte(DepositEventABI))
 	DepositEventVersion0 = common.Hash{}
+	BatchSubmittedHash   = snapshots.LoadBatchInboxABI().Events["BatchSubmitted"].ID
 )
 
 // UnmarshalDepositLogEvent decodes an EVM log entry emitted by the deposit contract into typed deposit data.
@@ -150,6 +152,54 @@ func MarshalDepositLogEvent(depositContractAddr common.Address, deposit *types.D
 	topics := []common.Hash{
 		DepositEventABIHash,
 		eth.AddressAsLeftPaddedHash(deposit.From),
+		toBytes,
+		DepositEventVersion0,
+	}
+
+	data := make([]byte, 64, 64+3*32)
+
+	// opaqueData slice content offset: value will always be 0x20.
+	binary.BigEndian.PutUint64(data[32-8:32], 32)
+
+	opaqueData, err := marshalDepositVersion0(deposit)
+	if err != nil {
+		return &types.Log{}, err
+	}
+
+	// opaqueData slice length
+	binary.BigEndian.PutUint64(data[64-8:64], uint64(len(opaqueData)))
+
+	// opaqueData slice content
+	data = append(data, opaqueData...)
+
+	// pad to multiple of 32
+	if len(data)%32 != 0 {
+		data = append(data, make([]byte, 32-(len(data)%32))...)
+	}
+
+	return &types.Log{
+		Address: depositContractAddr,
+		Topics:  topics,
+		Data:    data,
+		Removed: false,
+
+		// ignored (zeroed):
+		BlockNumber: 0,
+		TxHash:      common.Hash{},
+		TxIndex:     0,
+		BlockHash:   common.Hash{},
+		Index:       0,
+	}, nil
+}
+
+func MarshalDepositLogEventElectionWinner(depositContractAddr common.Address, deposit *types.DepositTx, electionWinnerAddress common.Address) (*types.Log, error) {
+	toBytes := common.Hash{}
+	if deposit.To != nil {
+		toBytes = eth.AddressAsLeftPaddedHash(*deposit.To)
+	}
+	topics := []common.Hash{
+		BatchSubmittedHash,
+		eth.AddressAsLeftPaddedHash(electionWinnerAddress),
 		toBytes,
 		DepositEventVersion0,
 	}
