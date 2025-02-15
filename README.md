@@ -23,7 +23,7 @@
 
 ## About Spire Labs?
 
-[<i>Spire</i>](https://www.spire.dev/) is developing the first <b>based rollup framework</b> & network on Ethereum, enabling a wide range of app developers to create their own appchains on Ethereum. Spire's sequencing design enables appchains to interact with Ethereum's liquidity and protocols natively (think: cross chain swaps). Spire appchains support a wide range of execution environments, scalability upgrades, and decentralized preconfirmations for lightning -fast UX.
+[<i>**Spire Labs**</i>](https://www.spire.dev/) is building a based rollup stack called “Based Stack” that enables developers to spin up app-specific **based rollups**. Spire's sequencing design enables appchains to interact with Ethereum's liquidity and protocols natively (e.g. cross chain contract calls). Also, based rollups/appchains built the Based Stack can retain MEV, customize their execution environment, and integrate natively with decentralized preconfirmations for a lightning-fast UX.
 
 ## Documentation
 
