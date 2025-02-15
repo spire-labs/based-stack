@@ -1,7 +1,7 @@
 <div align="center">
   <br />
   <br />
-  <a href="https://www.spire.dev"><img alt="Spire" src="https://github.com/user-attachments/assets/e08ba101-88bc-4a3f-9de3-e23529578cc1" width=600></a>
+  <a href="https://www.spire.dev"><img alt="Spire" src="https://github.com/user-attachments/assets/09a7fe72-1db2-4cce-a3c0-f34a16de4937" width=600></a>
   <br />
   <h3>Derived from<a href="https://optimism.io"> Optimism</a></h3>
   <br />
