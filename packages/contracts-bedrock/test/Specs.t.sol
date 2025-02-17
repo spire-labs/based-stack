@@ -66,6 +66,9 @@ contract Specification_Test is CommonTest {
 
     function setUp() public override {
         super.setUp();
+        // BasedInbox
+        _addSpec({ _name: "BasedInbox", _sel: _getSel("count()") });
+        _addSpec({ _name: "BasedInbox", _sel: _getSel("broadcastTx(bytes,uint256)") });
 
         // DataAvailabilityChallenge
         _addSpec({ _name: "DataAvailabilityChallenge", _sel: _getSel("owner()") });
