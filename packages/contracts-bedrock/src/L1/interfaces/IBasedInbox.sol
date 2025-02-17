@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity ^0.8.0;
 
 interface IBasedInbox {
     event TransactionBroadcasted(uint256 indexed _chainId, uint256 _count);
