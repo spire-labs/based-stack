@@ -81,6 +81,7 @@ func DecodeCommitmentData(input []byte) (CommitmentData, error) {
 	case GenericCommitmentType:
 		return DecodeGenericCommitment(data)
 	default:
+		fmt.Printf("invalid commitment type: %d\n", t)
 		return nil, ErrInvalidCommitment
 	}
 }

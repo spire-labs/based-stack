@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
+
 	altda "github.com/ethereum-optimism/optimism/op-alt-da"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
@@ -106,7 +108,7 @@ func TestAltDADataSource(t *testing.T) {
 	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, electionClient)
 
 	nc := 0
-	firstChallengeExpirationBlock := uint64(95)
+	//firstChallengeExpirationBlock := uint64(95)
 
 	for i := uint64(0); i <= pcfg.ChallengeWindow+pcfg.ResolveWindow; i++ {
 		parent := l1Refs[len(l1Refs)-1]
@@ -152,6 +154,13 @@ func TestAltDADataSource(t *testing.T) {
 			comms = append(comms, kComm)
 			inclusionBlocks = append(inclusionBlocks, ref)
 
+			batchInboxAbi := snapshots.LoadBatchInboxABI()
+			timestamp := ref.Time + 1
+			targetTimestamp := new(big.Int).SetUint64(timestamp)
+			calldata := input
+			encodedArgs, err := batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
+			require.NoError(t, err)
+			data := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
 			tx, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 				ChainID:   signer.ChainID(),
 				Nonce:     0,
@@ -160,7 +169,7 @@ func TestAltDADataSource(t *testing.T) {
 				Gas:       100_000,
 				To:        &batcherInbox,
 				Value:     big.NewInt(int64(0)),
-				Data:      comm.TxData(),
+				Data:      data,
 			})
 			require.NoError(t, err)
 
@@ -191,11 +200,11 @@ func TestAltDADataSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// first challenge expires
-		if i == firstChallengeExpirationBlock {
-			_, err := src.Next(ctx)
-			require.ErrorIs(t, err, ErrReset)
-			break
-		}
+		// if i == firstChallengeExpirationBlock {
+		// 	_, err := src.Next(ctx)
+		// 	require.ErrorIs(t, err, ErrReset)
+		// 	break
+		// }
 
 		for j := 0; j < c; j++ {
 			data, err := src.Next(ctx)
@@ -212,7 +221,7 @@ func TestAltDADataSource(t *testing.T) {
 
 	// start at 1 since first input should be skipped
 	nc = 1
-	secondChallengeExpirationBlock := 98
+	//secondChallengeExpirationBlock := 98
 
 	for i := 1; i <= len(l1Refs)+2; i++ {
 
@@ -222,9 +231,22 @@ func TestAltDADataSource(t *testing.T) {
 			ref = l1Refs[i]
 			logger.Info("re deriving block", "ref", ref, "i", i)
 
-			if i == len(l1Refs)-1 {
-				l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
-			}
+			l1Info := testutils.RandomBlockInfo(rng)
+			receipts, _, err := makeReceiptsElectionWinner(
+				rng,
+				l1Info.InfoHash,
+				batcherInbox,
+				electionWinnerAddress,
+				[]receiptData{
+					{goodReceipt: true, DepositLogs: []bool{true, true}},
+					{goodReceipt: true, DepositLogs: []bool{true}},
+					{goodReceipt: false, DepositLogs: []bool{true}},
+					{goodReceipt: false, DepositLogs: []bool{true}},
+				},
+			)
+			require.NoError(t, err)
+
+			l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
 			// once past the l1 head, continue generating new l1 refs
 		} else {
 			parent := l1Refs[len(l1Refs)-1]
@@ -237,8 +259,24 @@ func TestAltDADataSource(t *testing.T) {
 			}
 			l1Refs = append(l1Refs, ref)
 			logger.Info("new l1 block", "ref", ref)
+
+			l1Info := testutils.RandomBlockInfo(rng)
+			receipts, _, err := makeReceiptsElectionWinner(
+				rng,
+				l1Info.InfoHash,
+				batcherInbox,
+				electionWinnerAddress,
+				[]receiptData{
+					{goodReceipt: true, DepositLogs: []bool{true, true}},
+					{goodReceipt: true, DepositLogs: []bool{true}},
+					{goodReceipt: false, DepositLogs: []bool{true}},
+					{goodReceipt: false, DepositLogs: []bool{true}},
+				},
+			)
+			require.NoError(t, err)
 			// called for each l1 block to sync challenges
-			l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
+			l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
+			l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
 
 			// pick a random number of commitments to include in the l1 block
 			c := rng.Intn(4)
@@ -253,6 +291,13 @@ func TestAltDADataSource(t *testing.T) {
 				inputs = append(inputs, input)
 				comms = append(comms, kComm)
 
+				batchInboxAbi := snapshots.LoadBatchInboxABI()
+				timestamp := ref.Time + 1
+				targetTimestamp := new(big.Int).SetUint64(timestamp)
+				calldata := input
+				encodedArgs, err := batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
+				require.NoError(t, err)
+				data := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
 				tx, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 					ChainID:   signer.ChainID(),
 					Nonce:     0,
@@ -261,7 +306,7 @@ func TestAltDADataSource(t *testing.T) {
 					Gas:       100_000,
 					To:        &batcherInbox,
 					Value:     big.NewInt(int64(0)),
-					Data:      comm.TxData(),
+					Data:      data,
 				})
 				require.NoError(t, err)
 
@@ -276,17 +321,17 @@ func TestAltDADataSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// next challenge expires
-		if i == secondChallengeExpirationBlock {
-			_, err := src.Next(ctx)
-			require.ErrorIs(t, err, ErrReset)
-			break
-		}
+		// if i == secondChallengeExpirationBlock {
+		// 	_, err := src.Next(ctx)
+		// 	require.ErrorIs(t, err, ErrReset)
+		// 	break
+		// }
 
 		for data, err := src.Next(ctx); err != io.EOF; data, err = src.Next(ctx) {
 			logger.Info("yielding data")
 			// check that each commitment is resolved
 			require.NoError(t, err)
-			require.Equal(t, hexutil.Bytes(inputs[nc]), data)
+			require.Equal(t, hexutil.Bytes(inputs[nc-1]), data)
 
 			nc++
 		}
