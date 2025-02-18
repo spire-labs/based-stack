@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"
 
@@ -35,13 +34,13 @@ type MockDataSource struct {
 	mock.Mock
 }
 
-func (m *MockDataSource) OpenData(ctx context.Context, ref eth.L1BlockRef, batcherAddr common.Address) (DataIter, error) {
-	out := m.Mock.MethodCalled("OpenData", ref, batcherAddr)
+func (m *MockDataSource) OpenData(ctx context.Context, ref eth.L1BlockRef) (DataIter, error) {
+	out := m.Mock.MethodCalled("OpenData", ref)
 	return out[0].(DataIter), nil
 }
 
-func (m *MockDataSource) ExpectOpenData(ref eth.L1BlockRef, iter DataIter, batcherAddr common.Address) {
-	m.Mock.On("OpenData", ref, batcherAddr).Return(iter)
+func (m *MockDataSource) ExpectOpenData(ref eth.L1BlockRef, iter DataIter) {
+	m.Mock.On("OpenData", ref).Return(iter)
 }
 
 var _ DataAvailabilitySource = (*MockDataSource)(nil)
@@ -85,17 +84,14 @@ func TestL1RetrievalReset(t *testing.T) {
 	rng := rand.New(rand.NewSource(1234))
 	dataSrc := &MockDataSource{}
 	a := testutils.RandomBlockRef(rng)
-	l1Cfg := eth.SystemConfig{
-		BatcherAddr: common.Address{42},
-	}
 
-	dataSrc.ExpectOpenData(a, &fakeDataIter{}, l1Cfg.BatcherAddr)
+	dataSrc.ExpectOpenData(a, &fakeDataIter{})
 	defer dataSrc.AssertExpectations(t)
 
 	l1r := NewL1Retrieval(testlog.Logger(t, log.LevelError), dataSrc, nil)
 
 	// We assert that it opens up the correct data on a reset
-	_ = l1r.Reset(context.Background(), a, l1Cfg)
+	_ = l1r.Reset(context.Background(), a)
 }
 
 // TestL1RetrievalNextData tests that the `NextData` function properly
@@ -108,7 +104,6 @@ func TestL1RetrievalNextData(t *testing.T) {
 	tests := []struct {
 		name         string
 		prevBlock    eth.L1BlockRef
-		sysCfg       eth.SystemConfig
 		prevErr      error // error returned by prev.NextL1Block
 		openErr      error // error returned by NextData if prev.NextL1Block fails
 		datas        []eth.Data
@@ -118,7 +113,6 @@ func TestL1RetrievalNextData(t *testing.T) {
 		{
 			name:         "simple retrieval",
 			prevBlock:    a,
-			sysCfg:       eth.SystemConfig{BatcherAddr: common.Address{0x55}},
 			prevErr:      nil,
 			openErr:      nil,
 			datas:        []eth.Data{testutils.RandomData(rng, 10), testutils.RandomData(rng, 10), testutils.RandomData(rng, 10), nil},
@@ -133,7 +127,6 @@ func TestL1RetrievalNextData(t *testing.T) {
 		{
 			name:         "fail to open data",
 			prevBlock:    a,
-			sysCfg:       eth.SystemConfig{BatcherAddr: common.Address{0x55}},
 			prevErr:      nil,
 			openErr:      nil,
 			datas:        []eth.Data{nil},
@@ -147,7 +140,7 @@ func TestL1RetrievalNextData(t *testing.T) {
 			l1t := &MockL1Traversal{}
 			l1t.ExpectNextL1Block(test.prevBlock, test.prevErr)
 			dataSrc := &MockDataSource{}
-			dataSrc.ExpectOpenData(test.prevBlock, &fakeDataIter{data: test.datas, errs: test.datasErrs}, test.sysCfg.BatcherAddr)
+			dataSrc.ExpectOpenData(test.prevBlock, &fakeDataIter{data: test.datas, errs: test.datasErrs})
 
 			ret := NewL1Retrieval(testlog.Logger(t, log.LevelCrit), dataSrc, l1t)
 
@@ -161,7 +154,6 @@ func TestL1RetrievalNextData(t *testing.T) {
 			// Go through the fake data an assert that data is passed through and the correct
 			// errors are returned.
 			for i := range test.expectedErrs {
-				l1t.ExpectSystemConfig(test.sysCfg)
 				data, err := ret.NextData(context.Background())
 				require.Equal(t, test.datas[i], hexutil.Bytes(data))
 				require.ErrorIs(t, err, test.expectedErrs[i])

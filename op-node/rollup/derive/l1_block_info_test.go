@@ -31,10 +31,9 @@ type infoTest struct {
 
 func randomL1Cfg(rng *rand.Rand, l1Info eth.BlockInfo) eth.SystemConfig {
 	return eth.SystemConfig{
-		BatcherAddr: testutils.RandomAddress(rng),
-		Overhead:    [32]byte{},
-		Scalar:      [32]byte{},
-		GasLimit:    1234567,
+		Overhead: [32]byte{},
+		Scalar:   [32]byte{},
+		GasLimit: 1234567,
 	}
 }
 

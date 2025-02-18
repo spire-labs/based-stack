@@ -114,7 +114,7 @@ func (aq *AttributesQueue) createNextAttributes(ctx context.Context, batch *Sing
 	return attrs, nil
 }
 
-func (aq *AttributesQueue) Reset(ctx context.Context, _ eth.L1BlockRef, _ eth.SystemConfig) error {
+func (aq *AttributesQueue) Reset(ctx context.Context, _ eth.L1BlockRef) error {
 	aq.batch = nil
 	aq.isLastInSpan = false // overwritten later, but set for consistency
 	return io.EOF

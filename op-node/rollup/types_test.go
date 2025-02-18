@@ -33,10 +33,9 @@ func randConfig() *Config {
 			L2:     eth.BlockID{Hash: randHash(), Number: 1337},
 			L2Time: uint64(time.Now().Unix()),
 			SystemConfig: eth.SystemConfig{
-				BatcherAddr: randAddr(),
-				Overhead:    randHash(),
-				Scalar:      randHash(),
-				GasLimit:    1234567,
+				Overhead: randHash(),
+				Scalar:   randHash(),
+				GasLimit: 1234567,
 			},
 		},
 		BlockTime:                 2,
@@ -409,11 +408,6 @@ func TestConfig_Check(t *testing.T) {
 			name:        "GenesisL2TimeZero",
 			modifier:    func(cfg *Config) { cfg.Genesis.L2Time = 0 },
 			expectedErr: ErrMissingGenesisL2Time,
-		},
-		{
-			name:        "NoBatcherAddr",
-			modifier:    func(cfg *Config) { cfg.Genesis.SystemConfig.BatcherAddr = common.Address{} },
-			expectedErr: ErrMissingBatcherAddr,
 		},
 		{
 			name:        "NoScalar",

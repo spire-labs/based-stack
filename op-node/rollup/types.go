@@ -25,7 +25,6 @@ var (
 	ErrMissingGenesisL2Hash             = errors.New("genesis L2 hash cannot be empty")
 	ErrGenesisHashesSame                = errors.New("achievement get! rollup inception: L1 and L2 genesis cannot be the same")
 	ErrMissingGenesisL2Time             = errors.New("missing L2 genesis time")
-	ErrMissingBatcherAddr               = errors.New("missing genesis system config batcher address")
 	ErrMissingScalar                    = errors.New("missing genesis system config scalar")
 	ErrMissingGasLimit                  = errors.New("missing genesis system config gas limit")
 	ErrMissingBatchInboxContractAddress = errors.New("missing batch inbox contract address")
@@ -277,9 +276,7 @@ func (cfg *Config) Check() error {
 	if cfg.Genesis.L2Time == 0 {
 		return ErrMissingGenesisL2Time
 	}
-	if cfg.Genesis.SystemConfig.BatcherAddr == (common.Address{}) {
-		return ErrMissingBatcherAddr
-	}
+
 	if cfg.Genesis.SystemConfig.Scalar == (eth.Bytes32{}) {
 		return ErrMissingScalar
 	}

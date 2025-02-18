@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 
@@ -25,7 +24,6 @@ type blobOrCalldata struct {
 type BlobDataSource struct {
 	data           []blobOrCalldata
 	ref            eth.L1BlockRef
-	batcherAddr    common.Address
 	dsCfg          DataSourceConfig
 	fetcher        L1TransactionFetcher
 	blobsFetcher   L1BlobsFetcher
@@ -34,13 +32,12 @@ type BlobDataSource struct {
 }
 
 // NewBlobDataSource creates a new blob data source.
-func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, batcherAddr common.Address, electionClient ElectionWinnersProvider) DataIter {
+func NewBlobDataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConfig, fetcher L1TransactionFetcher, blobsFetcher L1BlobsFetcher, ref eth.L1BlockRef, electionClient ElectionWinnersProvider) DataIter {
 	return &BlobDataSource{
 		ref:            ref,
 		dsCfg:          dsCfg,
 		fetcher:        fetcher,
 		log:            log.New("origin", ref),
-		batcherAddr:    batcherAddr,
 		blobsFetcher:   blobsFetcher,
 		electionClient: electionClient,
 	}

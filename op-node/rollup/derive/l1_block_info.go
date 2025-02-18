@@ -22,9 +22,9 @@ const (
 	L1InfoFuncEcotoneSignature = "setL1BlockValuesEcotone()"
 	L1InfoFuncIsthmusSignature = "setL1BlockValuesIsthmus()"
 	DepositsCompleteSignature  = "depositsComplete()"
-	L1InfoArguments            = 9
+	L1InfoArguments            = 8
 	L1InfoBedrockLen           = 4 + 32*L1InfoArguments
-	L1InfoEcotoneLen           = 4 + 32*5 + 20 // after Ecotone upgrade, args are packed into 5 32-byte slots and 20 bytes for the election winner
+	L1InfoEcotoneLen           = 4 + 32*4 + 20 // after Ecotone upgrade, args are packed into 4 32-byte slots and 20 bytes for the election winner
 	DepositsCompleteLen        = 4             // only the selector
 	// DepositsCompleteGas allocates 21k gas for intrinsic tx costs, and
 	// an additional 15k to ensure that the DepositsComplete call does not run out of gas.
@@ -77,7 +77,6 @@ type L1BlockInfo struct {
 // | 32      | BaseFee                  |
 // | 32      | BlockHash                |
 // | 32      | SequenceNumber           |
-// | 32      | BatcherHash              |
 // | 32      | L1FeeOverhead            |
 // | 32      | L1FeeScalar              |
 // +---------+--------------------------+
@@ -167,7 +166,6 @@ func (info *L1BlockInfo) unmarshalBinaryBedrock(data []byte) error {
 // | 32      | BaseFee                  |
 // | 32      | BlobBaseFee              |
 // | 32      | BlockHash                |
-// | 32      | BatcherHash              |
 // +---------+--------------------------+
 
 func (info *L1BlockInfo) marshalBinaryEcotone() ([]byte, error) {

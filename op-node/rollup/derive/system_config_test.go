@@ -71,30 +71,6 @@ func TestProcessSystemConfigUpdateLogEvent(t *testing.T) {
 			err:    false,
 		},
 		{
-			// The batcher address should be updated.
-			name: "SystemConfigUpdateBatcher",
-			log: &types.Log{
-				Topics: []common.Hash{
-					ConfigUpdateEventABIHash,
-					ConfigUpdateEventVersion0,
-					SystemConfigUpdateBatcher,
-				},
-			},
-			hook: func(t *testing.T, log *types.Log) *types.Log {
-				addr := common.Address{19: 0xaa}
-				addrData, err := addressArgs.Pack(&addr)
-				require.NoError(t, err)
-				data, err := bytesArgs.Pack(addrData)
-				require.NoError(t, err)
-				log.Data = data
-				return log
-			},
-			config: eth.SystemConfig{
-				BatcherAddr: common.Address{19: 0xaa},
-			},
-			err: false,
-		},
-		{
 			// The overhead and the scalar should be updated.
 			name: "SystemConfigUpdateGasConfig",
 			log: &types.Log{

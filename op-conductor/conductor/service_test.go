@@ -55,10 +55,9 @@ func mockConfig(t *testing.T) Config {
 				},
 				L2Time: now,
 				SystemConfig: eth.SystemConfig{
-					BatcherAddr: [20]byte{1},
-					Overhead:    [32]byte{1},
-					Scalar:      [32]byte{1},
-					GasLimit:    30000000,
+					Overhead: [32]byte{1},
+					Scalar:   [32]byte{1},
+					GasLimit: 30000000,
 				},
 			},
 			BlockTime:                 2,
