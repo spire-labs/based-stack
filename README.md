@@ -7,7 +7,7 @@
   <br />
 </div>
 
-## ⚠️ This codebase is currently un-audited and not production ready
+### ⚠️ This codebase is currently un-audited and not production ready
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
