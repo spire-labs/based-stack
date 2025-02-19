@@ -76,7 +76,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
             abi.encodeWithSelector(
                 ICrossDomainMessenger.sendMessage.selector,
                 address(electionTicket),
-                abi.encodeCall(ElectionTickets.mint, (owner)),
+                abi.encodeCall(ElectionTickets.mint, (owner, 1)),
                 150_000
             ),
             abi.encode()
@@ -229,7 +229,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
             abi.encodeWithSelector(
                 ICrossDomainMessenger.sendMessage.selector,
                 electionTicket,
-                abi.encodeCall(ElectionTickets.mint, (owner)),
+                abi.encodeCall(ElectionTickets.mint, (owner, 1)),
                 150_000
             )
         );
@@ -254,8 +254,8 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
             abi.encodeWithSelector(
                 ICrossDomainMessenger.sendMessage.selector,
                 electionTicket,
-                abi.encodeCall(ElectionTickets.mint, (owner)),
-                150_000
+                abi.encodeCall(ElectionTickets.mint, (owner, _amount)),
+                150_000 * _amount
             )
         );
 

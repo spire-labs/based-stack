@@ -73,7 +73,7 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
     /// @dev Tests that the `mint` function reverts when called by a non-messenger address.
     function test_mint_onlyAuction_wrongCaller_reverts() public {
         vm.expectRevert(NotAuction.selector);
-        electionTicket.mint(to);
+        electionTicket.mint(to, 1);
     }
 
     /// @dev Tests that the `mint` function reverts when l1 sender is not the auction contract.
@@ -86,7 +86,7 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
 
         vm.expectRevert(NotAuction.selector);
         vm.prank(Predeploys.L1_BLOCK_ATTRIBUTES);
-        electionTicket.mint(to);
+        electionTicket.mint(to, 1);
     }
 
     /// @dev Tests that the `mint` function succeeds when called by the Election contract.
@@ -101,7 +101,27 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
             abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector)
         );
         vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
-        electionTicket.mint(to);
+        electionTicket.mint(to, 1);
+    }
+
+    /// @dev Tests that `mint` correctly mints multiple tickets
+    function test_mint_multipleTickets_succeeds(uint256 _amount) public {
+        // Theoretical max based on the current validator in lookahead is 32
+        vm.assume(_amount <= 32);
+
+        vm.mockCall(
+            Predeploys.L2_CROSS_DOMAIN_MESSENGER,
+            abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
+            abi.encode(election)
+        );
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
+        electionTicket.mint(to, _amount);
+
+        assertEq(electionTicket.tokenId(), _amount);
+
+        for (uint256 i; i < _amount; i++) {
+            assertEq(electionTicket.ownerOf(i + 1), to);
+        }
     }
 
     /// @dev Tests that the mint function correctly updates the stack
@@ -112,10 +132,8 @@ contract ElectionTickets_mint_Test is ElectionTickets_Test {
             abi.encode(election)
         );
 
-        for (uint256 i = 0; i < 10; i++) {
-            vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
-            electionTicket.mint(to);
-        }
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
+        electionTicket.mint(to, 10);
 
         uint256[] memory stack = electionTicket.traverseTicketStack(to);
 
@@ -140,7 +158,7 @@ contract ElectionTickets_burn_Test is ElectionTickets_Test {
             abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
             abi.encode(election)
         );
-        electionTicket.mint(to);
+        electionTicket.mint(to, 1);
     }
 
     /// @dev Tests that the `burn` function reverts when called by a non-BatchInbox address.
@@ -176,10 +194,8 @@ contract ElectionTickets_burn_Test is ElectionTickets_Test {
         );
 
         // Including the mint in setup this mints 10 tickets to "to"
-        for (uint256 i = 0; i < 9; i++) {
-            vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
-            electionTicket.mint(to);
-        }
+        vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
+        electionTicket.mint(to, 9);
 
         for (uint256 i = 0; i < 10; i++) {
             uint256 top = electionTicket.top(to);
@@ -208,7 +224,7 @@ contract ElectionTickets_Untransferable_Test is ElectionTickets_Test {
             abi.encodeWithSelector(ICrossDomainMessenger.xDomainMessageSender.selector),
             abi.encode(election)
         );
-        electionTicket.mint(to);
+        electionTicket.mint(to, 1);
     }
 
     /// @notice Test that the transferFrom function reverts
@@ -242,7 +258,7 @@ contract ElectionTickets_OwnerOf_Test is ElectionTickets_Test {
             abi.encode(election)
         );
         vm.prank(Predeploys.L2_CROSS_DOMAIN_MESSENGER);
-        electionTicket.mint(to);
+        electionTicket.mint(to, 1);
 
         assertEq(electionTicket.ownerOf(1), to);
     }

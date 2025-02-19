@@ -191,11 +191,9 @@ contract BlockDutchAuction is Ownable {
 
         // Mint theoretical max gas limit is ~130_000
         // We send as 150_000 to allow for some buffer
-        // TODO(spire): A potential improvement here is to allow for mass minting in one call
-        //              This would require a much larger refactor, can be handled as an optimization in a future PR
-        for (uint256 i; i < _amount; i++) {
-            _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 150_000);
-        }
+        _messenger.sendMessage(
+            ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender, _amount)), 150_000 * _amount
+        );
 
         unchecked {
             __ticketsLeft -= _amount;
