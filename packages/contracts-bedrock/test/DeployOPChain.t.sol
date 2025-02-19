@@ -324,7 +324,6 @@ contract DeployOPChain_TestBase is Test {
     // `opsm` is set during `setUp` since it is an output of the previous step.
     address opChainProxyAdminOwner = makeAddr("defaultOPChainProxyAdminOwner");
     address systemConfigOwner = makeAddr("defaultSystemConfigOwner");
-    address batcher = makeAddr("defaultBatcher");
     address unsafeBlockSigner = makeAddr("defaultUnsafeBlockSigner");
     address proposer = makeAddr("defaultProposer");
     address challenger = makeAddr("defaultChallenger");
