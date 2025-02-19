@@ -72,6 +72,7 @@ contract ElectionTickets is ERC721, Initializable {
     /// @notice Mints a new ticket
     ///
     /// @param _to The address to mint the ticket to
+    /// @param _amount The amount of tickets to mint
     function mint(address _to, uint256 _amount) external {
         // Mint is supposed to be called through a cross chain message
         // We need to also check that the l1 sender is the auction contract
