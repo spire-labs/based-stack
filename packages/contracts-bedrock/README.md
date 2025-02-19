@@ -43,8 +43,6 @@ The `IMPL_SALT` env var can be used to set the `create2` salt for deploying the 
 contracts.
 
 This will deploy an entire new system of L1 smart contracts including a new `SuperchainConfig`.
-In the future there will be an easy way to deploy only proxies and use shared implementations
-for each of the contracts as well as a shared `SuperchainConfig` contract.
 
 ## Generating L2 Genesis Allocs
 

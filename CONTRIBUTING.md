@@ -2,7 +2,7 @@
 
 ## Disclaimer
 
-- <b>Please keep in mind that we DO NOT have a token and we are not doing airdrops. Even if we do plan to launch a token in the future, contributing to this codebase will not be rewarded with an airdrop</b>
+- <b>Please keep in mind that we DO NOT have a token and we are not doing airdrops. Even if we do choose to launch a token in the future, contributing to this codebase will NOT be rewarded with an airdrop</b>
 - <b>Please refrain from opening low effort PRs. PRs for typo fix and modifying markdown newlines will NOT be accepted as first time contributions.</b>
 
 ## What to Contribute
@@ -66,8 +66,8 @@ You'll have to install the `compose` plugin if you're not using Docker Desktop o
 Clone the repository and open it:
 
 ```bash
-git clone git@github.com:ethereum-optimism/optimism.git
-cd optimism
+git clone https://github.com/spire-labs/based-stack.git
+cd based-stack
 ```
 
 ### Building the repo
