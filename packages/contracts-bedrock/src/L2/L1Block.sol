@@ -57,9 +57,9 @@ contract L1Block is ISemver, IGasToken {
     /// @notice The winner of the election for a given block
     address public l1ElectionWinner;
 
-    /// @custom:semver 1.5.1-beta.3
+    /// @custom:semver 1.5.1-beta.4
     function version() public pure virtual returns (string memory) {
-        return "1.5.1-beta.3";
+        return "1.5.1-beta.4";
     }
 
     /// @notice Returns the gas paying token, its decimals, name and symbol.
