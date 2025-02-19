@@ -90,13 +90,24 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         auction.forTest_setTicketsLeft(0);
 
         vm.expectRevert(NoTicketsLeft.selector);
-        auction.buy();
+        auction.buy(1);
+    }
+
+    /// @dev Tests that the `buy` function reverts when attempting to buy more tickets then available
+    function testFuzz_buy_overflow_reverts(uint8 _amount) public {
+        // Validators in lookahead is the absolute maximum amount of tickets to potentially be avilable
+        // It is possible for certain cases and auction setups for the max to be < VALIDATORS_IN_LOOKAHEAD based on
+        // config
+        vm.assume(_amount > auction.VALIDATORS_IN_LOOKAHEAD());
+
+        vm.expectRevert(NoTicketsLeft.selector);
+        auction.buy(_amount);
     }
 
     /// @dev Tests that the `buy` function reverts when the caller does not send enough funds.
     function test_buy_insufficientFunds_reverts() public {
         vm.expectRevert(InsufficientFunds.selector);
-        auction.buy();
+        auction.buy(1);
     }
 
     /// @dev Tests that the `buy` function correctly buys a ticket if the auction round auto increments
@@ -110,7 +121,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{ value: _price }();
+        auction.buy{ value: _price }(1);
 
         // Tickets left should be durationBlocks - 1 becuase `durationBlocks` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.durationBlocks() - 1);
@@ -138,7 +149,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{ value: _price }();
+        auction.buy{ value: _price }(1);
 
         // Tickets left should be durationBlocks - 1 becuase `durationBlocks` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.durationBlocks() - 1);
@@ -169,7 +180,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{ value: _price }();
+        auction.buy{ value: _price }(1);
 
         // Tickets left should be durationBlocks - 1 becuase `durationBlocks` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.durationBlocks() - 1);
@@ -199,7 +210,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         uint256 _price = auction.getPrice();
         vm.deal(owner, _price);
         vm.prank(owner);
-        auction.buy{ value: _price }();
+        auction.buy{ value: _price }(1);
 
         // Tickets left should be durationBlocks - 1 becuase `durationBlocks` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.durationBlocks() - 1);
@@ -223,10 +234,35 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
             )
         );
         vm.prank(owner);
-        auction.buy{ value: _price }();
+        auction.buy{ value: _price }(1);
 
         // Tickets left should be durationBlocks - 1 becuase `durationBlocks` tickets are in an auction round
         assertEq(auction.ticketsLeft(), auction.durationBlocks() - 1);
+    }
+
+    /// @dev Tests that the `buy` function correctly buys multiple tickets
+    function testFuzz_buy_multipleTickets_succeeds(uint8 _amount) public {
+        vm.assume(_amount > 0);
+        vm.assume(_amount <= auction.VALIDATORS_IN_LOOKAHEAD());
+
+        uint256 _price = auction.getPrice();
+        uint256 _totalPrice = _price * _amount;
+        vm.deal(owner, _totalPrice);
+
+        vm.expectCall(
+            address(messenger),
+            abi.encodeWithSelector(
+                ICrossDomainMessenger.sendMessage.selector,
+                electionTicket,
+                abi.encodeCall(ElectionTickets.mint, (owner)),
+                150_000
+            )
+        );
+
+        vm.prank(owner);
+        auction.buy{ value: _totalPrice }(_amount);
+
+        assertEq(auction.ticketsLeft(), auction.durationBlocks() - _amount);
     }
 
     /// @dev Tests that the `buy` function correctly buys a ticket when the caller overpays
@@ -238,7 +274,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
 
         vm.deal(owner, _price + _overpayment);
         vm.prank(owner);
-        auction.buy{ value: _price + _overpayment }();
+        auction.buy{ value: _price + _overpayment }(1);
 
         assertEq(owner.balance, _overpayment);
     }
@@ -252,7 +288,7 @@ contract BlockDutchAuction_buy_Test is BlockDutchAuction_Test {
         vm.expectEmit(true, true, true, true);
         emit TicketBought(owner, auction.startBlock(), _price, uint8(auction.ticketsLeft() - 1));
         vm.prank(owner);
-        auction.buy{ value: _price }();
+        auction.buy{ value: _price }(1);
     }
 }
 

@@ -132,7 +132,9 @@ contract BlockDutchAuction is Ownable {
     ///////////////////////////////////////////////////////////////*/
 
     /// @notice Buys a ticket in the auction
-    function buy() external payable {
+    ///
+    /// @param _amount The amount of tickets to buy
+    function buy(uint8 _amount) external payable {
         // TODO: Batch minting/buying
         uint256 _startBlock = startBlock;
         uint256 _durationBlocks = durationBlocks;
@@ -171,7 +173,7 @@ contract BlockDutchAuction is Ownable {
 
         // This check needs to come second incase its a new auction
         uint8 __ticketsLeft = _ticketsLeft;
-        if (__ticketsLeft == 0) revert NoTicketsLeft();
+        if (__ticketsLeft < _amount) revert NoTicketsLeft();
 
         uint256 _price = _getPrice(uint256(discountRate), startPrice, _startBlock);
 
@@ -189,13 +191,18 @@ contract BlockDutchAuction is Ownable {
 
         // Mint theoretical max gas limit is ~130_000
         // We send as 150_000 to allow for some buffer
-        _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 150_000);
-
-        unchecked {
-            _ticketsLeft = __ticketsLeft - 1;
+        // TODO(spire): A potential improvement here is to allow for mass minting in one call
+        //              This would require a much larger refactor, can be handled as an optimization in a future PR
+        for (uint256 i; i < _amount; i++) {
+            _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 150_000);
         }
 
-        emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);
+        unchecked {
+            __ticketsLeft -= _amount;
+            _ticketsLeft = __ticketsLeft;
+        }
+
+        emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft);
     }
 
     /*///////////////////////////////////////////////////////////////
