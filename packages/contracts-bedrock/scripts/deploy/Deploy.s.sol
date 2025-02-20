@@ -1105,8 +1105,6 @@ contract Deploy is Deployer {
         address systemConfigProxy = mustGetAddress("SystemConfigProxy");
         address systemConfig = mustGetAddress("SystemConfig");
 
-        bytes32 batcherHash = bytes32(uint256(uint160(cfg.batchSenderAddress())));
-
         address customGasTokenAddress = Constants.ETHER;
         if (cfg.useCustomGasToken()) {
             customGasTokenAddress = cfg.customGasTokenAddress();
@@ -1121,7 +1119,6 @@ contract Deploy is Deployer {
                     cfg.finalSystemOwner(),
                     cfg.basefeeScalar(),
                     cfg.blobbasefeeScalar(),
-                    batcherHash,
                     uint64(cfg.l2GenesisBlockGasLimit()),
                     cfg.p2pSequencerAddress(),
                     Constants.DEFAULT_RESOURCE_CONFIG(),

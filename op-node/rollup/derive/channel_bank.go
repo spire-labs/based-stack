@@ -199,7 +199,7 @@ func (cb *ChannelBank) NextData(ctx context.Context) ([]byte, error) {
 	}
 }
 
-func (cb *ChannelBank) Reset(ctx context.Context, base eth.L1BlockRef, _ eth.SystemConfig) error {
+func (cb *ChannelBank) Reset(ctx context.Context, base eth.L1BlockRef) error {
 	cb.channels = make(map[ChannelID]*Channel)
 	cb.channelQueue = make([]ChannelID, 0, 10)
 	return io.EOF

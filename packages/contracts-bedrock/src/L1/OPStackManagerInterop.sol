@@ -57,7 +57,6 @@ contract OPStackManagerInterop is OPStackManager {
             _input.roles.systemConfigOwner,
             _input.basefeeScalar,
             _input.blobBasefeeScalar,
-            bytes32(uint256(uint160(_input.roles.batcher))), // batcherHash
             30_000_000, // gasLimit TODO make this configurable?
             _input.roles.unsafeBlockSigner,
             referenceResourceConfig,

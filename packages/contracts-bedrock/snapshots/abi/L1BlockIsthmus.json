@@ -40,19 +40,6 @@
   },
   {
     "inputs": [],
-    "name": "batcherHash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "blobBaseFee",
     "outputs": [
       {
@@ -336,11 +323,6 @@
         "internalType": "uint64",
         "name": "_sequenceNumber",
         "type": "uint64"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_batcherHash",
-        "type": "bytes32"
       },
       {
         "internalType": "uint256",

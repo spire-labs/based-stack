@@ -183,19 +183,6 @@
   },
   {
     "inputs": [],
-    "name": "batcherHash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "blobbasefeeScalar",
     "outputs": [
       {
@@ -399,11 +386,6 @@
         "type": "uint32"
       },
       {
-        "internalType": "bytes32",
-        "name": "_batcherHash",
-        "type": "bytes32"
-      },
-      {
         "internalType": "uint64",
         "name": "_gasLimit",
         "type": "uint64"
@@ -556,11 +538,6 @@
         "internalType": "uint32",
         "name": "_blobbasefeeScalar",
         "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_batcherHash",
-        "type": "bytes32"
       },
       {
         "internalType": "uint64",
@@ -965,19 +942,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_batcherHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setBatcherHash",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

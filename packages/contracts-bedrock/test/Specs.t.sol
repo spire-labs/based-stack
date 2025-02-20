@@ -458,7 +458,6 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("START_BLOCK_SLOT()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("VERSION()") });
-        _addSpec({ _name: "SystemConfig", _sel: _getSel("batcherHash()") });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("gasLimit()") });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.initialize.selector });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.minimumGasLimit.selector });
@@ -468,7 +467,6 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfig", _sel: _getSel("renounceOwnership()"), _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.resourceConfig.selector });
         _addSpec({ _name: "SystemConfig", _sel: _getSel("scalar()") });
-        _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setBatcherHash.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasConfig.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({ _name: "SystemConfig", _sel: ISystemConfig.setGasLimit.selector, _auth: Role.SYSTEMCONFIGOWNER });
         _addSpec({
@@ -532,7 +530,6 @@ contract Specification_Test is CommonTest {
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("UNSAFE_BLOCK_SIGNER_SLOT()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("START_BLOCK_SLOT()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("VERSION()") });
-        _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("batcherHash()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("gasLimit()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: _getSel("MAX_SEQUENCER_RULES()") });
         _addSpec({ _name: "SystemConfigInterop", _sel: SystemConfigInterop.initialize.selector });
@@ -553,11 +550,6 @@ contract Specification_Test is CommonTest {
         _addSpec({
             _name: "SystemConfigInterop",
             _sel: _getSel("removeSequencerConfigRule(uint256)"),
-            _auth: Role.SYSTEMCONFIGOWNER
-        });
-        _addSpec({
-            _name: "SystemConfigInterop",
-            _sel: ISystemConfig.setBatcherHash.selector,
             _auth: Role.SYSTEMCONFIGOWNER
         });
         _addSpec({

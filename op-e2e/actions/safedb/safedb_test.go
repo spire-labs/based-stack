@@ -33,7 +33,7 @@ func TestRecordSafeHeadUpdates(gt *testing.T) {
 
 	// new L1 block with L2 batch
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	batchTx := miner.L1Transactions[0]
 	miner.ActL1EndBlock(t)
 
@@ -91,7 +91,7 @@ func TestRecordSafeHeadUpdates(gt *testing.T) {
 	// and there's no way to manually trigger runReorg, so we re-insert it ourselves.
 	require.NoError(t, miner.Eth.TxPool().Add([]*types.Transaction{batchTx}, true, true)[0])
 	// need to re-insert previously included tx into the block
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 
 	// sync the verifier again: now it should be safe again

@@ -97,11 +97,6 @@
               },
               {
                 "internalType": "address",
-                "name": "batcher",
-                "type": "address"
-              },
-              {
-                "internalType": "address",
                 "name": "unsafeBlockSigner",
                 "type": "address"
               },

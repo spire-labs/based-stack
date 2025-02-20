@@ -26,7 +26,6 @@ contract SystemConfig_Init is CommonTest {
 
 contract SystemConfig_Initialize_Test is SystemConfig_Init {
     address owner;
-    bytes32 batcherHash;
     uint64 gasLimit;
     address unsafeBlockSigner;
     address systemConfigImpl;
@@ -39,7 +38,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         owner = deploy.cfg().finalSystemOwner();
         basefeeScalar = deploy.cfg().basefeeScalar();
         blobbasefeeScalar = deploy.cfg().blobbasefeeScalar();
-        batcherHash = bytes32(uint256(uint160(deploy.cfg().batchSenderAddress())));
         gasLimit = uint64(deploy.cfg().l2GenesisBlockGasLimit());
         unsafeBlockSigner = deploy.cfg().p2pSequencerAddress();
         systemConfigImpl = deploy.mustGetAddress("SystemConfig");
@@ -52,7 +50,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(impl.owner(), address(0xdEaD));
         assertEq(impl.overhead(), 0);
         assertEq(impl.scalar(), uint256(0x01) << 248);
-        assertEq(impl.batcherHash(), bytes32(0));
         assertEq(impl.gasLimit(), 1);
         assertEq(impl.unsafeBlockSigner(), address(0));
         assertEq(impl.basefeeScalar(), 0);
@@ -86,7 +83,6 @@ contract SystemConfig_Initialize_Test is SystemConfig_Init {
         assertEq(systemConfig.owner(), owner);
         assertEq(systemConfig.overhead(), 0);
         assertEq(systemConfig.scalar() >> 248, 1);
-        assertEq(systemConfig.batcherHash(), batcherHash);
         assertEq(systemConfig.gasLimit(), gasLimit);
         assertEq(systemConfig.unsafeBlockSigner(), unsafeBlockSigner);
         assertEq(systemConfig.basefeeScalar(), basefeeScalar);
@@ -136,7 +132,6 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
             _owner: alice,
             _basefeeScalar: basefeeScalar,
             _blobbasefeeScalar: blobbasefeeScalar,
-            _batcherHash: bytes32(hex"abcd"),
             _gasLimit: minimumGasLimit - 1,
             _unsafeBlockSigner: address(1),
             _config: Constants.DEFAULT_RESOURCE_CONFIG(),
@@ -168,7 +163,6 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
             _owner: alice,
             _basefeeScalar: basefeeScalar,
             _blobbasefeeScalar: blobbasefeeScalar,
-            _batcherHash: bytes32(hex"abcd"),
             _gasLimit: gasLimit,
             _unsafeBlockSigner: address(1),
             _config: Constants.DEFAULT_RESOURCE_CONFIG(),
@@ -201,7 +195,6 @@ contract SystemConfig_Initialize_TestFail is SystemConfig_Initialize_Test {
             _owner: alice,
             _basefeeScalar: basefeeScalar,
             _blobbasefeeScalar: blobbasefeeScalar,
-            _batcherHash: bytes32(hex"abcd"),
             _gasLimit: gasLimit,
             _unsafeBlockSigner: address(1),
             _config: Constants.DEFAULT_RESOURCE_CONFIG(),
@@ -298,7 +291,6 @@ contract SystemConfig_Init_ResourceConfig is SystemConfig_Init {
             _owner: address(0xdEaD),
             _basefeeScalar: 0,
             _blobbasefeeScalar: 0,
-            _batcherHash: bytes32(0),
             _gasLimit: gasLimit,
             _unsafeBlockSigner: address(0),
             _config: config,
@@ -338,7 +330,6 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
             _owner: alice,
             _basefeeScalar: 2100,
             _blobbasefeeScalar: 1000000,
-            _batcherHash: bytes32(hex"abcd"),
             _gasLimit: 30_000_000,
             _unsafeBlockSigner: address(1),
             _config: Constants.DEFAULT_RESOURCE_CONFIG(),
@@ -489,12 +480,6 @@ contract SystemConfig_Init_CustomGasToken is SystemConfig_Init {
 }
 
 contract SystemConfig_Setters_TestFail is SystemConfig_Init {
-    /// @dev Tests that `setBatcherHash` reverts if the caller is not the owner.
-    function test_setBatcherHash_notOwner_reverts() external {
-        vm.expectRevert("Ownable: caller is not the owner");
-        systemConfig.setBatcherHash(bytes32(hex""));
-    }
-
     /// @dev Tests that `setGasConfig` reverts if the caller is not the owner.
     function test_setGasConfig_notOwner_reverts() external {
         vm.expectRevert("Ownable: caller is not the owner");
@@ -570,16 +555,6 @@ contract SystemConfig_Setters_TestFail is SystemConfig_Init {
 }
 
 contract SystemConfig_Setters_Test is SystemConfig_Init {
-    /// @dev Tests that `setBatcherHash` updates the batcher hash successfully.
-    function testFuzz_setBatcherHash_succeeds(bytes32 newBatcherHash) external {
-        vm.expectEmit(address(systemConfig));
-        emit ConfigUpdate(0, ISystemConfig.UpdateType.BATCHER, abi.encode(newBatcherHash));
-
-        vm.prank(systemConfig.owner());
-        systemConfig.setBatcherHash(newBatcherHash);
-        assertEq(systemConfig.batcherHash(), newBatcherHash);
-    }
-
     function test_setElectionFallbackList_withElectionFallbackList_succeeds() external {
         bytes32 _electionFallbackList = bytes32(uint256(uint160(address(0x02040506))));
 

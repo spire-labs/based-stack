@@ -58,7 +58,6 @@ interface ISystemConfig {
     function MAX_SEQUENCER_RULES() external view returns (uint256);
     function basefeeScalar() external view returns (uint32);
     function batchInbox() external view returns (address addr_);
-    function batcherHash() external view returns (bytes32);
     function blobbasefeeScalar() external view returns (uint32);
     function disputeGameFactory() external view returns (address addr_);
     function gasLimit() external view returns (uint64);
@@ -69,7 +68,6 @@ interface ISystemConfig {
         address _owner,
         uint32 _basefeeScalar,
         uint32 _blobbasefeeScalar,
-        bytes32 _batcherHash,
         uint64 _gasLimit,
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,
@@ -92,7 +90,6 @@ interface ISystemConfig {
     function renounceOwnership() external;
     function resourceConfig() external view returns (IResourceMetering.ResourceConfig memory);
     function scalar() external view returns (uint256);
-    function setBatcherHash(bytes32 _batcherHash) external;
     function setGasConfig(uint256 _overhead, uint256 _scalar) external;
     function setGasConfigEcotone(uint32 _basefeeScalar, uint32 _blobbasefeeScalar) external;
     function setGasLimit(uint64 _gasLimit) external;

@@ -54,7 +54,6 @@ func TestDataAndHashesFromTxs(t *testing.T) {
 		dsCfg:          config,
 		fetcher:        nil,
 		log:            logger,
-		batcherAddr:    batchInboxAddr,
 		blobsFetcher:   nil,
 		electionClient: mockElectionProvider,
 	}

@@ -72,7 +72,7 @@ func TestInteropVerifier(gt *testing.T) {
 	batcher.ActSubmitAll(t)
 	// new L1 block with L2 batch
 	l1Miner.ActL1StartBlock(12)(t)
-	l1Miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	l1Miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	l1Miner.ActL1EndBlock(t)
 
 	// Sync the L1 block, to verify the L2 block as local-safe.
