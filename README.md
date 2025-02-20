@@ -13,6 +13,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [About Spire Labs?](#about-spire-labs)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
@@ -59,4 +60,4 @@ Check out our [CONTRIBUTING.md](https://github.com/spire-labs/based-stack/blob/d
 
 ## License
 
-All other files within this repository are licensed under the [MIT License](https://github.com/ethereum-optimism/optimism/blob/master/LICENSE) unless stated otherwise.
+All other files within this repository are licensed under the [MIT License](https://github.com/spire-labs/based-stack/blob/develop/LICENSE) unless stated otherwise.
