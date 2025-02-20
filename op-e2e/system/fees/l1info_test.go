@@ -70,12 +70,6 @@ func L1InfoFromState(ctx context.Context, contract *bindings.L1Block, l2Number *
 		out.L1FeeScalar = eth.Bytes32(common.BigToHash(scalar))
 	}
 
-	batcherHash, err := contract.BatcherHash(&opts)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get batch sender: %w", err)
-	}
-	out.BatcherAddr = common.BytesToAddress(batcherHash[:])
-
 	if ecotone {
 		blobBaseFeeScalar, err := contract.BlobBaseFeeScalar(&opts)
 		if err != nil {
@@ -164,7 +158,6 @@ func TestL1InfoContract(t *testing.T) {
 			BaseFee:        b.BaseFee(),
 			BlockHash:      h,
 			SequenceNumber: 0, // ignored, will be overwritten
-			BatcherAddr:    sys.RollupConfig.Genesis.SystemConfig.BatcherAddr,
 		}
 		if sys.RollupConfig.IsEcotone(b.Time()) && !sys.RollupConfig.IsEcotoneActivationBlock(b.Time()) {
 			scalars, err := sys.RollupConfig.Genesis.SystemConfig.EcotoneScalars()

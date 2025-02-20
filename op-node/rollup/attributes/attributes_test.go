@@ -71,10 +71,9 @@ func TestAttributesHandler(t *testing.T) {
 			L2:     refA0.ID(),
 			L2Time: refA0.Time,
 			SystemConfig: eth.SystemConfig{
-				BatcherAddr: common.Address{42},
-				Overhead:    [32]byte{31: 123},
-				Scalar:      [32]byte{0: 0, 31: 42},
-				GasLimit:    20_000_000,
+				Overhead: [32]byte{31: 123},
+				Scalar:   [32]byte{0: 0, 31: 42},
+				GasLimit: 20_000_000,
 			},
 		},
 		BlockTime:     1,

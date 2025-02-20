@@ -196,7 +196,7 @@ func TestAltDADataSource(t *testing.T) {
 		}
 
 		// create a new data source for each block
-		src, err := factory.OpenData(ctx, ref, electionWinnerAddress)
+		src, err := factory.OpenData(ctx, ref)
 		require.NoError(t, err)
 
 		// first challenge expires
@@ -317,7 +317,7 @@ func TestAltDADataSource(t *testing.T) {
 		}
 
 		// create a new data source for each block
-		src, err := factory.OpenData(ctx, ref, electionWinnerAddress)
+		src, err := factory.OpenData(ctx, ref)
 		require.NoError(t, err)
 
 		// next challenge expires
@@ -379,8 +379,7 @@ func TestAltDADataSourceStall(t *testing.T) {
 		L1Origin:       refA.ID(),
 		SequenceNumber: 0,
 	}
-	batcherPriv := testutils.RandomKey()
-	batcherAddr := crypto.PubkeyToAddress(batcherPriv.PublicKey)
+	electionWinnerPriv := testutils.RandomKey()
 	batcherInbox := common.Address{42}
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
@@ -415,7 +414,7 @@ func TestAltDADataSourceStall(t *testing.T) {
 	input := testutils.RandomData(rng, 2000)
 	comm, _ := storage.SetInput(ctx, input)
 
-	tx, err := types.SignNewTx(batcherPriv, signer, &types.DynamicFeeTx{
+	tx, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 		ChainID:   signer.ChainID(),
 		Nonce:     0,
 		GasTipCap: big.NewInt(2 * params.GWei),
@@ -437,7 +436,7 @@ func TestAltDADataSourceStall(t *testing.T) {
 	// next block is fetched to look ahead challenges but is not yet available
 	l1F.ExpectL1BlockRefByNumber(ref.Number+1, eth.L1BlockRef{}, ethereum.NotFound)
 
-	src, err := factory.OpenData(ctx, ref, batcherAddr)
+	src, err := factory.OpenData(ctx, ref)
 	require.NoError(t, err)
 
 	// data is not found so we return a temporary error
@@ -502,7 +501,6 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 		SequenceNumber: 0,
 	}
 	batcherPriv := testutils.RandomKey()
-	batcherAddr := crypto.PubkeyToAddress(batcherPriv.PublicKey)
 	batcherInbox := common.Address{42}
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
@@ -582,7 +580,7 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 
 	l1F.ExpectInfoAndTxsByHash(ref.Hash, testutils.RandomBlockInfo(rng), txs, nil)
 
-	src, err := factory.OpenData(ctx, ref, batcherAddr)
+	src, err := factory.OpenData(ctx, ref)
 	require.NoError(t, err)
 
 	// oversized input is skipped and returns input2 directly

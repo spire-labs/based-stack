@@ -30,9 +30,8 @@ func TestPreparePayloadAttributes(t *testing.T) {
 	}
 
 	testSysCfg := eth.SystemConfig{
-		BatcherAddr: common.Address{42},
-		Overhead:    [32]byte{},
-		Scalar:      [32]byte{},
+		Overhead: [32]byte{},
+		Scalar:   [32]byte{},
 	}
 
 	emptyElectionClient := &MockElectionWinnersProvider{}

@@ -56,7 +56,7 @@ func (fq *FrameQueue) NextFrame(ctx context.Context) (Frame, error) {
 	return ret, nil
 }
 
-func (fq *FrameQueue) Reset(_ context.Context, _ eth.L1BlockRef, _ eth.SystemConfig) error {
+func (fq *FrameQueue) Reset(_ context.Context, _ eth.L1BlockRef) error {
 	fq.frames = fq.frames[:0]
 	return io.EOF
 }

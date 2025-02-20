@@ -169,7 +169,7 @@ func (d *DA) LookAhead(ctx context.Context, l1 L1Fetcher) error {
 }
 
 // Reset the challenge event derivation origin in case of L1 reorg
-func (d *DA) Reset(ctx context.Context, base eth.L1BlockRef, baseCfg eth.SystemConfig) error {
+func (d *DA) Reset(ctx context.Context, base eth.L1BlockRef) error {
 	// resetting due to expired challenge, do not clear state.
 	// If the DA source returns ErrReset, the pipeline is forced to reset by the rollup driver.
 	// In that case the Reset function will be called immediately, BEFORE the pipeline can

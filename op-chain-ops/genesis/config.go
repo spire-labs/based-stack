@@ -950,10 +950,9 @@ func (d *DeployConfig) RollupConfig(l1StartBlock *types.Header, l2GenesisBlockHa
 			},
 			L2Time: l1StartBlock.Time,
 			SystemConfig: eth.SystemConfig{
-				BatcherAddr: d.BatchSenderAddress,
-				Overhead:    eth.Bytes32(common.BigToHash(new(big.Int).SetUint64(d.GasPriceOracleOverhead))),
-				Scalar:      eth.Bytes32(d.FeeScalar()),
-				GasLimit:    uint64(d.L2GenesisBlockGasLimit),
+				Overhead: eth.Bytes32(common.BigToHash(new(big.Int).SetUint64(d.GasPriceOracleOverhead))),
+				Scalar:   eth.Bytes32(d.FeeScalar()),
+				GasLimit: uint64(d.L2GenesisBlockGasLimit),
 			},
 		},
 		BlockTime:                 d.L2BlockTime,

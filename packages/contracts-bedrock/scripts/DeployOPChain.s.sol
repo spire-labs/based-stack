@@ -55,7 +55,6 @@ contract DeployOPChainInput is BaseDeployIO {
         require(_addr != address(0), "DeployOPChainInput: cannot set zero address");
         if (_sel == this.opChainProxyAdminOwner.selector) _opChainProxyAdminOwner = _addr;
         else if (_sel == this.systemConfigOwner.selector) _systemConfigOwner = _addr;
-        else if (_sel == this.batcher.selector) _batcher = _addr;
         else if (_sel == this.unsafeBlockSigner.selector) _unsafeBlockSigner = _addr;
         else if (_sel == this.proposer.selector) _proposer = _addr;
         else if (_sel == this.challenger.selector) _challenger = _addr;
@@ -112,11 +111,6 @@ contract DeployOPChainInput is BaseDeployIO {
     function systemConfigOwner() public view returns (address) {
         require(_systemConfigOwner != address(0), "DeployOPChainInput: not set");
         return _systemConfigOwner;
-    }
-
-    function batcher() public view returns (address) {
-        require(_batcher != address(0), "DeployOPChainInput: not set");
-        return _batcher;
     }
 
     function unsafeBlockSigner() public view returns (address) {
@@ -326,7 +320,6 @@ contract DeployOPChainOutput is BaseDeployIO {
         require(systemConfig.owner() == _doi.systemConfigOwner(), "SYSCON-10");
         require(systemConfig.basefeeScalar() == _doi.basefeeScalar(), "SYSCON-20");
         require(systemConfig.blobbasefeeScalar() == _doi.blobBaseFeeScalar(), "SYSCON-30");
-        require(systemConfig.batcherHash() == bytes32(uint256(uint160(_doi.batcher()))), "SYSCON-40");
         require(systemConfig.gasLimit() == uint64(30000000), "SYSCON-50"); // TODO allow other gas limits?
         require(systemConfig.unsafeBlockSigner() == _doi.unsafeBlockSigner(), "SYSCON-60");
         require(systemConfig.scalar() >> 248 == 1, "SYSCON-70");
@@ -450,7 +443,6 @@ contract DeployOPChain is Script {
         OPStackManager.Roles memory roles = OPStackManager.Roles({
             opChainProxyAdminOwner: _doi.opChainProxyAdminOwner(),
             systemConfigOwner: _doi.systemConfigOwner(),
-            batcher: _doi.batcher(),
             unsafeBlockSigner: _doi.unsafeBlockSigner(),
             proposer: _doi.proposer(),
             challenger: _doi.challenger()

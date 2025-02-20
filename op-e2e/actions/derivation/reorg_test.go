@@ -159,7 +159,7 @@ func ReorgFlipFlop(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	// new L1 block A1 with L2 batch
 	miner.ActL1SetFeeRecipient(common.Address{'A', 1})
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	batchTxA := miner.L1Transactions[0]
 	miner.ActL1EndBlock(t)
 
@@ -184,7 +184,7 @@ func ReorgFlipFlop(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	miner.ActL1SetFeeRecipient(common.Address{'B', 1})
 	miner.ActL1StartBlock(12)(t)
 	require.NoError(t, miner.Eth.TxPool().Add([]*types.Transaction{batchTxA}, true, true)[0])
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 
 	// make B2, the reorg is picked up when we have a new longer chain
@@ -221,7 +221,7 @@ func ReorgFlipFlop(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	batcher.ActSubmitAll(t)
 	miner.ActL1SetFeeRecipient(common.Address{'B', 3})
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 
 	// sync the verifier to the L2 chain with origin B2
@@ -249,7 +249,7 @@ func ReorgFlipFlop(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	miner.ActL1SetFeeRecipient(common.Address{'A', 2})
 	miner.ActL1StartBlock(12)(t)
 	require.NoError(t, miner.Eth.TxPool().Add([]*types.Transaction{batchTxA}, true, true)[0]) // replay chain A batches, but now in A2 instead of A1
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 
 	// build more L1 blocks, so the chain is long enough for reorg to be picked up
@@ -278,7 +278,7 @@ func ReorgFlipFlop(gt *testing.T, deltaTimeOffset *hexutil.Uint64) {
 	batcher.ActSubmitAll(t)
 	miner.ActL1SetFeeRecipient(common.Address{'A', 5})
 	miner.ActL1StartBlock(12)(t)
-	miner.ActL1IncludeTx(sd.RollupCfg.Genesis.SystemConfig.BatcherAddr)(t)
+	miner.ActL1IncludeTx(batcher.BatcherAddr)(t)
 	miner.ActL1EndBlock(t)
 
 	// sync verifier to what ths sequencer submitted

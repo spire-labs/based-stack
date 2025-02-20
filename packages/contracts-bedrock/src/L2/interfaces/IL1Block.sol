@@ -9,7 +9,6 @@ interface IL1Block {
     function DEPOSITOR_ACCOUNT() external pure returns (address addr_);
     function baseFeeScalar() external view returns (uint32);
     function basefee() external view returns (uint256);
-    function batcherHash() external view returns (bytes32);
     function blobBaseFee() external view returns (uint256);
     function blobBaseFeeScalar() external view returns (uint32);
     function gasPayingToken() external view returns (address addr_, uint8 decimals_);
@@ -29,7 +28,6 @@ interface IL1Block {
         uint256 _basefee,
         bytes32 _hash,
         uint64 _sequenceNumber,
-        bytes32 _batcherHash,
         uint256 _l1FeeOverhead,
         uint256 _l1FeeScalar,
         address _electionWinner

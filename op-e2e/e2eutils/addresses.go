@@ -44,7 +44,6 @@ func CollectAddresses(sd *SetupData, dp *DeployParams) (out []common.Address) {
 		dp.Addresses.SequencerP2P,
 		predeploys.SequencerFeeVaultAddr,
 		sd.RollupCfg.BatchInboxContractAddress,
-		sd.RollupCfg.Genesis.SystemConfig.BatcherAddr,
 		sd.RollupCfg.DepositContractAddress,
 		sd.RollupCfg.AuctionContractAddress,
 	)

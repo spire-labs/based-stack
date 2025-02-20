@@ -190,7 +190,7 @@
       "daResolveWindow": 16,
       "daBondSize": 1000000,
       "daResolverRefundPercentage": 0,
-      "electionFallbackList": "0x0203050000000000000000000000000000000000000000000000000000000000",
+      "electionFallbackList": "0x0402050000000000000000000000000000000000000000000000000000000000",
       "genesisAllocation": [
         {
           "amount": 150,

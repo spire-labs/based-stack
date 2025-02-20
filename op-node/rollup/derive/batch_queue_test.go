@@ -195,7 +195,7 @@ func BatchQueueNewOrigin(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[0], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[0])
 	require.Equal(t, []eth.L1BlockRef{l1[0]}, bq.l1Blocks)
 
 	// Prev Origin: 0; Safehead Origin: 2; Internal Origin: 0
@@ -256,7 +256,7 @@ func BatchQueueResetOneBlockBeforeOrigin(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[0], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[0])
 	require.Equal(t, []eth.L1BlockRef{l1[0]}, bq.l1Blocks)
 
 	// Prev Origin: 0; Safehead Origin: 1; Internal Origin: 0
@@ -345,7 +345,7 @@ func BatchQueueEager(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[0], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[0])
 	// Advance the origin
 	input.origin = l1[1]
 
@@ -423,7 +423,7 @@ func BatchQueueInvalidInternalAdvance(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[0], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[0])
 
 	// Load continuous batches for epoch 0
 	for i := 0; i < len(expectedOutputBatches); i++ {
@@ -538,7 +538,7 @@ func BatchQueueMissing(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[0], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[0])
 
 	for i := 0; i < len(expectedOutputBatches); i++ {
 		b, _, e := bq.NextBatch(context.Background(), safeHead)
@@ -665,7 +665,7 @@ func BatchQueueAdvancedEpoch(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[1], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[1])
 
 	for i := 0; i < len(expectedOutputBatches); i++ {
 		expectedOutput := expectedOutputBatches[i]
@@ -756,7 +756,7 @@ func BatchQueueShuffle(t *testing.T, batchType int) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, nil)
-	_ = bq.Reset(context.Background(), l1[1], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[1])
 
 	for i := 0; i < len(expectedOutputBatches); i++ {
 		expectedOutput := expectedOutputBatches[i]
@@ -871,7 +871,7 @@ func TestBatchQueueOverlappingSpanBatch(t *testing.T) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, &l2Client)
-	_ = bq.Reset(context.Background(), l1[0], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[0])
 	// Advance the origin
 	input.origin = l1[1]
 
@@ -977,7 +977,7 @@ func TestBatchQueueComplex(t *testing.T) {
 	}
 
 	bq := NewBatchQueue(log, cfg, input, &l2Client)
-	_ = bq.Reset(context.Background(), l1[1], eth.SystemConfig{})
+	_ = bq.Reset(context.Background(), l1[1])
 
 	for i := 0; i < len(expectedOutputBatches); i++ {
 		expectedOutput := expectedOutputBatches[i]

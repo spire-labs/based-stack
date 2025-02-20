@@ -233,7 +233,6 @@ contract GasBenchMark_L1Block is CommonTest {
             type(uint256).max,
             type(uint256).max,
             keccak256(abi.encode(1)),
-            bytes32(type(uint256).max),
             address(0)
         );
         vm.startPrank(depositor);
@@ -270,8 +269,7 @@ contract GasBenchMark_L1BlockIsthmus is GasBenchMark_L1Block {
             type(uint64).max,
             type(uint256).max,
             type(uint256).max,
-            keccak256(abi.encode(1)),
-            bytes32(type(uint256).max)
+            keccak256(abi.encode(1))
         );
     }
 }

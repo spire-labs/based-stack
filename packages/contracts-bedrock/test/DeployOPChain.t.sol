@@ -38,7 +38,6 @@ contract DeployOPChainInput_Test is Test {
     // Define defaults.
     address opChainProxyAdminOwner = makeAddr("opChainProxyAdminOwner");
     address systemConfigOwner = makeAddr("systemConfigOwner");
-    address batcher = makeAddr("batcher");
     address unsafeBlockSigner = makeAddr("unsafeBlockSigner");
     address proposer = makeAddr("proposer");
     address challenger = makeAddr("challenger");
@@ -54,7 +53,6 @@ contract DeployOPChainInput_Test is Test {
     function test_set_succeeds() public {
         doi.set(doi.opChainProxyAdminOwner.selector, opChainProxyAdminOwner);
         doi.set(doi.systemConfigOwner.selector, systemConfigOwner);
-        doi.set(doi.batcher.selector, batcher);
         doi.set(doi.unsafeBlockSigner.selector, unsafeBlockSigner);
         doi.set(doi.proposer.selector, proposer);
         doi.set(doi.challenger.selector, challenger);
@@ -65,7 +63,6 @@ contract DeployOPChainInput_Test is Test {
         // Compare the default inputs to the getter methods.
         assertEq(opChainProxyAdminOwner, doi.opChainProxyAdminOwner(), "200");
         assertEq(systemConfigOwner, doi.systemConfigOwner(), "300");
-        assertEq(batcher, doi.batcher(), "400");
         assertEq(unsafeBlockSigner, doi.unsafeBlockSigner(), "500");
         assertEq(proposer, doi.proposer(), "600");
         assertEq(challenger, doi.challenger(), "700");
@@ -83,9 +80,6 @@ contract DeployOPChainInput_Test is Test {
 
         vm.expectRevert(expectedErr);
         doi.systemConfigOwner();
-
-        vm.expectRevert(expectedErr);
-        doi.batcher();
 
         vm.expectRevert(expectedErr);
         doi.unsafeBlockSigner();
@@ -330,7 +324,6 @@ contract DeployOPChain_TestBase is Test {
     // `opsm` is set during `setUp` since it is an output of the previous step.
     address opChainProxyAdminOwner = makeAddr("defaultOPChainProxyAdminOwner");
     address systemConfigOwner = makeAddr("defaultSystemConfigOwner");
-    address batcher = makeAddr("defaultBatcher");
     address unsafeBlockSigner = makeAddr("defaultUnsafeBlockSigner");
     address proposer = makeAddr("defaultProposer");
     address challenger = makeAddr("defaultChallenger");
@@ -396,7 +389,6 @@ contract DeployOPChain_Test is DeployOPChain_TestBase {
     function testFuzz_run_memory_succeeds(bytes32 _seed) public {
         opChainProxyAdminOwner = address(uint160(uint256(hash(_seed, 0))));
         systemConfigOwner = address(uint160(uint256(hash(_seed, 1))));
-        batcher = address(uint160(uint256(hash(_seed, 2))));
         unsafeBlockSigner = address(uint160(uint256(hash(_seed, 3))));
         proposer = address(uint160(uint256(hash(_seed, 4))));
         challenger = address(uint160(uint256(hash(_seed, 5))));
@@ -406,7 +398,6 @@ contract DeployOPChain_Test is DeployOPChain_TestBase {
 
         doi.set(doi.opChainProxyAdminOwner.selector, opChainProxyAdminOwner);
         doi.set(doi.systemConfigOwner.selector, systemConfigOwner);
-        doi.set(doi.batcher.selector, batcher);
         doi.set(doi.unsafeBlockSigner.selector, unsafeBlockSigner);
         doi.set(doi.proposer.selector, proposer);
         doi.set(doi.challenger.selector, challenger);
@@ -422,7 +413,6 @@ contract DeployOPChain_Test is DeployOPChain_TestBase {
         // Assert that individual input fields were properly set based on the inputs.
         assertEq(opChainProxyAdminOwner, doi.opChainProxyAdminOwner(), "100");
         assertEq(systemConfigOwner, doi.systemConfigOwner(), "200");
-        assertEq(batcher, doi.batcher(), "300");
         assertEq(unsafeBlockSigner, doi.unsafeBlockSigner(), "400");
         assertEq(proposer, doi.proposer(), "500");
         assertEq(challenger, doi.challenger(), "600");
@@ -433,8 +423,6 @@ contract DeployOPChain_Test is DeployOPChain_TestBase {
         // Assert inputs were properly passed through to the contract initializers.
         assertEq(address(doo.opChainProxyAdmin().owner()), opChainProxyAdminOwner, "2100");
         assertEq(address(doo.systemConfigProxy().owner()), systemConfigOwner, "2200");
-        address batcherActual = address(uint160(uint256(doo.systemConfigProxy().batcherHash())));
-        assertEq(batcherActual, batcher, "2300");
         assertEq(address(doo.systemConfigProxy().unsafeBlockSigner()), unsafeBlockSigner, "2400");
         // assertEq(address(...proposer()), proposer, "2500"); // TODO once we deploy dispute games.
         // assertEq(address(...challenger()), challenger, "2600"); // TODO once we deploy dispute games.

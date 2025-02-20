@@ -12,7 +12,6 @@ interface ISystemConfigV0 {
     function VERSION() external view returns (uint256);
     function overhead() external view returns (uint256);
     function scalar() external view returns (uint256);
-    function batcherHash() external view returns (bytes32);
     function gasLimit() external view returns (uint64);
     function resourceConfig() external view returns (IResourceMetering.ResourceConfig memory);
     function unsafeBlockSigner() external view returns (address);

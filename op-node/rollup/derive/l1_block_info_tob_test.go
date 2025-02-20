@@ -46,7 +46,6 @@ func FuzzParseL1InfoDepositTxDataValid(f *testing.F) {
 		require.Equal(t, res.BaseFee.Bytes(), l1Info.BaseFee().Bytes())
 		require.Equal(t, res.BlockHash, l1Info.Hash())
 		require.Equal(t, res.SequenceNumber, seqNr)
-		require.Equal(t, res.BatcherAddr, sysCfg.BatcherAddr)
 		require.Equal(t, res.L1FeeOverhead, sysCfg.Overhead)
 		require.Equal(t, res.L1FeeScalar, sysCfg.Scalar)
 		require.Equal(t, res.L1ElectionWinner, winner)
@@ -72,10 +71,9 @@ func FuzzDecodeDepositTxDataToL1Info(f *testing.F) {
 		}
 
 		sysCfg := eth.SystemConfig{
-			BatcherAddr: res.BatcherAddr,
-			Overhead:    res.L1FeeOverhead,
-			Scalar:      res.L1FeeScalar,
-			GasLimit:    uint64(0),
+			Overhead: res.L1FeeOverhead,
+			Scalar:   res.L1FeeScalar,
+			GasLimit: uint64(0),
 		}
 
 		depTx, err := L1InfoDeposit(&rollupCfg, sysCfg, res.SequenceNumber, &l1Info, 0, common.Address{})

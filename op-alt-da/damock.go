@@ -90,7 +90,7 @@ func (d *AltDADisabled) GetInput(ctx context.Context, l1 L1Fetcher, commitment C
 	return nil, ErrNotEnabled
 }
 
-func (d *AltDADisabled) Reset(ctx context.Context, base eth.L1BlockRef, baseCfg eth.SystemConfig) error {
+func (d *AltDADisabled) Reset(ctx context.Context, base eth.L1BlockRef) error {
 	return io.EOF
 }
 

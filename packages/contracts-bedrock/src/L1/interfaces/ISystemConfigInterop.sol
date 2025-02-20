@@ -12,7 +12,6 @@ interface ISystemConfigInterop is ISystemConfig {
         address _owner,
         uint32 _basefeeScalar,
         uint32 _blobbasefeeScalar,
-        bytes32 _batcherHash,
         uint64 _gasLimit,
         address _unsafeBlockSigner,
         IResourceMetering.ResourceConfig memory _config,

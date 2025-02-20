@@ -116,16 +116,17 @@ func FuzzL1InfoBedrockAgainstContract(f *testing.F) {
 	l1BlockInfoContract, err := bindings.NewL1Block(common.Address{0x42, 0xff}, nil)
 	require.NoError(f, err)
 
-	f.Fuzz(func(t *testing.T, number, time uint64, baseFee, hash []byte, seqNumber uint64, batcherHash []byte, l1FeeOverhead []byte, l1FeeScalar []byte) {
+	f.Fuzz(func(t *testing.T, number, time uint64, baseFee, hash []byte, seqNumber uint64, l1FeeOverhead []byte, l1FeeScalar []byte, electionWinner []byte) {
+		electionWinnerAddr := common.BytesToAddress(electionWinner)
 		expected := L1BlockInfo{
-			Number:         number,
-			Time:           time,
-			BaseFee:        BytesToBigInt(baseFee),
-			BlockHash:      common.BytesToHash(hash),
-			SequenceNumber: seqNumber,
-			BatcherAddr:    common.BytesToAddress(batcherHash),
-			L1FeeOverhead:  eth.Bytes32(common.BytesToHash(l1FeeOverhead)),
-			L1FeeScalar:    eth.Bytes32(common.BytesToHash(l1FeeScalar)),
+			Number:           number,
+			Time:             time,
+			BaseFee:          BytesToBigInt(baseFee),
+			BlockHash:        common.BytesToHash(hash),
+			SequenceNumber:   seqNumber,
+			L1FeeOverhead:    eth.Bytes32(common.BytesToHash(l1FeeOverhead)),
+			L1FeeScalar:      eth.Bytes32(common.BytesToHash(l1FeeScalar)),
+			L1ElectionWinner: electionWinnerAddr,
 		}
 
 		// Setup opts
@@ -141,9 +142,9 @@ func FuzzL1InfoBedrockAgainstContract(f *testing.F) {
 			BytesToBigInt(baseFee),
 			common.BytesToHash(hash),
 			seqNumber,
-			eth.AddressAsLeftPaddedHash(common.BytesToAddress(batcherHash)),
 			common.BytesToHash(l1FeeOverhead).Big(),
 			common.BytesToHash(l1FeeScalar).Big(),
+			electionWinnerAddr,
 		)
 		if err != nil {
 			t.Fatalf("Failed to create the transaction: %v", err)

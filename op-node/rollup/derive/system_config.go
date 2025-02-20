@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	SystemConfigUpdateBatcher           = common.Hash{31: 0}
 	SystemConfigUpdateGasConfig         = common.Hash{31: 1}
 	SystemConfigUpdateGasLimit          = common.Hash{31: 2}
 	SystemConfigUpdateUnsafeBlockSigner = common.Hash{31: 3}
@@ -77,22 +76,6 @@ func ProcessSystemConfigUpdateLogEvent(destSysCfg *eth.SystemConfig, ev *types.L
 
 	// Attempt to read unindexed data
 	switch updateType {
-	case SystemConfigUpdateBatcher:
-		if pointer, err := solabi.ReadUint64(reader); err != nil || pointer != 32 {
-			return NewCriticalError(errors.New("invalid pointer field"))
-		}
-		if length, err := solabi.ReadUint64(reader); err != nil || length != 32 {
-			return NewCriticalError(errors.New("invalid length field"))
-		}
-		address, err := solabi.ReadAddress(reader)
-		if err != nil {
-			return NewCriticalError(errors.New("could not read address"))
-		}
-		if !solabi.EmptyReader(reader) {
-			return NewCriticalError(errors.New("too many bytes"))
-		}
-		destSysCfg.BatcherAddr = address
-		return nil
 	case SystemConfigUpdateGasConfig:
 		if pointer, err := solabi.ReadUint64(reader); err != nil || pointer != 32 {
 			return NewCriticalError(errors.New("invalid pointer field"))
