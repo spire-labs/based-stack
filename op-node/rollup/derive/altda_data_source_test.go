@@ -108,7 +108,7 @@ func TestAltDADataSource(t *testing.T) {
 	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, electionClient)
 
 	nc := 0
-	//firstChallengeExpirationBlock := uint64(95)
+	firstChallengeExpirationBlock := uint64(91)
 
 	for i := uint64(0); i <= pcfg.ChallengeWindow+pcfg.ResolveWindow; i++ {
 		parent := l1Refs[len(l1Refs)-1]
@@ -157,7 +157,7 @@ func TestAltDADataSource(t *testing.T) {
 			batchInboxAbi := snapshots.LoadBatchInboxABI()
 			timestamp := ref.Time + 1
 			targetTimestamp := new(big.Int).SetUint64(timestamp)
-			calldata := input
+			calldata := comm.TxData()
 			encodedArgs, err := batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
 			require.NoError(t, err)
 			data := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
@@ -174,6 +174,7 @@ func TestAltDADataSource(t *testing.T) {
 			require.NoError(t, err)
 
 			txs = append(txs, tx)
+
 		}
 		logger.Info("included commitments", "count", c)
 		l1F.ExpectInfoAndTxsByHash(ref.Hash, testutils.RandomBlockInfo(rng), txs, nil)
@@ -200,11 +201,11 @@ func TestAltDADataSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// first challenge expires
-		// if i == firstChallengeExpirationBlock {
-		// 	_, err := src.Next(ctx)
-		// 	require.ErrorIs(t, err, ErrReset)
-		// 	break
-		// }
+		if i == firstChallengeExpirationBlock {
+			_, err := src.Next(ctx)
+			require.ErrorIs(t, err, ErrReset)
+			break
+		}
 
 		for j := 0; j < c; j++ {
 			data, err := src.Next(ctx)
@@ -221,7 +222,7 @@ func TestAltDADataSource(t *testing.T) {
 
 	// start at 1 since first input should be skipped
 	nc = 1
-	//secondChallengeExpirationBlock := 98
+	secondChallengeExpirationBlock := 94
 
 	for i := 1; i <= len(l1Refs)+2; i++ {
 
@@ -294,7 +295,7 @@ func TestAltDADataSource(t *testing.T) {
 				batchInboxAbi := snapshots.LoadBatchInboxABI()
 				timestamp := ref.Time + 1
 				targetTimestamp := new(big.Int).SetUint64(timestamp)
-				calldata := input
+				calldata := comm.TxData()
 				encodedArgs, err := batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
 				require.NoError(t, err)
 				data := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
@@ -321,17 +322,17 @@ func TestAltDADataSource(t *testing.T) {
 		require.NoError(t, err)
 
 		// next challenge expires
-		// if i == secondChallengeExpirationBlock {
-		// 	_, err := src.Next(ctx)
-		// 	require.ErrorIs(t, err, ErrReset)
-		// 	break
-		// }
+		if i == secondChallengeExpirationBlock {
+			_, err := src.Next(ctx)
+			require.ErrorIs(t, err, ErrReset)
+			break
+		}
 
 		for data, err := src.Next(ctx); err != io.EOF; data, err = src.Next(ctx) {
 			logger.Info("yielding data")
 			// check that each commitment is resolved
 			require.NoError(t, err)
-			require.Equal(t, hexutil.Bytes(inputs[nc-1]), data)
+			require.Equal(t, hexutil.Bytes(inputs[nc]), data)
 
 			nc++
 		}

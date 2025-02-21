@@ -3,8 +3,9 @@ package derive
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"math/big"
+
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 
 	"github.com/holiman/uint256"
 
