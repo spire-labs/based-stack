@@ -80,7 +80,7 @@ func TestAltDADataSource(t *testing.T) {
 	}
 	electionWinnerPriv := testutils.RandomKey()
 	electionWinnerAddress := crypto.PubkeyToAddress(electionWinnerPriv.PublicKey)
-	batcherInbox := crypto.PubkeyToAddress(testutils.RandomKey().PublicKey)
+	batcherInbox := common.Address{42}
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
 			L1:     refA.ID(),
@@ -381,6 +381,7 @@ func TestAltDADataSourceStall(t *testing.T) {
 		SequenceNumber: 0,
 	}
 	electionWinnerPriv := testutils.RandomKey()
+	electionWinnerAddress := crypto.PubkeyToAddress(electionWinnerPriv.PublicKey)
 	batcherInbox := common.Address{42}
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
@@ -400,7 +401,8 @@ func TestAltDADataSourceStall(t *testing.T) {
 
 	signer := cfg.L1Signer()
 
-	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, nil)
+	electionClient := &MockElectionWinnersProvider{electionWinnerAddress}
+	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, electionClient)
 
 	parent := l1Refs[0]
 	// create a new mock l1 ref
@@ -410,11 +412,34 @@ func TestAltDADataSourceStall(t *testing.T) {
 		ParentHash: parent.Hash,
 		Time:       parent.Time + l1Time,
 	}
-	l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
+
+	l1Info := testutils.RandomBlockInfo(rng)
+	receipts, _, err := makeReceiptsElectionWinner(
+		rng,
+		l1Info.InfoHash,
+		batcherInbox,
+		electionWinnerAddress,
+		[]receiptData{
+			{goodReceipt: true, DepositLogs: []bool{true, true}},
+			{goodReceipt: true, DepositLogs: []bool{true}},
+			{goodReceipt: false, DepositLogs: []bool{true}},
+			{goodReceipt: false, DepositLogs: []bool{true}},
+		},
+	)
+	require.NoError(t, err)
+	l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
+	l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
 	// mock input commitments in l1 transactions
 	input := testutils.RandomData(rng, 2000)
 	comm, _ := storage.SetInput(ctx, input)
 
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	timestamp := ref.Time + 1
+	targetTimestamp := new(big.Int).SetUint64(timestamp)
+	calldata := comm.TxData()
+	encodedArgs, err := batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
+	require.NoError(t, err)
+	txData := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
 	tx, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 		ChainID:   signer.ChainID(),
 		Nonce:     0,
@@ -423,7 +448,7 @@ func TestAltDADataSourceStall(t *testing.T) {
 		Gas:       100_000,
 		To:        &batcherInbox,
 		Value:     big.NewInt(int64(0)),
-		Data:      comm.TxData(),
+		Data:      txData,
 	})
 	require.NoError(t, err)
 
@@ -501,7 +526,8 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 		L1Origin:       refA.ID(),
 		SequenceNumber: 0,
 	}
-	batcherPriv := testutils.RandomKey()
+	electionWinnerPriv := testutils.RandomKey()
+	electionWinnerAddress := crypto.PubkeyToAddress(electionWinnerPriv.PublicKey)
 	batcherInbox := common.Address{42}
 	cfg := &rollup.Config{
 		Genesis: rollup.Genesis{
@@ -521,7 +547,8 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 
 	signer := cfg.L1Signer()
 
-	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, nil)
+	electionClient := &MockElectionWinnersProvider{electionWinnerAddress}
+	factory := NewDataSourceFactory(logger, cfg, l1F, nil, da, electionClient)
 
 	parent := l1Refs[0]
 	// create a new mock l1 ref
@@ -531,12 +558,35 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 		ParentHash: parent.Hash,
 		Time:       parent.Time + l1Time,
 	}
-	l1F.ExpectFetchReceipts(ref.Hash, nil, types.Receipts{}, nil)
+
+	l1Info := testutils.RandomBlockInfo(rng)
+	receipts, _, err := makeReceiptsElectionWinner(
+		rng,
+		l1Info.InfoHash,
+		batcherInbox,
+		electionWinnerAddress,
+		[]receiptData{
+			{goodReceipt: true, DepositLogs: []bool{true, true}},
+			{goodReceipt: true, DepositLogs: []bool{true}},
+			{goodReceipt: false, DepositLogs: []bool{true}},
+			{goodReceipt: false, DepositLogs: []bool{true}},
+		},
+	)
+	require.NoError(t, err)
+	l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
+	l1F.ExpectFetchReceipts(ref.Hash, nil, receipts, nil)
 	// mock input commitments in l1 transactions with an oversized input
 	input := testutils.RandomData(rng, altda.MaxInputSize+1)
-	comm, _ := storage.SetInput(ctx, input)
+	comm1, _ := storage.SetInput(ctx, input)
 
-	tx1, err := types.SignNewTx(batcherPriv, signer, &types.DynamicFeeTx{
+	batchInboxAbi := snapshots.LoadBatchInboxABI()
+	timestamp := ref.Time + 1
+	targetTimestamp := new(big.Int).SetUint64(timestamp)
+	calldata := comm1.TxData()
+	encodedArgs, err := batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
+	require.NoError(t, err)
+	txData1 := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
+	tx1, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 		ChainID:   signer.ChainID(),
 		Nonce:     0,
 		GasTipCap: big.NewInt(2 * params.GWei),
@@ -544,14 +594,22 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 		Gas:       100_000,
 		To:        &batcherInbox,
 		Value:     big.NewInt(int64(0)),
-		Data:      comm.TxData(),
+		Data:      txData1,
 	})
 	require.NoError(t, err)
 
 	// valid data
 	input2 := testutils.RandomData(rng, 2000)
 	comm2, _ := storage.SetInput(ctx, input2)
-	tx2, err := types.SignNewTx(batcherPriv, signer, &types.DynamicFeeTx{
+
+	batchInboxAbi = snapshots.LoadBatchInboxABI()
+	timestamp = ref.Time + 1
+	targetTimestamp = new(big.Int).SetUint64(timestamp)
+	calldata = comm2.TxData()
+	encodedArgs, err = batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
+	require.NoError(t, err)
+	txData2 := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
+	tx2, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 		ChainID:   signer.ChainID(),
 		Nonce:     0,
 		GasTipCap: big.NewInt(2 * params.GWei),
@@ -559,13 +617,21 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 		Gas:       100_000,
 		To:        &batcherInbox,
 		Value:     big.NewInt(int64(0)),
-		Data:      comm2.TxData(),
+		Data:      txData2,
 	})
 	require.NoError(t, err)
 
 	// regular input instead of commitment
 	input3 := testutils.RandomData(rng, 32)
-	tx3, err := types.SignNewTx(batcherPriv, signer, &types.DynamicFeeTx{
+
+	batchInboxAbi = snapshots.LoadBatchInboxABI()
+	timestamp = ref.Time + 1
+	targetTimestamp = new(big.Int).SetUint64(timestamp)
+	calldata = input3
+	encodedArgs, err = batchInboxAbi.Methods["submitCalldata"].Inputs.Pack(targetTimestamp, calldata)
+	require.NoError(t, err)
+	txData3 := append(batchInboxAbi.Methods["submitCalldata"].ID, encodedArgs...)
+	tx3, err := types.SignNewTx(electionWinnerPriv, signer, &types.DynamicFeeTx{
 		ChainID:   signer.ChainID(),
 		Nonce:     0,
 		GasTipCap: big.NewInt(2 * params.GWei),
@@ -573,7 +639,7 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 		Gas:       100_000,
 		To:        &batcherInbox,
 		Value:     big.NewInt(int64(0)),
-		Data:      input3,
+		Data:      txData3,
 	})
 	require.NoError(t, err)
 
