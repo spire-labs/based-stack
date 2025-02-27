@@ -13,9 +13,9 @@
 
 # op-node
 
-This is the reference implementation of the [rollup-node spec](https://github.com/ethereum-optimism/specs/blob/main/specs/protocol/rollup-node.md).
+This is the reference implementation of the rollup-node spec.
 It can be thought of like the consensus layer client of an OP Stack chain where it must run with an OP Stack execution layer client
-like [op-geth](https://github.com/ethereum-optimism/op-geth).
+like [op-geth](https://github.com/spire-labs/op-geth).
 
 ## Compiling
 

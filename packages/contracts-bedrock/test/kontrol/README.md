@@ -3,17 +3,24 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Getting Started](#getting-started)
-  - [Overview](#overview)
-  - [Directory structure](#directory-structure)
-  - [Installation](#installation)
-- [Usage](#usage)
-  - [Build Deployment Summary](#build-deployment-summary)
-  - [Execute Proofs](#execute-proofs)
-  - [Add New Proofs](#add-new-proofs)
-- [Implementation Details](#implementation-details)
-  - [Assumptions](#assumptions)
-  - [Deployment Summary Process](#deployment-summary-process)
+- [Kontrol Verification](#kontrol-verification)
+  - [Getting Started](#getting-started)
+    - [Overview](#overview)
+    - [Directory structure](#directory-structure)
+    - [Installation](#installation)
+  - [Usage](#usage)
+    - [Build Deployment Summary](#build-deployment-summary)
+    - [Execute Proofs](#execute-proofs)
+    - [Add New Proofs](#add-new-proofs)
+      - [Make Kontrol aware of the new contract being tested](#make-kontrol-aware-of-the-new-contract-being-tested)
+      - [Include existing tests on the new state-diff recorded bytecode](#include-existing-tests-on-the-new-state-diff-recorded-bytecode)
+      - [Add function signatures to `KontrolInterfaces`](#add-function-signatures-to-kontrolinterfaces)
+      - [Write the proof](#write-the-proof)
+      - [Add your test to `run-kontrol.sh`](#add-your-test-to-run-kontrolsh)
+  - [Implementation Details](#implementation-details)
+    - [Assumptions](#assumptions)
+    - [Deployment Summary Process](#deployment-summary-process)
+    - [Kontrol Proof Execution using KaaS (Kontrol as a Service) \& CI Integration](#kontrol-proof-execution-using-kaas-kontrol-as-a-service--ci-integration)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
