@@ -31,8 +31,8 @@ func NewMockDAClient(log log.Logger) *MockDAClient {
 	}
 }
 
-func (c *MockDAClient) GetInput(ctx context.Context, key CommitmentData) ([]byte, error) {
-	bytes, err := c.store.Get(key.Encode())
+func (c *MockDAClient) GetInput(ctx context.Context, key []byte) ([]byte, error) {
+	bytes, err := c.store.Get(key)
 	if err != nil {
 		return nil, ErrNotFound
 	}
@@ -55,7 +55,7 @@ type DAErrFaker struct {
 	setInputErr error
 }
 
-func (f *DAErrFaker) GetInput(ctx context.Context, key CommitmentData) ([]byte, error) {
+func (f *DAErrFaker) GetInput(ctx context.Context, key []byte) ([]byte, error) {
 	if err := f.getInputErr; err != nil {
 		f.getInputErr = nil
 		return nil, err
