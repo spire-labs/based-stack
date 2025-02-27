@@ -72,7 +72,8 @@ contract ElectionTickets is ERC721, Initializable {
     /// @notice Mints a new ticket
     ///
     /// @param _to The address to mint the ticket to
-    function mint(address _to) external {
+    /// @param _amount The amount of tickets to mint
+    function mint(address _to, uint256 _amount) external {
         // Mint is supposed to be called through a cross chain message
         // We need to also check that the l1 sender is the auction contract
         if (
@@ -80,14 +81,16 @@ contract ElectionTickets is ERC721, Initializable {
                 || ICrossDomainMessenger(msg.sender).xDomainMessageSender() != AUCTION
         ) revert NotAuction();
 
-        uint256 _tokenId;
+        uint256 _tokenId = tokenId;
+
+        for (uint256 i; i < _amount; i++) {
+            _mintTo(_to, _tokenId + i + 1);
+        }
 
         // Not feasible for this to ever overflow
         unchecked {
-            _tokenId = ++tokenId;
+            tokenId = _tokenId + _amount;
         }
-
-        _mintTo(_to, _tokenId);
     }
 
     /// @notice Burns a ticket

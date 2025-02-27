@@ -70,7 +70,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "_amount",
+        "type": "uint8"
+      }
+    ],
     "name": "buy",
     "outputs": [],
     "stateMutability": "payable",
