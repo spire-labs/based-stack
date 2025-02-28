@@ -1,7 +1,6 @@
 package altda
 
 import (
-	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -165,14 +164,8 @@ func (a *L2AltDA) ActNewL2Tx(t helpers.Testing) {
 	a.batcher.ActL2BatchBuffer(t)
 	a.batcher.ActL2ChannelClose(t)
 	a.batcher.ActL2BatchSubmit(t, func(tx *types.DynamicFeeTx) {
-		batchInboxAbi := snapshots.LoadBatchInboxABI()
-		method := batchInboxAbi.Methods["submitCalldata"]
-
-		// Unpack the method inputs
-		inputs, err := method.Inputs.Unpack(tx.Data[4:])
-		require.NoError(t, err)
 		// skip txdata version byte
-		a.lastComm = inputs[1].([]byte)
+		a.lastComm = tx.Data[1:]
 	})
 
 	a.miner.ActL1StartBlock(12)(t)
@@ -466,7 +459,7 @@ func TestAltDA_SequencerStalledMultiChallenges(gt *testing.T) {
 
 	// keep track of the related commitment
 	comm1 := a.lastComm
-	input1, err := a.storage.GetInput(t.Ctx(), comm1[1:])
+	input1, err := a.storage.GetInput(t.Ctx(), altda.Keccak256Commitment(comm1[1:]))
 	bn1 := a.lastCommBn
 	require.NoError(t, err)
 

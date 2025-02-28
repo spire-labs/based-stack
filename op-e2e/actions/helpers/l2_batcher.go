@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
-	"fmt"
 	"io"
 	"math/big"
 
@@ -294,7 +293,6 @@ func (s *L2Batcher) ActL2BatchSubmitRaw(t Testing, payload []byte, txOpts ...fun
 	var txData types.TxData
 	if s.l2BatcherCfg.DataAvailabilityType == batcherFlags.CalldataType {
 		calldata := submitCalldataTxData(t, nextBlockTime, payload)
-		fmt.Printf("calldata: %x\n", calldata)
 		rawTx := &types.DynamicFeeTx{
 			ChainID:   s.rollupCfg.L1ChainID,
 			Nonce:     nonce,

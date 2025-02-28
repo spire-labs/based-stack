@@ -40,7 +40,7 @@ type L1Fetcher interface {
 
 // DAStorage interface for calling the DA storage server.
 type DAStorage interface {
-	GetInput(ctx context.Context, key []byte) ([]byte, error)
+	GetInput(ctx context.Context, key CommitmentData) ([]byte, error)
 	SetInput(ctx context.Context, img []byte) (CommitmentData, error)
 }
 
@@ -208,7 +208,7 @@ func (d *DA) GetInput(ctx context.Context, l1 L1Fetcher, comm CommitmentData, bl
 	d.log.Info("getting input", "comm", comm, "status", status)
 
 	// Fetch the input from the DA storage.
-	data, err := d.storage.GetInput(ctx, comm.Encode())
+	data, err := d.storage.GetInput(ctx, comm)
 	notFound := errors.Is(ErrNotFound, err)
 	if err != nil && !notFound {
 		d.log.Error("failed to get preimage", "err", err)

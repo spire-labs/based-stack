@@ -37,8 +37,8 @@ func NewDAClient(url string, verify bool, pc bool) *DAClient {
 }
 
 // GetInput returns the input data for the given encoded commitment bytes.
-func (c *DAClient) GetInput(ctx context.Context, comm []byte) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/get/0x%x", c.url, comm), nil)
+func (c *DAClient) GetInput(ctx context.Context, comm CommitmentData) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/get/0x%x", c.url, comm.Encode()), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
@@ -60,7 +60,7 @@ func (c *DAClient) GetInput(ctx context.Context, comm []byte) ([]byte, error) {
 	}
 
 	if c.verify {
-		if err := Keccak256Commitment(comm).Verify(input); err != nil {
+		if err := comm.Verify(input); err != nil {
 			return nil, err
 		}
 
