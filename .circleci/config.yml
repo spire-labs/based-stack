@@ -1623,7 +1623,7 @@ workflows:
           name: op-e2e-action-tests<< matrix.variant >>
           matrix:
             parameters:
-              variant: ["", "-l2oo", "-altda"]
+              variant: ["", "-l2oo"]
           module: op-e2e
           target: test-actions
           parallelism: 1

@@ -439,13 +439,13 @@
   "bedrock-devnet": {
     "devnet": {
       "dgType": "254",
-      "daType": "auto",
+      "daType": "blobs",
       "isAltDa": true,
       "useL2OOAddress": false,
       "proposalInterval": "12s",
       "genericAltDA": false,
       "altDAService": false,
-      "daCommitmentType": "KeccakCommitment",
+      "daCommitmentType": "GenericCommitment",
       "devnetNoBuild": false
     }
   }
