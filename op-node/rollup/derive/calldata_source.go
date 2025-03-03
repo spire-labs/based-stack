@@ -46,38 +46,40 @@ func NewCalldataSource(ctx context.Context, log log.Logger, dsCfg DataSourceConf
 // will attempt to reinitialize itself. If it cannot find the block it returns a ResetError
 // otherwise it returns a temporary error if fetching the block returns an error.
 func (ds *CalldataSource) Next(ctx context.Context) (eth.Data, error) {
-	electionWinner := ds.electionClient.GetElectionWinner(ds.ref.Time)
-	if electionWinner.Address == (common.Address{}) {
-		ds.log.Warn("No election winner found for block", "time", ds.ref.Time)
-		return nil, io.EOF
-	}
+	// Only fetch if we haven't already fetched the data.
+	if ds.data == nil {
+		electionWinner := ds.electionClient.GetElectionWinner(ds.ref.Time)
+		if electionWinner.Address == (common.Address{}) {
+			ds.log.Warn("No election winner found for block", "time", ds.ref.Time)
+			return nil, io.EOF
+		}
 
-	_, txs, err := ds.fetcher.InfoAndTxsByHash(ctx, ds.ref.Hash)
-	if err != nil && errors.Is(err, ethereum.NotFound) {
-		return nil, NewResetError(fmt.Errorf("failed to open calldata source: %w", err))
-	} else if err != nil {
-		return nil, NewTemporaryError(fmt.Errorf("failed to open calldata source: %w", err))
-	}
+		_, txs, err := ds.fetcher.InfoAndTxsByHash(ctx, ds.ref.Hash)
+		if err != nil && errors.Is(err, ethereum.NotFound) {
+			return nil, NewResetError(fmt.Errorf("failed to open calldata source: %w", err))
+		} else if err != nil {
+			return nil, NewTemporaryError(fmt.Errorf("failed to open calldata source: %w", err))
+		}
 
-	_, receipts, err := ds.fetcher.FetchReceipts(ctx, ds.ref.Hash)
-	if err != nil {
-		return nil, NewTemporaryError(fmt.Errorf("failed to fetch tx receipts: %w", err))
-	}
+		_, receipts, err := ds.fetcher.FetchReceipts(ctx, ds.ref.Hash)
+		if err != nil {
+			return nil, NewTemporaryError(fmt.Errorf("failed to fetch tx receipts: %w", err))
+		}
 
-	txsWithReceipts := make([]TxWithReceipt, len(txs))
-	for i, tx := range txs {
-		txsWithReceipts[i] = TxWithReceipt{tx: tx, receipt: receipts[i]}
-	}
+		txsWithReceipts := make([]TxWithReceipt, len(txs))
+		for i, tx := range txs {
+			txsWithReceipts[i] = TxWithReceipt{tx: tx, receipt: receipts[i]}
+		}
 
-	ds.data = DataFromEVMTransactions(ds.dsCfg, electionWinner.Address, txsWithReceipts, ds.log)
+		ds.data = DataFromEVMTransactions(ds.dsCfg, electionWinner.Address, txsWithReceipts, ds.log)
+	}
 
 	if len(ds.data) == 0 {
 		return nil, io.EOF
-	} else {
-		data := ds.data[0]
-		ds.data = ds.data[1:]
-		return data, nil
 	}
+	data := ds.data[0]
+	ds.data = ds.data[1:]
+	return data, nil
 }
 
 // DataFromEVMTransactions filters all of the transactions and returns the calldata from transactions
