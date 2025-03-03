@@ -132,7 +132,9 @@ contract BlockDutchAuction is Ownable {
     ///////////////////////////////////////////////////////////////*/
 
     /// @notice Buys a ticket in the auction
-    function buy() external payable {
+    ///
+    /// @param _amount The amount of tickets to buy
+    function buy(uint8 _amount) external payable {
         // TODO: Batch minting/buying
         uint256 _startBlock = startBlock;
         uint256 _durationBlocks = durationBlocks;
@@ -171,7 +173,7 @@ contract BlockDutchAuction is Ownable {
 
         // This check needs to come second incase its a new auction
         uint8 __ticketsLeft = _ticketsLeft;
-        if (__ticketsLeft == 0) revert NoTicketsLeft();
+        if (__ticketsLeft < _amount) revert NoTicketsLeft();
 
         uint256 _price = _getPrice(uint256(discountRate), startPrice, _startBlock);
 
@@ -187,15 +189,18 @@ contract BlockDutchAuction is Ownable {
         // Send the message to L2 to mint the ticket
         ICrossDomainMessenger _messenger = ICrossDomainMessenger(SYSTEM_CONFIG.l1CrossDomainMessenger());
 
-        // Mint theoretical max gas limit is ~130_000
-        // We send as 150_000 to allow for some buffer
-        _messenger.sendMessage(ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender)), 150_000);
+        // Mint theoretical max gas limit is ~130_000 per ticket
+        // We send as 150_000 * amount of tickets minting to allow for some buffer
+        _messenger.sendMessage(
+            ELECTION_TICKET, abi.encodeCall(ElectionTickets.mint, (msg.sender, _amount)), 150_000 * _amount
+        );
 
         unchecked {
-            _ticketsLeft = __ticketsLeft - 1;
+            __ticketsLeft -= _amount;
+            _ticketsLeft = __ticketsLeft;
         }
 
-        emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft - 1);
+        emit TicketBought(msg.sender, _startBlock, _price, __ticketsLeft);
     }
 
     /*///////////////////////////////////////////////////////////////
