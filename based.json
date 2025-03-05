@@ -440,7 +440,7 @@
     "devnet": {
       "dgType": "254",
       "daType": "blobs",
-      "isAltDa": true,
+      "isAltDa": false,
       "useL2OOAddress": false,
       "proposalInterval": "12s",
       "genericAltDA": false,

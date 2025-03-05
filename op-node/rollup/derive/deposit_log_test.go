@@ -94,10 +94,9 @@ func makeReceipts(rng *rand.Rand, blockHash common.Hash, depositContractAddr com
 	return receipts, expectedDeposits, nil
 }
 
-func makeReceiptsElectionWinner(rng *rand.Rand, blockHash common.Hash, depositContractAddr common.Address, electionWinnerAddress common.Address, testReceipts []receiptData) ([]*types.Receipt, []*types.DepositTx, error) {
+func makeReceiptsSubmitCalldata(rng *rand.Rand, blockHash common.Hash, depositContractAddr common.Address, electionWinnerAddress common.Address, testReceipts []receiptData) ([]*types.Receipt, error) {
 	logIndex := uint(0)
 	receipts := []*types.Receipt{}
-	expectedDeposits := []*types.DepositTx{}
 	for txIndex, rData := range testReceipts {
 		var logs []*types.Log
 		status := types.ReceiptStatusSuccessful
@@ -110,12 +109,10 @@ func makeReceiptsElectionWinner(rng *rand.Rand, blockHash common.Hash, depositCo
 			if isDeposit {
 				source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
 				dep := testutils.GenerateDeposit(source.SourceHash(), rng)
-				if status == types.ReceiptStatusSuccessful {
-					expectedDeposits = append(expectedDeposits, dep)
-				}
-				ev, err = MarshalDepositLogEventElectionWinner(depositContractAddr, dep, electionWinnerAddress)
+				tx := types.NewTx(dep)
+				ev, err = MarshalBatchSubmittedLogEvent(depositContractAddr, tx, electionWinnerAddress)
 				if err != nil {
-					return []*types.Receipt{}, []*types.DepositTx{}, err
+					return []*types.Receipt{}, err
 				}
 			} else {
 				ev = testutils.GenerateLog(testutils.RandomAddress(rng), nil, nil)
@@ -135,7 +132,7 @@ func makeReceiptsElectionWinner(rng *rand.Rand, blockHash common.Hash, depositCo
 			TransactionIndex: uint(txIndex),
 		})
 	}
-	return receipts, expectedDeposits, nil
+	return receipts, nil
 }
 
 type DeriveUserDepositsTestCase struct {

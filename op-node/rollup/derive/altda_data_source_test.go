@@ -123,7 +123,7 @@ func TestAltDADataSource(t *testing.T) {
 		logger.Info("new l1 block", "ref", ref)
 
 		l1Info := testutils.RandomBlockInfo(rng)
-		receipts, _, err := makeReceiptsElectionWinner(
+		receipts, err := makeReceiptsSubmitCalldata(
 			rng,
 			l1Info.InfoHash,
 			batcherInbox,
@@ -233,7 +233,7 @@ func TestAltDADataSource(t *testing.T) {
 			logger.Info("re deriving block", "ref", ref, "i", i)
 
 			l1Info := testutils.RandomBlockInfo(rng)
-			receipts, _, err := makeReceiptsElectionWinner(
+			receipts, err := makeReceiptsSubmitCalldata(
 				rng,
 				l1Info.InfoHash,
 				batcherInbox,
@@ -262,7 +262,7 @@ func TestAltDADataSource(t *testing.T) {
 			logger.Info("new l1 block", "ref", ref)
 
 			l1Info := testutils.RandomBlockInfo(rng)
-			receipts, _, err := makeReceiptsElectionWinner(
+			receipts, err := makeReceiptsSubmitCalldata(
 				rng,
 				l1Info.InfoHash,
 				batcherInbox,
@@ -414,7 +414,7 @@ func TestAltDADataSourceStall(t *testing.T) {
 	}
 
 	l1Info := testutils.RandomBlockInfo(rng)
-	receipts, _, err := makeReceiptsElectionWinner(
+	receipts, err := makeReceiptsSubmitCalldata(
 		rng,
 		l1Info.InfoHash,
 		batcherInbox,
@@ -560,7 +560,7 @@ func TestAltDADataSourceInvalidData(t *testing.T) {
 	}
 
 	l1Info := testutils.RandomBlockInfo(rng)
-	receipts, _, err := makeReceiptsElectionWinner(
+	receipts, err := makeReceiptsSubmitCalldata(
 		rng,
 		l1Info.InfoHash,
 		batcherInbox,

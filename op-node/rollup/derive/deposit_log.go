@@ -193,10 +193,10 @@ func MarshalDepositLogEvent(depositContractAddr common.Address, deposit *types.D
 	}, nil
 }
 
-func MarshalDepositLogEventElectionWinner(depositContractAddr common.Address, deposit *types.DepositTx, electionWinnerAddress common.Address) (*types.Log, error) {
+func MarshalBatchSubmittedLogEvent(depositContractAddr common.Address, tx *types.Transaction, electionWinnerAddress common.Address) (*types.Log, error) {
 	toBytes := common.Hash{}
-	if deposit.To != nil {
-		toBytes = eth.AddressAsLeftPaddedHash(*deposit.To)
+	if tx.To() != nil {
+		toBytes = eth.AddressAsLeftPaddedHash(*tx.To())
 	}
 	topics := []common.Hash{
 		BatchSubmittedHash,
@@ -210,7 +210,7 @@ func MarshalDepositLogEventElectionWinner(depositContractAddr common.Address, de
 	// opaqueData slice content offset: value will always be 0x20.
 	binary.BigEndian.PutUint64(data[32-8:32], 32)
 
-	opaqueData, err := marshalDepositVersion0(deposit)
+	opaqueData, err := marshalTransactionVersion0(tx)
 	if err != nil {
 		return &types.Log{}, err
 	}
@@ -272,6 +272,38 @@ func marshalDepositVersion0(deposit *types.DepositTx) ([]byte, error) {
 
 	// Deposit data then fills the remaining event data
 	opaqueData = append(opaqueData, deposit.Data...)
+
+	return opaqueData, nil
+}
+
+func marshalTransactionVersion0(tx *types.Transaction) ([]byte, error) {
+	opaqueData := make([]byte, 32+32+8+1, 32+32+8+1+len(tx.Data()))
+	offset := 0
+
+	// uint256 mint (not used in regular transactions, set to 0)
+	mint := new(big.Int)
+	mint.FillBytes(opaqueData[offset : offset+32])
+	offset += 32
+
+	// uint256 value
+	if tx.Value().BitLen() > 256 {
+		return nil, fmt.Errorf("value exceeds 256 bits: %d", tx.Value())
+	}
+	tx.Value().FillBytes(opaqueData[offset : offset+32])
+	offset += 32
+
+	// uint64 gas
+	binary.BigEndian.PutUint64(opaqueData[offset:offset+8], tx.Gas())
+	offset += 8
+
+	// uint8 isCreation (determined by To address)
+	if tx.To() == nil {
+		opaqueData[offset] = 1
+	}
+	offset += 1
+
+	// Transaction data
+	opaqueData = append(opaqueData, tx.Data()...)
 
 	return opaqueData, nil
 }
