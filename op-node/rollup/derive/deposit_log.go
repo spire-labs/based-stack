@@ -300,7 +300,6 @@ func marshalTransactionVersion0(tx *types.Transaction) ([]byte, error) {
 	if tx.To() == nil {
 		opaqueData[offset] = 1
 	}
-	offset += 1
 
 	// Transaction data
 	opaqueData = append(opaqueData, tx.Data()...)
