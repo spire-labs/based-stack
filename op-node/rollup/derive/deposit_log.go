@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum-optimism/optimism/packages/contracts-bedrock/snapshots"
+
 	"github.com/holiman/uint256"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -18,6 +20,7 @@ var (
 	DepositEventABI      = "TransactionDeposited(address,address,uint256,bytes)"
 	DepositEventABIHash  = crypto.Keccak256Hash([]byte(DepositEventABI))
 	DepositEventVersion0 = common.Hash{}
+	BatchSubmittedHash   = snapshots.LoadBatchInboxABI().Events["BatchSubmitted"].ID
 )
 
 // UnmarshalDepositLogEvent decodes an EVM log entry emitted by the deposit contract into typed deposit data.
@@ -190,6 +193,54 @@ func MarshalDepositLogEvent(depositContractAddr common.Address, deposit *types.D
 	}, nil
 }
 
+func MarshalBatchSubmittedLogEvent(depositContractAddr common.Address, tx *types.Transaction, electionWinnerAddress common.Address) (*types.Log, error) {
+	toBytes := common.Hash{}
+	if tx.To() != nil {
+		toBytes = eth.AddressAsLeftPaddedHash(*tx.To())
+	}
+	topics := []common.Hash{
+		BatchSubmittedHash,
+		eth.AddressAsLeftPaddedHash(electionWinnerAddress),
+		toBytes,
+		DepositEventVersion0,
+	}
+
+	data := make([]byte, 64, 64+3*32)
+
+	// opaqueData slice content offset: value will always be 0x20.
+	binary.BigEndian.PutUint64(data[32-8:32], 32)
+
+	opaqueData, err := marshalTransactionVersion0(tx)
+	if err != nil {
+		return &types.Log{}, err
+	}
+
+	// opaqueData slice length
+	binary.BigEndian.PutUint64(data[64-8:64], uint64(len(opaqueData)))
+
+	// opaqueData slice content
+	data = append(data, opaqueData...)
+
+	// pad to multiple of 32
+	if len(data)%32 != 0 {
+		data = append(data, make([]byte, 32-(len(data)%32))...)
+	}
+
+	return &types.Log{
+		Address: depositContractAddr,
+		Topics:  topics,
+		Data:    data,
+		Removed: false,
+
+		// ignored (zeroed):
+		BlockNumber: 0,
+		TxHash:      common.Hash{},
+		TxIndex:     0,
+		BlockHash:   common.Hash{},
+		Index:       0,
+	}, nil
+}
+
 func marshalDepositVersion0(deposit *types.DepositTx) ([]byte, error) {
 	opaqueData := make([]byte, 32+32+8+1, 32+32+8+1+len(deposit.Data))
 	offset := 0
@@ -221,6 +272,37 @@ func marshalDepositVersion0(deposit *types.DepositTx) ([]byte, error) {
 
 	// Deposit data then fills the remaining event data
 	opaqueData = append(opaqueData, deposit.Data...)
+
+	return opaqueData, nil
+}
+
+func marshalTransactionVersion0(tx *types.Transaction) ([]byte, error) {
+	opaqueData := make([]byte, 32+32+8+1, 32+32+8+1+len(tx.Data()))
+	offset := 0
+
+	// uint256 mint (not used in regular transactions, set to 0)
+	mint := new(big.Int)
+	mint.FillBytes(opaqueData[offset : offset+32])
+	offset += 32
+
+	// uint256 value
+	if tx.Value().BitLen() > 256 {
+		return nil, fmt.Errorf("value exceeds 256 bits: %d", tx.Value())
+	}
+	tx.Value().FillBytes(opaqueData[offset : offset+32])
+	offset += 32
+
+	// uint64 gas
+	binary.BigEndian.PutUint64(opaqueData[offset:offset+8], tx.Gas())
+	offset += 8
+
+	// uint8 isCreation (determined by To address)
+	if tx.To() == nil {
+		opaqueData[offset] = 1
+	}
+
+	// Transaction data
+	opaqueData = append(opaqueData, tx.Data()...)
 
 	return opaqueData, nil
 }

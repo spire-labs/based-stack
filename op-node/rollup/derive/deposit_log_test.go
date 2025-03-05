@@ -94,6 +94,47 @@ func makeReceipts(rng *rand.Rand, blockHash common.Hash, depositContractAddr com
 	return receipts, expectedDeposits, nil
 }
 
+func makeReceiptsSubmitCalldata(rng *rand.Rand, blockHash common.Hash, depositContractAddr common.Address, electionWinnerAddress common.Address, testReceipts []receiptData) ([]*types.Receipt, error) {
+	logIndex := uint(0)
+	receipts := []*types.Receipt{}
+	for txIndex, rData := range testReceipts {
+		var logs []*types.Log
+		status := types.ReceiptStatusSuccessful
+		if !rData.goodReceipt {
+			status = types.ReceiptStatusFailed
+		}
+		for _, isDeposit := range rData.DepositLogs {
+			var ev *types.Log
+			var err error
+			if isDeposit {
+				source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
+				dep := testutils.GenerateDeposit(source.SourceHash(), rng)
+				tx := types.NewTx(dep)
+				ev, err = MarshalBatchSubmittedLogEvent(depositContractAddr, tx, electionWinnerAddress)
+				if err != nil {
+					return []*types.Receipt{}, err
+				}
+			} else {
+				ev = testutils.GenerateLog(testutils.RandomAddress(rng), nil, nil)
+			}
+			ev.TxIndex = uint(txIndex)
+			ev.Index = logIndex
+			ev.BlockHash = blockHash
+			logs = append(logs, ev)
+			logIndex++
+		}
+
+		receipts = append(receipts, &types.Receipt{
+			Type:             types.DynamicFeeTxType,
+			Status:           status,
+			Logs:             logs,
+			BlockHash:        blockHash,
+			TransactionIndex: uint(txIndex),
+		})
+	}
+	return receipts, nil
+}
+
 type DeriveUserDepositsTestCase struct {
 	name string
 	// generate len(receipts) receipts

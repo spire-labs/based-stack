@@ -447,7 +447,7 @@ func TestAltDA_ChallengeReorg(gt *testing.T) {
 // Sequencer stalls as data is not available, batcher keeps posting, untracked commitments are
 // challenged and resolved, then sequencer resumes and catches up.
 func TestAltDA_SequencerStalledMultiChallenges(gt *testing.T) {
-	gt.Skip("TODO(spire): Reenable this test once AltDA is supported")
+	gt.Skip("AltDA is not enabled")
 	if !e2eutils.UseAltDA() {
 		gt.Skip("AltDA is not enabled")
 	}
@@ -576,6 +576,7 @@ func TestAltDA_Finalization(gt *testing.T) {
 
 	// commit all the l2 blocks to L1
 	a.batcher.ActSubmitAll(t)
+	// add L1 block #3
 	a.miner.ActL1StartBlock(12)(t)
 	a.miner.ActL1IncludeTx(a.dp.Addresses.Batcher)(t)
 	a.miner.ActL1EndBlock(t)
@@ -587,8 +588,9 @@ func TestAltDA_Finalization(gt *testing.T) {
 	a.sequencer.ActL1HeadSignal(t)
 	a.sequencer.ActBuildToL1Head(t)
 
-	// submit those blocks too, block #4
+	// submit those blocks too
 	a.batcher.ActSubmitAll(t)
+	// add L1 block #4
 	a.miner.ActL1StartBlock(12)(t)
 	a.miner.ActL1IncludeTx(a.dp.Addresses.Batcher)(t)
 	a.miner.ActL1EndBlock(t)
@@ -626,6 +628,6 @@ func TestAltDA_Finalization(gt *testing.T) {
 	a.ActL1Finalized(t)
 	a.sequencer.ActL2PipelineFull(t) // finality event needs to be processed
 
-	// given 12s l1 time and 1s l2 time, l2 should be 12 * 3 = 36 blocks finalized
-	require.Equal(t, uint64(36), a.sequencer.SyncStatus().FinalizedL2.Number)
+	// given L1BlockTime = L2BlockTime, the L2 chain should finalize at the same block as L1
+	require.Equal(t, uint64(3), a.sequencer.SyncStatus().FinalizedL2.Number)
 }
