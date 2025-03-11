@@ -48,19 +48,15 @@ func makeReceiptsSubmitCalldata(rng *rand.Rand, blockHash common.Hash, depositCo
 		if !rData.goodReceipt {
 			status = types.ReceiptStatusFailed
 		}
-		for _, isDeposit := range rData.DepositLogs {
+		for range rData.DepositLogs {
 			var ev *types.Log
 			var err error
-			if isDeposit {
-				source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
-				dep := testutils.GenerateDeposit(source.SourceHash(), rng)
-				tx := types.NewTx(dep)
-				ev, err = MarshalBatchSubmittedLogEvent(depositContractAddr, tx, electionWinnerAddress)
-				if err != nil {
-					return []*types.Receipt{}, err
-				}
-			} else {
-				ev = testutils.GenerateLog(testutils.RandomAddress(rng), nil, nil)
+			source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
+			dep := testutils.GenerateDeposit(source.SourceHash(), rng)
+			tx := types.NewTx(dep)
+			ev, err = MarshalBatchSubmittedLogEvent(depositContractAddr, tx, electionWinnerAddress)
+			if err != nil {
+				return []*types.Receipt{}, err
 			}
 			ev.TxIndex = uint(txIndex)
 			ev.Index = logIndex
