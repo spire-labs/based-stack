@@ -2,6 +2,8 @@ package derive
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 	"io"
 	"math/big"
 	"math/rand"
@@ -35,6 +37,126 @@ func (m *MockFinalitySignal) OnFinalized(blockRef eth.L1BlockRef) {
 
 func (m *MockFinalitySignal) ExpectFinalized(blockRef eth.L1BlockRef) {
 	m.On("OnFinalized", blockRef).Once()
+}
+
+func makeReceiptsSubmitCalldata(rng *rand.Rand, blockHash common.Hash, depositContractAddr common.Address, electionWinnerAddress common.Address, testReceipts []receiptData) ([]*types.Receipt, error) {
+	logIndex := uint(0)
+	receipts := []*types.Receipt{}
+	for txIndex, rData := range testReceipts {
+		var logs []*types.Log
+		status := types.ReceiptStatusSuccessful
+		if !rData.goodReceipt {
+			status = types.ReceiptStatusFailed
+		}
+		for _, isDeposit := range rData.DepositLogs {
+			var ev *types.Log
+			var err error
+			if isDeposit {
+				source := UserDepositSource{L1BlockHash: blockHash, LogIndex: uint64(logIndex)}
+				dep := testutils.GenerateDeposit(source.SourceHash(), rng)
+				tx := types.NewTx(dep)
+				ev, err = MarshalBatchSubmittedLogEvent(depositContractAddr, tx, electionWinnerAddress)
+				if err != nil {
+					return []*types.Receipt{}, err
+				}
+			} else {
+				ev = testutils.GenerateLog(testutils.RandomAddress(rng), nil, nil)
+			}
+			ev.TxIndex = uint(txIndex)
+			ev.Index = logIndex
+			ev.BlockHash = blockHash
+			logs = append(logs, ev)
+			logIndex++
+		}
+
+		receipts = append(receipts, &types.Receipt{
+			Type:             types.DynamicFeeTxType,
+			Status:           status,
+			Logs:             logs,
+			BlockHash:        blockHash,
+			TransactionIndex: uint(txIndex),
+		})
+	}
+	return receipts, nil
+}
+
+func MarshalBatchSubmittedLogEvent(depositContractAddr common.Address, tx *types.Transaction, electionWinnerAddress common.Address) (*types.Log, error) {
+	toBytes := common.Hash{}
+	if tx.To() != nil {
+		toBytes = eth.AddressAsLeftPaddedHash(*tx.To())
+	}
+	topics := []common.Hash{
+		BatchSubmittedHash,
+		eth.AddressAsLeftPaddedHash(electionWinnerAddress),
+		toBytes,
+		DepositEventVersion0,
+	}
+
+	data := make([]byte, 64, 64+3*32)
+
+	// opaqueData slice content offset: value will always be 0x20.
+	binary.BigEndian.PutUint64(data[32-8:32], 32)
+
+	opaqueData, err := marshalTransactionVersion0(tx)
+	if err != nil {
+		return &types.Log{}, err
+	}
+
+	// opaqueData slice length
+	binary.BigEndian.PutUint64(data[64-8:64], uint64(len(opaqueData)))
+
+	// opaqueData slice content
+	data = append(data, opaqueData...)
+
+	// pad to multiple of 32
+	if len(data)%32 != 0 {
+		data = append(data, make([]byte, 32-(len(data)%32))...)
+	}
+
+	return &types.Log{
+		Address: depositContractAddr,
+		Topics:  topics,
+		Data:    data,
+		Removed: false,
+
+		// ignored (zeroed):
+		BlockNumber: 0,
+		TxHash:      common.Hash{},
+		TxIndex:     0,
+		BlockHash:   common.Hash{},
+		Index:       0,
+	}, nil
+}
+
+func marshalTransactionVersion0(tx *types.Transaction) ([]byte, error) {
+	opaqueData := make([]byte, 32+32+8+1, 32+32+8+1+len(tx.Data()))
+	offset := 0
+
+	// uint256 mint (not used in regular transactions, set to 0)
+	mint := new(big.Int)
+	mint.FillBytes(opaqueData[offset : offset+32])
+	offset += 32
+
+	// uint256 value
+	if tx.Value().BitLen() > 256 {
+		return nil, fmt.Errorf("value exceeds 256 bits: %d", tx.Value())
+	}
+	tx.Value().FillBytes(opaqueData[offset : offset+32])
+	offset += 32
+
+	// uint64 gas
+	binary.BigEndian.PutUint64(opaqueData[offset:offset+8], tx.Gas())
+	offset += 8
+
+	// uint8 isCreation (determined by To address)
+	if tx.To() == nil {
+		opaqueData[offset] = 1
+	}
+
+	// Transaction data
+	opaqueData = append(opaqueData, tx.Data()...)
+
+	return opaqueData, nil
 }
 
 // TestAltDADataSource verifies that commitments are correctly read from l1 and then
