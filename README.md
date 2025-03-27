@@ -29,7 +29,7 @@
 
 **The Based Stack** is an open-source framework for deploying **based rollups**—a new class of Ethereum Layer 2 solutions that embrace Ethereum's core values of decentralization, neutrality, and credible neutrality.
 
-Built by [Spire Labs](https://spire.dev), the Based Stack makes it easy to spin up rollups with **decentralized sequencing** and **shared security**, while providing a smooth path to production-grade deployments. Also, based rollups/appchains built wiht hte Based Stack can retain MEV, customize their execution environment, and integrate natively with decentralized preconfirmations for a lightning-fast UX.
+Built by [Spire Labs](https://spire.dev), the Based Stack makes it easy to spin up rollups with **decentralized sequencing** and **shared security**, while providing a smooth path to production-grade deployments. Also, based rollups/appchains built with the Based Stack can retain MEV, customize their execution environment, and integrate natively with decentralized preconfirmations for a lightning-fast UX.
 
 ---
 
