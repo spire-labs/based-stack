@@ -3,7 +3,8 @@
   <br />
   <a href="https://www.spire.dev"><img alt="Spire" src="https://github.com/user-attachments/assets/73919322-473a-4616-b2cc-81af471b2ca4" width=600></a>
   <br />
-  <h3>Derived from<a href="https://optimism.io"> Optimism</a></h3>
+  <h3>Standing on the shoulders of giants.</h3>
+  <h2>A fork of <a href="https://optimism.io">Optimism's</a> OP Stack</h2>
   <br />
 </div>
 
@@ -13,24 +14,71 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
-- [About Spire Labs?](#about-spire-labs)
-- [Documentation](#documentation)
+- [Based Stack](#based-stack)
+  - [What is a Based Rollup?](#what-is-a-based-rollup)
+  - [What This Stack Enables](#what-this-stack-enables)
+- [Current Status](#current-status)
+- [Learn More](#learn-more)
 - [Contributing](#contributing)
-- [Directory Structure](#directory-structure)
-- [License](#license)
+  - [Directory Structure](#directory-structure)
+  - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## About Spire Labs?
+# Based Stack
 
-[<i>**Spire Labs**</i>](https://www.spire.dev/) is building a based rollup stack called “Based Stack” that enables developers to spin up app-specific **based rollups**. Spire's sequencing design enables appchains to interact with Ethereum's liquidity and protocols natively (e.g. cross chain contract calls). Also, based rollups/appchains built the Based Stack can retain MEV, customize their execution environment, and integrate natively with decentralized preconfirmations for a lightning-fast UX.
+**The Based Stack** is an open-source framework for deploying **based rollups**—a new class of Ethereum Layer 2 solutions that embrace Ethereum's core values of decentralization, neutrality, and credible neutrality.
 
-## Documentation
+Built by [Spire Labs](https://spire.dev), the Based Stack makes it easy to spin up rollups with **decentralized sequencing** and **shared security**, while providing a smooth path to production-grade deployments. Also, based rollups/appchains built wiht hte Based Stack can retain MEV, customize their execution environment, and integrate natively with decentralized preconfirmations for a lightning-fast UX.
 
-Visit https://docs.spire.dev/ for documentation about this project.
+---
 
-## Contributing
+## What is a Based Rollup?
+
+A **based rollup** is a rollup that outsources block production to Ethereum, instead of relying on a centralized sequencer. This architecture enhances:
+
+- **Neutrality** – No single actor controls transaction ordering.
+- **Security** – Sequencing is settled on Ethereum, minimizing trust assumptions.
+- **Simplicity** – Eliminates the need for bespoke validator sets or complex bridge contracts.
+
+Based rollups inherit the liveness and censorship-resistance of Ethereum itself.
+
+---
+
+## What This Stack Enables
+
+The Based Stack includes tools and contracts to support:
+
+- **Decentralized Sequencing Markets**
+  A Dutch auction model determines who can propose blocks in a fair, permissionless way.
+
+- **Election Tickets**
+  Winning sequencers receive election tickets that grant block production rights. These cannot be transferred and in future versions could be slashed for misbehavior.
+
+- **MEV Compatibility**
+  Sequencers can capture MEV in a transparent and competitive environment, reducing centralization incentives.
+
+- **L2 Infrastructure Templates**
+  Boilerplate configs and smart contracts for launching your own based rollup.
+
+---
+
+# Current Status
+
+> **Alpha** – Unstable. Contributions welcome!
+
+We’re actively developing and testing core components.
+
+---
+
+#  Learn More
+
+- [The Based Path to Decentralised Sequencing](https://paragraph.xyz/@spire/the-based-path-to-decentralised-sequencing)
+- [Documentation](https://docs.spire.dev/)
+- [X ](https://x.com/Spire_Labs)
+
+---
+# Contributing
 
 Check out our [CONTRIBUTING.md](https://github.com/spire-labs/based-stack/blob/develop/CONTRIBUTING.md) file for a detailed explanation of the contributing process for this repository. Make sure to use the [Developer Quick Start](https://github.com/spire-labs/based-stack/blob/develop/CONTRIBUTING.md#development-quick-start) to properly set up your development environment.
 
