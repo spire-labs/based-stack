@@ -108,7 +108,7 @@ var (
 	}
 	BuildingTime = &cli.DurationFlag{
 		Name:    "building-time",
-		Usage:   "duration of of block building, this should be set to something lower than the block time.",
+		Usage:   "duration of block building, this should be set to something lower than the block time.",
 		EnvVars: prefixEnvVars("BUILDING_TIME"),
 		Value:   time.Second * 6,
 	}

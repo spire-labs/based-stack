@@ -289,7 +289,7 @@ func P2PFlags(envPrefix string) []cli.Flag {
 		},
 		&cli.DurationFlag{
 			Name:     TimeoutNegotiationName,
-			Usage:    "Negotiation timeout, time for new peer connections to share their their supported p2p protocols",
+			Usage:    "Negotiation timeout, time for new peer connections to share their supported p2p protocols",
 			Hidden:   true,
 			Required: false,
 			Value:    10 * time.Second,

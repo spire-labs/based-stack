@@ -874,7 +874,7 @@ contract DeployImplementations is Script {
 //     - Updates the OPSM release setter logic to use the updated initializer.
 //  - A `DeployOPChainInterop is DeployOPChain` that allows the updated input parameter to be passed.
 //
-// Most of the complexity in the above flow comes from the the new input for the updated SystemConfig
+// Most of the complexity in the above flow comes from the new input for the updated SystemConfig
 // initializer. If all function signatures were the same, all we'd have to change is the contract
 // implementations that are deployed then set in the OPSM. For now, to simplify things until we
 // resolve https://github.com/ethereum-optimism/optimism/issues/11783, we just assume this new role
