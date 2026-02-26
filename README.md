@@ -75,6 +75,7 @@ We’re actively developing and testing core components.
 
 - [The Based Path to Decentralised Sequencing](https://paragraph.xyz/@spire/the-based-path-to-decentralised-sequencing)
 - [Documentation](https://docs.spire.dev/)
+- [Blog](https://paragraph.com/@spire)
 - [X ](https://x.com/Spire_Labs)
 
 ---
